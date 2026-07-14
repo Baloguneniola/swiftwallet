@@ -19,6 +19,7 @@ function Signup() {
           width: "380px",
           textAlign: "center",
           border: "1px solid #2a2a2a",
+          boxShadow: "0 0 20px rgba(34,197,94,0.15)",
         }}
       >
         <h1
@@ -65,7 +66,9 @@ function Signup() {
           style={inputStyle}
         />
 
-        <button style={buttonStyle}>Create Account</button>
+        <button style={buttonStyle}>
+          Create Account
+        </button>
 
         <p
           style={{
@@ -78,7 +81,6 @@ function Signup() {
           <span
             style={{
               color: "#22c55e",
-              cursor: "pointer",
               fontWeight: "600",
             }}
           >

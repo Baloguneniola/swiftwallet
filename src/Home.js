@@ -1,5 +1,4 @@
 import React from 'react';
-import './App.css';
 import Navbar from './components/Navbar';
 import StatusBar from './components/StatusBar';
 import HeroSection from './components/HeroSection';
@@ -10,9 +9,9 @@ import Testimonials from './components/TestimonialsSection';
 import CTASection from './components/CTASection';
 import Footer from './components/Footer';
 
-function App() {
+function Home() {
   return (
-    <div className="App">
+    <>
       <Navbar />
       <StatusBar />
       <HeroSection />
@@ -22,8 +21,8 @@ function App() {
       <Testimonials />
       <CTASection />
       <Footer />
-    </div>
+    </>
   );
 }
 
-export default App;
+export default Home;
