@@ -1,102 +1,138 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import Navbar from "./components/Navbar";
 
 function Signup() {
   return (
-    <>
-      <Navbar />
-
-      <div
+    <div
+      style={{
+        backgroundColor: "#0d0d0d",
+        minHeight: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        position: "relative",
+      }}
+    >
+      {/* Swift Wallet Logo */}
+      <Link
+        to="/"
         style={{
-          backgroundColor: "#0d0d0d",
-          minHeight: "100vh",
+          position: "absolute",
+          top: "35px",
+          left: "50px",
           display: "flex",
-          justifyContent: "center",
           alignItems: "center",
+          gap: "10px",
+          textDecoration: "none",
+          cursor: "pointer",
         }}
       >
         <div
           style={{
-            backgroundColor: "#1a1a1a",
-            padding: "40px",
-            borderRadius: "15px",
-            width: "380px",
-            textAlign: "center",
-            border: "1px solid #2a2a2a",
-            boxShadow: "0 0 20px rgba(34,197,94,0.15)",
+            width: "40px",
+            height: "40px",
+            backgroundColor: "#22c55e",
+            borderRadius: "10px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontWeight: "bold",
+            fontSize: "16px",
+            color: "#000",
           }}
         >
-          <h1
+          SW
+        </div>
+
+        <span
+          style={{
+            color: "#fff",
+            fontWeight: "700",
+            fontSize: "20px",
+          }}
+        >
+          Swift Wallet
+        </span>
+      </Link>
+
+      <div
+        style={{
+          backgroundColor: "#1a1a1a",
+          padding: "40px",
+          borderRadius: "15px",
+          width: "380px",
+          textAlign: "center",
+          border: "1px solid #2a2a2a",
+          boxShadow: "0 0 20px rgba(34,197,94,0.15)",
+        }}
+      >
+        <h1
+          style={{
+            color: "#22c55e",
+            marginBottom: "10px",
+            fontSize: "32px",
+          }}
+        >
+          Create Account
+        </h1>
+
+        <p
+          style={{
+            color: "#aaa",
+            marginBottom: "30px",
+            fontSize: "15px",
+          }}
+        >
+          Join Swift Wallet and start sending money instantly.
+        </p>
+
+        <input
+          type="text"
+          placeholder="Full Name"
+          style={inputStyle}
+        />
+
+        <input
+          type="email"
+          placeholder="Email Address"
+          style={inputStyle}
+        />
+
+        <input
+          type="password"
+          placeholder="Password"
+          style={inputStyle}
+        />
+
+        <input
+          type="password"
+          placeholder="Confirm Password"
+          style={inputStyle}
+        />
+
+        <button style={buttonStyle}>Create Account</button>
+
+        <p
+          style={{
+            color: "#888",
+            marginTop: "25px",
+            fontSize: "14px",
+          }}
+        >
+          Already have an account?{" "}
+          <Link
+            to="/login"
             style={{
               color: "#22c55e",
-              marginBottom: "10px",
-              fontSize: "32px",
+              textDecoration: "none",
+              fontWeight: "600",
             }}
           >
-            Create Account
-          </h1>
-
-          <p
-            style={{
-              color: "#aaa",
-              marginBottom: "30px",
-              fontSize: "15px",
-            }}
-          >
-            Join Swift Wallet and start sending money instantly.
-          </p>
-
-          <input
-            type="text"
-            placeholder="Full Name"
-            style={inputStyle}
-          />
-
-          <input
-            type="email"
-            placeholder="Email Address"
-            style={inputStyle}
-          />
-
-          <input
-            type="password"
-            placeholder="Password"
-            style={inputStyle}
-          />
-
-          <input
-            type="password"
-            placeholder="Confirm Password"
-            style={inputStyle}
-          />
-
-          <button style={buttonStyle}>
-            Create Account
-          </button>
-
-          <p
-            style={{
-              color: "#888",
-              marginTop: "25px",
-              fontSize: "14px",
-            }}
-          >
-            Already have an account?{" "}
-            <Link
-              to="/login"
-              style={{
-                color: "#22c55e",
-                textDecoration: "none",
-                fontWeight: "600",
-              }}
-            >
-              Log In
-            </Link>
-          </p>
-        </div>
+            Log In
+          </Link>
+        </p>
       </div>
-    </>
+    </div>
   );
 }
 
