@@ -6,7 +6,7 @@ import HeroSection from './components/HeroSection';
 import BuiltForSpeed from './components/BuiltForSpeed';
 import HowItWorks from './components/HowItWorks';
 import MoneyInSteps from './components/MoneyInSteps';
-import Testimonials from './components/TestimonialsSection';
+import Reviews from './components/ReviewsSection';
 import CTASection from './components/CTASection';
 import Footer from './components/Footer';
 
@@ -19,7 +19,7 @@ function App() {
       <BuiltForSpeed />
       <HowItWorks />
       <MoneyInSteps />
-      <Testimonials />
+      <Reviews />
       <CTASection />
       <Footer />
     </div>

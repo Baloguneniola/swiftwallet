@@ -1,6 +1,6 @@
 import React from 'react';
 
-const testimonials = [
+const reviews = [
   {
     stars: 5,
     text: 'Sending money back home has never been this smooth. Swift Wallet changed everything for me.',
@@ -24,7 +24,7 @@ const testimonials = [
   },
 ];
 
-const Testimonials = () => {
+const Reviews = () => {
   return (
     <section style={{
       padding: '60px 40px',
@@ -41,7 +41,7 @@ const Testimonials = () => {
         gridTemplateColumns: 'repeat(3, 1fr)',
         gap: '20px',
       }}>
-        {testimonials.map((t) => (
+        {reviews.map((t) => (
           <div key={t.name} style={{
             backgroundColor: '#1a1a1a',
             borderRadius: '16px',
@@ -81,4 +81,4 @@ const Testimonials = () => {
   );
 };
 
-export default Testimonials;
+export default Reviews;
