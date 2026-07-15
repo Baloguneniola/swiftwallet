@@ -1,28 +1,20 @@
-import React from 'react';
-import './App.css';
-import Navbar from './components/Navbar';
-import StatusBar from './components/StatusBar';
-import HeroSection from './components/HeroSection';
-import BuiltForSpeed from './components/BuiltForSpeed';
-import HowItWorks from './components/HowItWorks';
-import MoneyInSteps from './components/MoneyInSteps';
-import Reviews from './components/ReviewsSection';
-import CTASection from './components/CTASection';
-import Footer from './components/Footer';
+import React from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import "./App.css";
+
+import Home from "./Home";
+import Login from "./login";
+import Signup from "./signup";
 
 function App() {
   return (
-    <div className="App">
-      <Navbar />
-      <StatusBar />
-      <HeroSection />
-      <BuiltForSpeed />
-      <HowItWorks />
-      <MoneyInSteps />
-      <Reviews />
-      <CTASection />
-      <Footer />
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
