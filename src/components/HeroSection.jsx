@@ -34,7 +34,7 @@ const HeroSection = () => {
         <p
           style={{
             color: '#aaa',
-            fontSize: '16px',
+            fontSize: '18px',
             lineHeight: '1.6',
             marginBottom: '32px',
             maxWidth: '380px',
