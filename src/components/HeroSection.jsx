@@ -133,6 +133,7 @@ const HeroSection = () => {
             width: '260px',
             boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
             border: '1px solid #2a2a2a',
+            transform: 'translateY(-60px)',
           }}
         >
           <div style={{ marginBottom: '16px' }}>
