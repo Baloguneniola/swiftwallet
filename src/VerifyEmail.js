@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-function Login() {
+function VerifyEmail() {
   return (
     <div
       style={{
@@ -55,17 +55,48 @@ function Login() {
         </span>
       </Link>
 
+      {/* Card */}
       <div
         style={{
           backgroundColor: "#1a1a1a",
           padding: "40px",
           borderRadius: "15px",
-          width: "380px",
+          width: "420px",
           textAlign: "center",
           border: "1px solid #2a2a2a",
           boxShadow: "0 0 20px rgba(34,197,94,0.15)",
         }}
       >
+        <p
+          style={{
+            color: "#22c55e",
+            fontWeight: "600",
+            marginBottom: "10px",
+          }}
+        >
+          Step 2 of 5
+        </p>
+
+        {/* Progress Bar */}
+        <div
+          style={{
+            width: "100%",
+            height: "8px",
+            backgroundColor: "#333",
+            borderRadius: "10px",
+            overflow: "hidden",
+            marginBottom: "30px",
+          }}
+        >
+          <div
+            style={{
+              width: "40%",
+              height: "100%",
+              backgroundColor: "#22c55e",
+            }}
+          ></div>
+        </div>
+
         <h1
           style={{
             color: "#22c55e",
@@ -73,7 +104,7 @@ function Login() {
             fontSize: "32px",
           }}
         >
-          Welcome Back 
+          Verify Your Email
         </h1>
 
         <p
@@ -81,31 +112,36 @@ function Login() {
             color: "#aaa",
             marginBottom: "30px",
             fontSize: "15px",
+            lineHeight: "1.5",
           }}
         >
-          Sign in to access your Swift Wallet.
+          Enter the 6-digit verification code we sent to your email address.
         </p>
 
-        <input
-          type="email"
-          placeholder="Email Address"
-          style={inputStyle}
-        />
-
-        <input
-          type="password"
-          placeholder="Password"
-          style={inputStyle}
-        />
-
-        <Link
-          to="/dashboard"
-          style={{ textDecoration: "none" }}
+        {/* Verification Boxes */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            gap: "10px",
+            marginBottom: "30px",
+          }}
         >
-        <button style={buttonStyle}>
-          Log In
-      </button>
-      </Link>
+          {[...Array(6)].map((_, index) => (
+            <input
+              key={index}
+              type="text"
+              maxLength="1"
+              style={codeInputStyle}
+            />
+          ))}
+        </div>
+
+        <Link to="/complete-profile">
+          <button style={buttonStyle}>
+            Verify Email
+          </button>
+        </Link>
 
         <p
           style={{
@@ -114,34 +150,32 @@ function Login() {
             fontSize: "14px",
           }}
         >
-          Don't have an account?{" "}
-          <Link
-            to="/signup"
+          Didn't receive a code?{" "}
+          <span
             style={{
               color: "#22c55e",
-              textDecoration: "none",
+              cursor: "pointer",
               fontWeight: "600",
             }}
           >
-            Sign Up
-          </Link>
+            Resend Code
+          </span>
         </p>
       </div>
     </div>
   );
 }
 
-const inputStyle = {
-  width: "100%",
-  padding: "14px",
-  marginBottom: "18px",
+const codeInputStyle = {
+  width: "50px",
+  height: "55px",
   backgroundColor: "#111",
   border: "1px solid #333",
+  borderRadius: "10px",
   color: "#fff",
-  borderRadius: "8px",
+  fontSize: "22px",
+  textAlign: "center",
   outline: "none",
-  boxSizing: "border-box",
-  fontSize: "15px",
 };
 
 const buttonStyle = {
@@ -156,4 +190,4 @@ const buttonStyle = {
   fontSize: "15px",
 };
 
-export default Login;
+export default VerifyEmail;

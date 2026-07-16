@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-function Login() {
+function CompleteProfile() {
   return (
     <div
       style={{
@@ -55,17 +55,48 @@ function Login() {
         </span>
       </Link>
 
+      {/* Card */}
       <div
         style={{
           backgroundColor: "#1a1a1a",
           padding: "40px",
           borderRadius: "15px",
-          width: "380px",
+          width: "450px",
           textAlign: "center",
           border: "1px solid #2a2a2a",
           boxShadow: "0 0 20px rgba(34,197,94,0.15)",
         }}
       >
+        <p
+          style={{
+            color: "#22c55e",
+            fontWeight: "600",
+            marginBottom: "10px",
+          }}
+        >
+          Step 3 of 5
+        </p>
+
+        {/* Progress Bar */}
+        <div
+          style={{
+            width: "100%",
+            height: "8px",
+            backgroundColor: "#333",
+            borderRadius: "10px",
+            overflow: "hidden",
+            marginBottom: "30px",
+          }}
+        >
+          <div
+            style={{
+              width: "60%",
+              height: "100%",
+              backgroundColor: "#22c55e",
+            }}
+          ></div>
+        </div>
+
         <h1
           style={{
             color: "#22c55e",
@@ -73,7 +104,7 @@ function Login() {
             fontSize: "32px",
           }}
         >
-          Welcome Back 
+          Complete Your Profile
         </h1>
 
         <p
@@ -83,29 +114,58 @@ function Login() {
             fontSize: "15px",
           }}
         >
-          Sign in to access your Swift Wallet.
+          Tell us a little more about yourself to continue.
         </p>
 
         <input
-          type="email"
-          placeholder="Email Address"
+          type="tel"
+          inputMode="tel"
+          placeholder="Phone Number"
+          style={inputStyle}
+        />
+
+        <p
+         style={{
+            color: "#aaa",
+            textAlign: "left",
+            marginBottom: "8px",
+            fontSize: "14px",
+        }}
+        >
+            Date of Birth
+        </p>
+
+        <input
+          type="date"
           style={inputStyle}
         />
 
         <input
-          type="password"
-          placeholder="Password"
+          type="text"
+          placeholder="Residential Address"
+          style={inputStyle}
+        />
+
+        <input
+          type="text"
+          placeholder="Country"
+          style={inputStyle}
+        />
+
+        <input
+          type="text"
+          placeholder="State / Province"
           style={inputStyle}
         />
 
         <Link
-          to="/dashboard"
+          to="/identity-verification"
           style={{ textDecoration: "none" }}
         >
-        <button style={buttonStyle}>
-          Log In
-      </button>
-      </Link>
+          <button style={buttonStyle}>
+            Continue
+          </button>
+        </Link>
 
         <p
           style={{
@@ -114,17 +174,7 @@ function Login() {
             fontSize: "14px",
           }}
         >
-          Don't have an account?{" "}
-          <Link
-            to="/signup"
-            style={{
-              color: "#22c55e",
-              textDecoration: "none",
-              fontWeight: "600",
-            }}
-          >
-            Sign Up
-          </Link>
+          Your information is encrypted and securely stored.
         </p>
       </div>
     </div>
@@ -156,4 +206,4 @@ const buttonStyle = {
   fontSize: "15px",
 };
 
-export default Login;
+export default CompleteProfile;

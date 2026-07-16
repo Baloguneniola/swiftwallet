@@ -110,7 +110,14 @@ function Signup() {
           style={inputStyle}
         />
 
-        <button style={buttonStyle}>Create Account</button>
+        <Link
+          to="/verify-email"
+          style={{ textDecoration: "none" }}
+        >
+          <button style={buttonStyle}>
+            Continue
+          </button>
+        </Link>   
 
         <p
           style={{

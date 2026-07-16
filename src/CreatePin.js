@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-function Login() {
+function CreatePin() {
   return (
     <div
       style={{
@@ -55,17 +55,48 @@ function Login() {
         </span>
       </Link>
 
+      {/* Card */}
       <div
         style={{
           backgroundColor: "#1a1a1a",
           padding: "40px",
           borderRadius: "15px",
-          width: "380px",
+          width: "420px",
           textAlign: "center",
           border: "1px solid #2a2a2a",
           boxShadow: "0 0 20px rgba(34,197,94,0.15)",
         }}
       >
+        <p
+          style={{
+            color: "#22c55e",
+            fontWeight: "600",
+            marginBottom: "10px",
+          }}
+        >
+          Step 5 of 5
+        </p>
+
+        {/* Progress Bar */}
+        <div
+          style={{
+            width: "100%",
+            height: "8px",
+            backgroundColor: "#333",
+            borderRadius: "10px",
+            overflow: "hidden",
+            marginBottom: "30px",
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              backgroundColor: "#22c55e",
+            }}
+          ></div>
+        </div>
+
         <h1
           style={{
             color: "#22c55e",
@@ -73,7 +104,7 @@ function Login() {
             fontSize: "32px",
           }}
         >
-          Welcome Back 
+          Create Your PIN
         </h1>
 
         <p
@@ -81,20 +112,27 @@ function Login() {
             color: "#aaa",
             marginBottom: "30px",
             fontSize: "15px",
+            lineHeight: "1.5",
           }}
         >
-          Sign in to access your Swift Wallet.
+          Create a secure 4-digit PIN to authorise transfers and payments.
         </p>
 
         <input
-          type="email"
-          placeholder="Email Address"
+          type="password"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          placeholder="Enter 4-digit PIN"
+          maxLength="4"
           style={inputStyle}
         />
 
         <input
           type="password"
-          placeholder="Password"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          placeholder="Confirm PIN"
+          maxLength="4"
           style={inputStyle}
         />
 
@@ -102,10 +140,10 @@ function Login() {
           to="/dashboard"
           style={{ textDecoration: "none" }}
         >
-        <button style={buttonStyle}>
-          Log In
-      </button>
-      </Link>
+          <button style={buttonStyle}>
+            Finish Setup
+          </button>
+        </Link>
 
         <p
           style={{
@@ -114,17 +152,7 @@ function Login() {
             fontSize: "14px",
           }}
         >
-          Don't have an account?{" "}
-          <Link
-            to="/signup"
-            style={{
-              color: "#22c55e",
-              textDecoration: "none",
-              fontWeight: "600",
-            }}
-          >
-            Sign Up
-          </Link>
+          Your PIN will be required whenever you make a transaction.
         </p>
       </div>
     </div>
@@ -156,4 +184,4 @@ const buttonStyle = {
   fontSize: "15px",
 };
 
-export default Login;
+export default CreatePin;

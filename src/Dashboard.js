@@ -1,0 +1,215 @@
+import React from "react";
+import { Link } from "react-router-dom";
+
+function Dashboard() {
+  return (
+    <div
+      style={{
+        backgroundColor: "#0d0d0d",
+        minHeight: "100vh",
+        color: "#fff",
+      }}
+    >
+      {/* Navbar */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: "25px 50px",
+          borderBottom: "1px solid #222",
+        }}
+      >
+        <Link
+          to="/"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            textDecoration: "none",
+          }}
+        >
+          <div
+            style={{
+              width: "40px",
+              height: "40px",
+              backgroundColor: "#22c55e",
+              borderRadius: "10px",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              color: "#000",
+              fontWeight: "bold",
+            }}
+          >
+            SW
+          </div>
+
+          <span
+            style={{
+              color: "#fff",
+              fontSize: "20px",
+              fontWeight: "700",
+            }}
+          >
+            Swift Wallet
+          </span>
+        </Link>
+
+        <button
+          style={{
+            backgroundColor: "#22c55e",
+            color: "#000",
+            border: "none",
+            padding: "10px 20px",
+            borderRadius: "8px",
+            fontWeight: "600",
+            cursor: "pointer",
+          }}
+        >
+          Log Out
+        </button>
+      </div>
+
+      {/* Main */}
+      <div style={{ padding: "40px 50px" }}>
+        <h1
+          style={{
+            fontSize: "36px",
+            marginBottom: "10px",
+          }}
+        >
+          Welcome back 👋
+        </h1>
+
+        <p
+          style={{
+            color: "#999",
+            marginBottom: "35px",
+          }}
+        >
+          Here's an overview of your Swift Wallet account.
+        </p>
+
+        {/* Balance Card */}
+        <div
+          style={{
+            backgroundColor: "#1a1a1a",
+            border: "1px solid #2a2a2a",
+            borderRadius: "15px",
+            padding: "30px",
+            marginBottom: "30px",
+          }}
+        >
+          <p
+            style={{
+              color: "#999",
+              marginBottom: "10px",
+            }}
+          >
+            Available Balance
+          </p>
+
+          <h2
+            style={{
+              color: "#22c55e",
+              fontSize: "42px",
+              margin: 0,
+            }}
+          >
+            ₦42,500.00
+          </h2>
+        </div>
+
+        {/* Quick Actions */}
+        <h2 style={{ marginBottom: "20px" }}>
+          Quick Actions
+        </h2>
+
+        <div
+          style={{
+            display: "flex",
+            gap: "20px",
+            flexWrap: "wrap",
+          }}
+        >
+          {[
+            "Send Money",
+            "Request Money",
+            "Pay Bills",
+            "Top Up",
+          ].map((action) => (
+            <button
+              key={action}
+              style={{
+                backgroundColor: "#1a1a1a",
+                color: "#fff",
+                border: "1px solid #333",
+                borderRadius: "12px",
+                padding: "20px 30px",
+                cursor: "pointer",
+                fontSize: "16px",
+                minWidth: "180px",
+              }}
+            >
+              {action}
+            </button>
+          ))}
+        </div>
+
+        {/* Recent Transactions */}
+        <div
+          style={{
+            marginTop: "50px",
+          }}
+        >
+          <h2 style={{ marginBottom: "20px" }}>
+            Recent Transactions
+          </h2>
+
+          {[
+            {
+              name: "Netflix",
+              amount: "- ₦4,500",
+            },
+            {
+              name: "Salary",
+              amount: "+ ₦180,000",
+            },
+            {
+              name: "Electricity Bill",
+              amount: "- ₦12,000",
+            },
+          ].map((transaction) => (
+            <div
+              key={transaction.name}
+              style={{
+                backgroundColor: "#1a1a1a",
+                border: "1px solid #2a2a2a",
+                borderRadius: "12px",
+                padding: "18px 25px",
+                display: "flex",
+                justifyContent: "space-between",
+                marginBottom: "15px",
+              }}
+            >
+              <span>{transaction.name}</span>
+              <span
+                style={{
+                  color: transaction.amount.startsWith("+")
+                    ? "#22c55e"
+                    : "#ff5f5f",
+                  fontWeight: "600",
+                }}
+              >
+                {transaction.amount}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default Dashboard;

@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-function Login() {
+function IdentityVerification() {
   return (
     <div
       style={{
@@ -55,17 +55,48 @@ function Login() {
         </span>
       </Link>
 
+      {/* Card */}
       <div
         style={{
           backgroundColor: "#1a1a1a",
           padding: "40px",
           borderRadius: "15px",
-          width: "380px",
+          width: "450px",
           textAlign: "center",
           border: "1px solid #2a2a2a",
           boxShadow: "0 0 20px rgba(34,197,94,0.15)",
         }}
       >
+        <p
+          style={{
+            color: "#22c55e",
+            fontWeight: "600",
+            marginBottom: "10px",
+          }}
+        >
+          Step 4 of 5
+        </p>
+
+        {/* Progress Bar */}
+        <div
+          style={{
+            width: "100%",
+            height: "8px",
+            backgroundColor: "#333",
+            borderRadius: "10px",
+            overflow: "hidden",
+            marginBottom: "30px",
+          }}
+        >
+          <div
+            style={{
+              width: "80%",
+              height: "100%",
+              backgroundColor: "#22c55e",
+            }}
+          />
+        </div>
+
         <h1
           style={{
             color: "#22c55e",
@@ -73,7 +104,7 @@ function Login() {
             fontSize: "32px",
           }}
         >
-          Welcome Back 
+          Identity Verification
         </h1>
 
         <p
@@ -81,31 +112,60 @@ function Login() {
             color: "#aaa",
             marginBottom: "30px",
             fontSize: "15px",
+            lineHeight: "1.5",
           }}
         >
-          Sign in to access your Swift Wallet.
+          Verify your identity to unlock all Swift Wallet features.
         </p>
 
         <input
-          type="email"
-          placeholder="Email Address"
+          type="text"
+          placeholder="Nationality"
           style={inputStyle}
         />
+
+        <select
+          style={inputStyle}
+          defaultValue=""
+        >
+          <option value="" disabled>
+            Select ID Type
+          </option>
+          <option>National ID</option>
+          <option>Passport</option>
+          <option>Driver's Licence</option>
+        </select>
 
         <input
-          type="password"
-          placeholder="Password"
+          type="text"
+          placeholder="ID Number"
           style={inputStyle}
         />
 
+        {/* Hidden File Input */}
+        <input
+          type="file"
+          id="upload-id"
+          accept="image/*,.pdf"
+          style={{ display: "none" }}
+        />
+
+        {/* Upload Button */}
+        <label
+          htmlFor="upload-id"
+          style={uploadButton}
+        >
+          Upload Government ID
+        </label>
+
         <Link
-          to="/dashboard"
+          to="/create-pin"
           style={{ textDecoration: "none" }}
         >
-        <button style={buttonStyle}>
-          Log In
-      </button>
-      </Link>
+          <button style={buttonStyle}>
+            Continue
+          </button>
+        </Link>
 
         <p
           style={{
@@ -114,17 +174,7 @@ function Login() {
             fontSize: "14px",
           }}
         >
-          Don't have an account?{" "}
-          <Link
-            to="/signup"
-            style={{
-              color: "#22c55e",
-              textDecoration: "none",
-              fontWeight: "600",
-            }}
-          >
-            Sign Up
-          </Link>
+          Your documents are securely encrypted and protected.
         </p>
       </div>
     </div>
@@ -144,6 +194,21 @@ const inputStyle = {
   fontSize: "15px",
 };
 
+const uploadButton = {
+  display: "block",
+  width: "100%",
+  padding: "14px",
+  marginBottom: "18px",
+  backgroundColor: "transparent",
+  color: "#22c55e",
+  border: "2px dashed #22c55e",
+  borderRadius: "8px",
+  fontWeight: "600",
+  cursor: "pointer",
+  fontSize: "15px",
+  boxSizing: "border-box",
+};
+
 const buttonStyle = {
   width: "100%",
   padding: "14px",
@@ -156,4 +221,4 @@ const buttonStyle = {
   fontSize: "15px",
 };
 
-export default Login;
+export default IdentityVerification;
