@@ -20,10 +20,7 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/complete-profile" element={<CompleteProfile />} />
-        <Route
-          path="/identity-verification"
-          element={<IdentityVerification />}
-        />
+        <Route path="/identity-verification" element={<IdentityVerification />} />
         <Route path="/create-pin" element={<CreatePin />} />
         <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
