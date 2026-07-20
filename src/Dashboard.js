@@ -79,7 +79,7 @@ function Dashboard() {
             marginBottom: "10px",
           }}
         >
-          Welcome back 👋
+          Welcome back 
         </h1>
 
         <p
