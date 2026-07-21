@@ -105,7 +105,7 @@ function AddMoney() {
               margin: 0,
             }}
           >
-            ₦42,500.00
+            ₦200,350.00
           </h2>
         </div>
 
