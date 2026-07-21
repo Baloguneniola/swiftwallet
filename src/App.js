@@ -10,6 +10,10 @@ import CompleteProfile from "./CompleteProfile";
 import IdentityVerification from "./IdentityVerification";
 import CreatePin from "./CreatePin";
 import Dashboard from "./Dashboard";
+import SendMoney from "./SendMoney";
+import AddMoney from "./AddMoney";
+import PayBills from "./PayBills";
+import TransactionHistory from "./TransactionHistory";
 
 function App() {
   return (
@@ -23,6 +27,10 @@ function App() {
         <Route path="/identity-verification" element={<IdentityVerification />} />
         <Route path="/create-pin" element={<CreatePin />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/send-money" element={<SendMoney />} />
+        <Route path="/add-money" element={<AddMoney />} />
+        <Route path="/pay-bills" element={<PayBills />} />
+        <Route path="/transaction-history" element={<TransactionHistory />} />
       </Routes>
     </BrowserRouter>
   );
