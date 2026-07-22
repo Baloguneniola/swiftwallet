@@ -107,7 +107,7 @@ function PayBills() {
             <option>Choose a bill</option>
             <option>⚡ Electricity</option>
             <option>💧 Water</option>
-            <option>📶 Wifi</option>
+            <option>📶 Wi-Fi</option>
             <option>📺 Cable TV</option>
             <option>📱 Airtime</option>
             <option>📡 Mobile Data</option>
@@ -165,7 +165,7 @@ function PayBills() {
             {[
               "⚡ Electricity",
               "📺 DSTV",
-              "📶 Wifi",
+              "📶 Wi-Fi",
               "📱 Airtime",
             ].map((service) => (
               <div
