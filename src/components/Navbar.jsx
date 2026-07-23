@@ -70,16 +70,16 @@ const Navbar = () => {
           Home
         </Link>
 
-        <a
-          href="#"
-          style={{
-            color: "#aaa",
-            textDecoration: "none",
-            fontSize: "14px",
+      <Link
+        to="/features"
+        style={{
+        color: "#aaa",
+        textDecoration: "none",
+        fontSize: "14px",
           }}
         >
-          Features
-        </a>
+        Features
+      </Link>
 
         <Link
           to="/login"
