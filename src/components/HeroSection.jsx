@@ -68,21 +68,30 @@ const HeroSection = () => {
             </button>
           </Link>
 
-          <button
+
+          <Link
+            to="/features"
             style={{
-              backgroundColor: 'transparent',
-              color: '#fff',
-              border: '1px solid #444',
-              padding: '14px 28px',
-              borderRadius: '8px',
-              fontWeight: '600',
-              fontSize: '15px',
-              cursor: 'pointer',
+              textDecoration: 'none',
             }}
           >
-            Learn More
-          </button>
+            <button
+              style={{
+                backgroundColor: 'transparent',
+                color: '#fff',
+                border: '1px solid #444',
+                padding: '14px 28px',
+                borderRadius: '8px',
+                fontWeight: '600',
+                fontSize: '15px',
+                cursor: 'pointer',
+              }}
+            >
+              Learn More
+            </button>
+          </Link>
         </div>
+
 
         {/* Stats */}
         <div style={{ display: 'flex', gap: '40px' }}>
@@ -102,6 +111,7 @@ const HeroSection = () => {
               >
                 {stat.value}
               </div>
+
               <div
                 style={{
                   fontSize: '12px',
@@ -115,6 +125,7 @@ const HeroSection = () => {
           ))}
         </div>
       </div>
+
 
       {/* Right: Phone Mockup */}
       <div
@@ -140,6 +151,7 @@ const HeroSection = () => {
             <div style={{ color: '#888', fontSize: '12px' }}>
               Welcome Back
             </div>
+
             <div
               style={{
                 color: '#aaa',
@@ -151,8 +163,12 @@ const HeroSection = () => {
             </div>
           </div>
 
+
           <div style={{ marginBottom: '20px' }}>
-            <div style={{ color: '#888', fontSize: '11px' }}>Balance</div>
+            <div style={{ color: '#888', fontSize: '11px' }}>
+              Balance
+            </div>
+
             <div
               style={{
                 color: '#22c55e',
@@ -163,6 +179,7 @@ const HeroSection = () => {
               ₦42,500.00
             </div>
           </div>
+
 
           <div
             style={{
@@ -190,6 +207,7 @@ const HeroSection = () => {
             ))}
           </div>
 
+
           <Link
             to="/login"
             style={{
@@ -213,8 +231,10 @@ const HeroSection = () => {
               Sign In
             </button>
           </Link>
+
         </div>
       </div>
+
     </section>
   );
 };
