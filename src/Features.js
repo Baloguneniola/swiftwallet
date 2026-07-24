@@ -102,16 +102,6 @@ function Features() {
           </span>
         </Link>
 
-        <Link
-          to="/"
-          style={{
-            color: "#22c55e",
-            textDecoration: "none",
-            fontWeight: "600",
-          }}
-        >
-          Back Home
-        </Link>
       </div>
 
       <div

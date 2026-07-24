@@ -159,7 +159,7 @@ const HeroSection = () => {
                 marginTop: '4px',
               }}
             >
-              someone@gmail.com
+              danielsmith@gmail.com
             </div>
           </div>
 
