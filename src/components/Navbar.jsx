@@ -77,8 +77,7 @@ const Navbar = () => {
         </a>
 
 
-        <Link
-          to="/features"
+        <Link to="/features"
           style={{
             color: "#aaa",
             textDecoration: "none",
