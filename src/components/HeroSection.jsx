@@ -214,22 +214,7 @@ const HeroSection = () => {
               textDecoration: 'none',
             }}
           >
-            <button
-              style={{
-                marginTop: '16px',
-                width: '100%',
-                backgroundColor: '#22c55e',
-                color: '#000',
-                border: 'none',
-                padding: '12px',
-                borderRadius: '10px',
-                fontWeight: '600',
-                fontSize: '14px',
-                cursor: 'pointer',
-              }}
-            >
-              Sign In
-            </button>
+            
           </Link>
 
         </div>
