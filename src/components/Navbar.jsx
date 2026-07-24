@@ -11,6 +11,9 @@ const Navbar = () => {
         padding: "16px 40px",
         backgroundColor: "#0d0d0d",
         borderBottom: "1px solid #1a1a1a",
+        position: "sticky",
+        top: "0",
+        zIndex: "1000",
       }}
     >
       {/* Logo */}
@@ -51,6 +54,7 @@ const Navbar = () => {
         </span>
       </Link>
 
+
       {/* Navigation Links */}
       <div
         style={{
@@ -59,8 +63,10 @@ const Navbar = () => {
           alignItems: "center",
         }}
       >
-        <Link
-          to="/"
+
+        {/* Home Scroll */}
+        <a
+          href="#top"
           style={{
             color: "#aaa",
             textDecoration: "none",
@@ -68,18 +74,20 @@ const Navbar = () => {
           }}
         >
           Home
-        </Link>
+        </a>
 
-      <Link
-        to="/features"
-        style={{
-        color: "#aaa",
-        textDecoration: "none",
-        fontSize: "14px",
+
+        <Link
+          to="/features"
+          style={{
+            color: "#aaa",
+            textDecoration: "none",
+            fontSize: "14px",
           }}
         >
-        Features
-      </Link>
+          Features
+        </Link>
+
 
         <Link
           to="/login"
@@ -91,6 +99,7 @@ const Navbar = () => {
         >
           Log In
         </Link>
+
 
         <Link
           to="/signup"
@@ -113,6 +122,8 @@ const Navbar = () => {
             Open an Account
           </button>
         </Link>
+
+
       </div>
     </nav>
   );

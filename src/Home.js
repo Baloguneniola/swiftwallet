@@ -11,7 +11,7 @@ import Footer from './components/Footer';
 
 function Home() {
   return (
-    <>
+    <div id="top">
       <Navbar />
       <StatusBar />
       <HeroSection />
@@ -21,7 +21,7 @@ function Home() {
       <Reviews />
       <CTASection />
       <Footer />
-    </>
+    </div>
   );
 }
 
