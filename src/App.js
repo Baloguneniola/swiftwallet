@@ -14,7 +14,9 @@ import SendMoney from "./SendMoney";
 import AddMoney from "./AddMoney";
 import PayBills from "./PayBills";
 import TransactionHistory from "./TransactionHistory";
-import Features from "./Features";
+import Features from "./Features"
+import Terms from "./Terms";
+
 
 function App() {
   return (
@@ -33,6 +35,7 @@ function App() {
         <Route path="/pay-bills" element={<PayBills />} />
         <Route path="/transaction-history" element={<TransactionHistory />} />
         <Route path="/features" element={<Features />} />
+        <Route path="/terms" element={<Terms />} />
       </Routes>
     </BrowserRouter>
   );
