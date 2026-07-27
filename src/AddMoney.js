@@ -22,6 +22,7 @@ function AddMoney() {
       >
         <Link
           to="/dashboard"
+          onClick={() => window.scrollTo(0, 0)}
           style={{
             display: "flex",
             alignItems: "center",
@@ -222,6 +223,7 @@ function AddMoney() {
 
         <Link
           to="/dashboard"
+          onClick={() => window.scrollTo(0, 0)}
           style={{
             textDecoration: "none",
           }}

@@ -16,6 +16,7 @@ function SendMoney() {
       {/* Swift Wallet Logo */}
       <Link
         to="/dashboard"
+        onClick={() => window.scrollTo(0, 0)}
         style={{
           position: "absolute",
           top: "35px",
@@ -125,6 +126,7 @@ function SendMoney() {
 
         <Link
           to="/dashboard"
+          onClick={() => window.scrollTo(0, 0)}
           style={{
             textDecoration: "none",
           }}

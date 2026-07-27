@@ -141,37 +141,41 @@ function Dashboard() {
         >
           <Link
             to="/send-money"
+            onClick={() => window.scrollTo(0, 0)}
             style={{ textDecoration: "none" }}
           >
             <button style={actionButton}>
-               Send Money
+              Send Money
             </button>
           </Link>
 
           <Link
             to="/add-money"
+            onClick={() => window.scrollTo(0, 0)}
             style={{ textDecoration: "none" }}
           >
             <button style={actionButton}>
-               Add Money
+              Add Money
             </button>
           </Link>
 
           <Link
             to="/pay-bills"
+            onClick={() => window.scrollTo(0, 0)}
             style={{ textDecoration: "none" }}
           >
             <button style={actionButton}>
-               Pay Bills
+              Pay Bills
             </button>
           </Link>
 
           <Link
             to="/transaction-history"
+            onClick={() => window.scrollTo(0, 0)}
             style={{ textDecoration: "none" }}
           >
             <button style={actionButton}>
-               Transaction History
+              Transaction History
             </button>
           </Link>
         </div>

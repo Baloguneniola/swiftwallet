@@ -23,7 +23,11 @@ function TransactionHistory() {
       filter === "All" ||
       (filter === "Credit" && t.type === "credit") ||
       (filter === "Debit" && t.type === "debit");
-    const matchesSearch = t.name.toLowerCase().includes(search.toLowerCase());
+
+    const matchesSearch = t.name
+      .toLowerCase()
+      .includes(search.toLowerCase());
+
     return matchesFilter && matchesSearch;
   });
 
@@ -47,6 +51,7 @@ function TransactionHistory() {
       >
         <Link
           to="/dashboard"
+          onClick={() => window.scrollTo(0, 0)}
           style={{
             display: "flex",
             alignItems: "center",
@@ -124,15 +129,33 @@ function TransactionHistory() {
           }}
         >
           <div>
-            <p style={{ color: "#999", marginBottom: "10px" }}>Money In</p>
-            <h2 style={{ color: "#22c55e", fontSize: "28px", margin: 0 }}>
+            <p style={{ color: "#999", marginBottom: "10px" }}>
+              Money In
+            </p>
+
+            <h2
+              style={{
+                color: "#22c55e",
+                fontSize: "28px",
+                margin: 0,
+              }}
+            >
               + ₦270,000
             </h2>
           </div>
 
           <div>
-            <p style={{ color: "#999", marginBottom: "10px" }}>Money Out</p>
-            <h2 style={{ color: "#ff5f5f", fontSize: "28px", margin: 0 }}>
+            <p style={{ color: "#999", marginBottom: "10px" }}>
+              Money Out
+            </p>
+
+            <h2
+              style={{
+                color: "#ff5f5f",
+                fontSize: "28px",
+                margin: 0,
+              }}
+            >
               - ₦69,650
             </h2>
           </div>
@@ -140,7 +163,9 @@ function TransactionHistory() {
 
         {/* Filter + Search */}
         <div style={cardStyle}>
-          <h3 style={titleStyle}>Filter Transactions</h3>
+          <h3 style={titleStyle}>
+            Filter Transactions
+          </h3>
 
           <select
             style={inputStyle}
@@ -162,13 +187,24 @@ function TransactionHistory() {
         </div>
 
         {/* Transaction List */}
-        <div style={{ ...cardStyle, marginTop: "30px" }}>
+        <div
+          style={{
+            ...cardStyle,
+            marginTop: "30px",
+          }}
+        >
           <h3 style={titleStyle}>
-            {filter === "All" ? "All Transactions" : filter === "Credit" ? "Money In" : "Money Out"}
+            {filter === "All"
+              ? "All Transactions"
+              : filter === "Credit"
+              ? "Money In"
+              : "Money Out"}
           </h3>
 
           {filtered.length === 0 ? (
-            <p style={{ color: "#999" }}>No transactions found.</p>
+            <p style={{ color: "#999" }}>
+              No transactions found.
+            </p>
           ) : (
             filtered.map((t, index) => (
               <div
@@ -178,19 +214,26 @@ function TransactionHistory() {
                   justifyContent: "space-between",
                   alignItems: "center",
                   borderBottom:
-                    index === filtered.length - 1 ? "none" : "1px solid #2a2a2a",
+                    index === filtered.length - 1
+                      ? "none"
+                      : "1px solid #2a2a2a",
                   padding: "15px 0",
                 }}
               >
                 <div>
                   <div>{t.name}</div>
 
-                  <small style={{ color: "#888" }}>{t.date}</small>
+                  <small style={{ color: "#888" }}>
+                    {t.date}
+                  </small>
                 </div>
 
                 <span
                   style={{
-                    color: t.type === "credit" ? "#22c55e" : "#ff5f5f",
+                    color:
+                      t.type === "credit"
+                        ? "#22c55e"
+                        : "#ff5f5f",
                     fontWeight: "700",
                   }}
                 >
@@ -203,6 +246,7 @@ function TransactionHistory() {
 
         <Link
           to="/dashboard"
+          onClick={() => window.scrollTo(0, 0)}
           style={{
             textDecoration: "none",
           }}

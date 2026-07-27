@@ -22,6 +22,7 @@ function PayBills() {
       >
         <Link
           to="/dashboard"
+          onClick={() => window.scrollTo(0, 0)}
           style={{
             display: "flex",
             alignItems: "center",
@@ -253,6 +254,7 @@ function PayBills() {
 
         <Link
           to="/dashboard"
+          onClick={() => window.scrollTo(0, 0)}
           style={{
             textDecoration: "none",
           }}
