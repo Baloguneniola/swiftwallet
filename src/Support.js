@@ -163,7 +163,7 @@ function Support() {
           >
             Email: support@swiftwallet.com
             <br />
-            Phone number: +234809012345
+            Phone number: +2348091234567
             <br />
             Response time: Within 24 hours
             <br />
