@@ -120,10 +120,18 @@ function SendMoney() {
           style={textAreaStyle}
         />
 
-        <button style={buttonStyle}>
-          Continue
-        </button>
+          <Link
+  to="/confirm-transfer"
+  style={{
+    textDecoration: "none",
+  }}
+>
+  <button style={buttonStyle}>
+    Continue
+  </button>
+</Link>
 
+        {/* Back Button */}
         <Link
           to="/dashboard"
           onClick={() => window.scrollTo(0, 0)}
@@ -131,8 +139,13 @@ function SendMoney() {
             textDecoration: "none",
           }}
         >
-          <button style={secondaryButton}>
-            Back to Dashboard
+          <button
+            style={{
+              ...secondaryButton,
+              marginTop: "30px",
+            }}
+          >
+             {"←"} Back to Dashboard
           </button>
         </Link>
       </div>
@@ -178,7 +191,6 @@ const buttonStyle = {
   fontWeight: "700",
   fontSize: "15px",
   cursor: "pointer",
-  marginBottom: "15px",
 };
 
 const secondaryButton = {
