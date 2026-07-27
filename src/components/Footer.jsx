@@ -70,16 +70,16 @@ const Footer = () => {
           Terms
         </Link>
 
-        <a
-          href="#"
-          style={{
-            color: "#888",
-            textDecoration: "none",
-            fontSize: "13px",
-          }}
-        >
-          Support
-        </a>
+<Link
+  to="/support"
+  style={{
+    color: "#888",
+    textDecoration: "none",
+    fontSize: "13px",
+  }}
+>
+  Support
+</Link>
 
         <a
           href="#"

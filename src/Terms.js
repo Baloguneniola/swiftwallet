@@ -68,7 +68,6 @@ function Terms() {
             fontWeight: "600",
           }}
         >
-          Back Home
         </Link>
       </div>
 

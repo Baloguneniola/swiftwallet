@@ -16,6 +16,7 @@ import PayBills from "./PayBills";
 import TransactionHistory from "./TransactionHistory";
 import Features from "./Features"
 import Terms from "./Terms";
+import Support from "./Support";
 
 
 function App() {
@@ -36,6 +37,7 @@ function App() {
         <Route path="/transaction-history" element={<TransactionHistory />} />
         <Route path="/features" element={<Features />} />
         <Route path="/terms" element={<Terms />} />
+        <Route path="/support" element={<Support />} />
       </Routes>
     </BrowserRouter>
   );
