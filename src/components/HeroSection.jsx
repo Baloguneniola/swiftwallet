@@ -159,6 +159,8 @@ const HeroSection = () => {
                 marginTop: '4px',
               }}
             >
+              Daniel Smith
+              <br />
               danielsmith@gmail.com
             </div>
           </div>
