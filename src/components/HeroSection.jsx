@@ -149,7 +149,7 @@ const HeroSection = () => {
         >
           <div style={{ marginBottom: '16px' }}>
             <div style={{ color: '#888', fontSize: '12px' }}>
-              Welcome back
+              Welcome back, Daniel
             </div>
 
             <div
@@ -159,8 +159,6 @@ const HeroSection = () => {
                 marginTop: '4px',
               }}
             >
-              Daniel Smith
-              <br />
               danielsmith@gmail.com
             </div>
           </div>
