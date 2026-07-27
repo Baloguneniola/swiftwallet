@@ -1,7 +1,17 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
 function SendMoney() {
+
+  const [transferData, setTransferData] = useState({
+    recipient: "",
+    bank: "",
+    accountNumber: "",
+    amount: "",
+    description: "",
+  });
+
+
   return (
     <div
       style={{
@@ -13,6 +23,7 @@ function SendMoney() {
         position: "relative",
       }}
     >
+
       {/* Swift Wallet Logo */}
       <Link
         to="/dashboard"
@@ -27,6 +38,7 @@ function SendMoney() {
           textDecoration: "none",
         }}
       >
+
         <div
           style={{
             width: "40px",
@@ -43,6 +55,7 @@ function SendMoney() {
           SW
         </div>
 
+
         <span
           style={{
             color: "#fff",
@@ -52,7 +65,10 @@ function SendMoney() {
         >
           Swift Wallet
         </span>
+
       </Link>
+
+
 
       {/* Card */}
       <div
@@ -65,6 +81,7 @@ function SendMoney() {
           boxShadow: "0 0 20px rgba(34,197,94,0.15)",
         }}
       >
+
         <h1
           style={{
             color: "#22c55e",
@@ -74,6 +91,7 @@ function SendMoney() {
         >
           Send Money
         </h1>
+
 
         <p
           style={{
@@ -85,15 +103,33 @@ function SendMoney() {
           Transfer money quickly and securely.
         </p>
 
+
+
         <input
           type="text"
           placeholder="Recipient Name"
           style={inputStyle}
+          value={transferData.recipient}
+          onChange={(e) =>
+            setTransferData({
+              ...transferData,
+              recipient: e.target.value,
+            })
+          }
         />
 
-        <select style={inputStyle}>
-          <option>Select Bank</option>
-          <option>Ecobank</option>
+
+        <select
+          style={inputStyle}
+          value={transferData.bank}
+          onChange={(e) =>
+            setTransferData({
+              ...transferData,
+              bank: e.target.value,
+            })
+          }
+        >
+          <option value="">Select Bank</option>
           <option>Access Bank</option>
           <option>GTBank</option>
           <option>First Bank</option>
@@ -103,38 +139,69 @@ function SendMoney() {
           <option>Opay</option>
         </select>
 
+
+
         <input
           type="text"
           placeholder="Account Number"
           style={inputStyle}
+          value={transferData.accountNumber}
+          onChange={(e) =>
+            setTransferData({
+              ...transferData,
+              accountNumber: e.target.value,
+            })
+          }
         />
+
+
 
         <input
           type="number"
           placeholder="Amount (₦)"
           style={inputStyle}
+          value={transferData.amount}
+          onChange={(e) =>
+            setTransferData({
+              ...transferData,
+              amount: e.target.value,
+            })
+          }
         />
+
+
 
         <textarea
           placeholder="Description (Optional)"
           style={textAreaStyle}
+          value={transferData.description}
+          onChange={(e) =>
+            setTransferData({
+              ...transferData,
+              description: e.target.value,
+            })
+          }
         />
 
-          <Link
-  to="/confirm-transfer"
-  style={{
-    textDecoration: "none",
-  }}
->
-  <button style={buttonStyle}>
-    Continue
-  </button>
-</Link>
 
-        {/* Back Button */}
+
+        <Link
+          to="/confirm-transfer"
+          state={transferData}
+          style={{
+            textDecoration: "none",
+          }}
+        >
+          <button style={buttonStyle}>
+            Continue
+          </button>
+        </Link>
+
+
+
         <Link
           to="/dashboard"
-          onClick={() => window.scrollTo(0, 0)}
+          onClick={() => window.scrollTo(0,0)}
           style={{
             textDecoration: "none",
           }}
@@ -142,16 +209,21 @@ function SendMoney() {
           <button
             style={{
               ...secondaryButton,
-              marginTop: "30px",
+              marginTop: "15px",
             }}
           >
-             {"←"} Back to Dashboard
+            ← Back to Dashboard
           </button>
         </Link>
+
+
       </div>
+
     </div>
   );
 }
+
+
 
 const inputStyle = {
   width: "100%",
@@ -165,6 +237,7 @@ const inputStyle = {
   outline: "none",
   boxSizing: "border-box",
 };
+
 
 const textAreaStyle = {
   width: "100%",
@@ -181,6 +254,7 @@ const textAreaStyle = {
   boxSizing: "border-box",
 };
 
+
 const buttonStyle = {
   width: "100%",
   padding: "14px",
@@ -193,6 +267,7 @@ const buttonStyle = {
   cursor: "pointer",
 };
 
+
 const secondaryButton = {
   width: "100%",
   padding: "14px",
@@ -204,5 +279,6 @@ const secondaryButton = {
   fontSize: "15px",
   cursor: "pointer",
 };
+
 
 export default SendMoney;
