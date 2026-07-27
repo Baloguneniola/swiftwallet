@@ -118,20 +118,21 @@ function ConfirmTransfer() {
           <p style={{color:"#888"}}>
             Amount
           </p>
-
-          <h2
+        
+        <h2
             style={{
-              color:"#22c55e",
-              fontSize:"36px",
-              margin:0,
-            }}
-          >
-            ₦{transfer?.amount || "0"}
-          </h2>
-
+            color:"#22c55e",
+            fontSize:"36px",
+            margin:0,
+        }}
+        >
+            ₦{Number(transfer?.amount || 0).toLocaleString("en-NG", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        })}
+        </h2>
+        
         </div>
-
-
 
 
         <div

@@ -119,25 +119,53 @@ function SendMoney() {
         />
 
 
-        <select
-          style={inputStyle}
-          value={transferData.bank}
-          onChange={(e) =>
-            setTransferData({
-              ...transferData,
-              bank: e.target.value,
-            })
-          }
-        >
-          <option value="">Select Bank</option>
-          <option>Access Bank</option>
-          <option>GTBank</option>
-          <option>First Bank</option>
-          <option>UBA</option>
-          <option>Zenith Bank</option>
-          <option>Kuda</option>
-          <option>Opay</option>
-        </select>
+        <div
+  style={{
+    position: "relative",
+    marginBottom: "18px",
+  }}
+>
+  <select
+    style={{
+      ...inputStyle,
+      appearance: "none",
+      WebkitAppearance: "none",
+      MozAppearance: "none",
+      paddingRight: "40px",
+      marginBottom: "0",
+    }}
+    value={transferData.bank}
+    onChange={(e) =>
+      setTransferData({
+        ...transferData,
+        bank: e.target.value,
+      })
+    }
+  >
+    <option value="">Select Bank</option>
+    <option>Access Bank</option>
+    <option>GTBank</option>
+    <option>First Bank</option>
+    <option>UBA</option>
+    <option>Zenith Bank</option>
+    <option>Kuda</option>
+    <option>Opay</option>
+  </select>
+
+  <span
+    style={{
+      position: "absolute",
+      right: "10px",
+      top: "55%",
+      transform: "translateY(-50%)",
+      pointerEvents: "none",
+      color: "#fff",
+      fontSize: "12px",
+    }}
+  >
+    ▼
+  </span>
+</div>
 
 
 
@@ -156,18 +184,26 @@ function SendMoney() {
 
 
 
-        <input
-          type="number"
-          placeholder="Amount (₦)"
-          style={inputStyle}
-          value={transferData.amount}
-          onChange={(e) =>
+      <input
+        type="text"
+        placeholder="Amount (₦)"
+        style={inputStyle}
+        value={
+          transferData.amount
+          ?  Number(transferData.amount).toLocaleString("en-NG")
+          : ""
+        }
+        onChange={(e) => {
+          const value = e.target.value.replace(/,/g, "");
+
+          if (!isNaN(value)) {
             setTransferData({
               ...transferData,
-              amount: e.target.value,
-            })
+              amount: value,
+            });
           }
-        />
+        }}
+      />
 
 
 

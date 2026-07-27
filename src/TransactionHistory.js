@@ -39,7 +39,6 @@ function TransactionHistory() {
         color: "#fff",
       }}
     >
-      {/* Navbar */}
       <div
         style={{
           display: "flex",
@@ -87,7 +86,6 @@ function TransactionHistory() {
         </Link>
       </div>
 
-      {/* Main */}
       <div
         style={{
           maxWidth: "700px",
@@ -114,7 +112,6 @@ function TransactionHistory() {
           A full record of the money moving in and out of your account.
         </p>
 
-        {/* Summary */}
         <div
           style={{
             backgroundColor: "#1a1a1a",
@@ -161,21 +158,56 @@ function TransactionHistory() {
           </div>
         </div>
 
-        {/* Filter + Search */}
         <div style={cardStyle}>
           <h3 style={titleStyle}>
             Filter Transactions
           </h3>
 
-          <select
-            style={inputStyle}
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
+          <div
+            style={{
+              position: "relative",
+              marginBottom: "18px",
+            }}
           >
-            <option value="All">All Transactions</option>
-            <option value="Credit">Money In</option>
-            <option value="Debit">Money Out</option>
-          </select>
+            <select
+              style={{
+                ...inputStyle,
+                appearance: "none",
+                WebkitAppearance: "none",
+                MozAppearance: "none",
+                paddingRight: "40px",
+                marginBottom: "0",
+              }}
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+            >
+              <option value="All">
+                All Transactions
+              </option>
+
+              <option value="Credit">
+                Money In
+              </option>
+
+              <option value="Debit">
+                Money Out
+              </option>
+            </select>
+
+            <span
+              style={{
+                position: "absolute",
+                right: "10px",
+                top: "55%",
+                transform: "translateY(-50%)",
+                pointerEvents: "none",
+                color: "#fff",
+                fontSize: "12px",
+              }}
+            >
+              ▼
+            </span>
+          </div>
 
           <input
             type="text"
@@ -186,7 +218,6 @@ function TransactionHistory() {
           />
         </div>
 
-        {/* Transaction List */}
         <div
           style={{
             ...cardStyle,
