@@ -149,7 +149,7 @@ const HeroSection = () => {
         >
           <div style={{ marginBottom: '16px' }}>
             <div style={{ color: '#888', fontSize: '12px' }}>
-              Welcome Back
+              Welcome back
             </div>
 
             <div

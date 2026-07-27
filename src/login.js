@@ -73,7 +73,7 @@ function Login() {
             fontSize: "32px",
           }}
         >
-          Welcome Back 
+          Welcome back 
         </h1>
 
         <p
