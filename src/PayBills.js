@@ -213,7 +213,11 @@ function PayBills() {
               </option>
 
               <option value="Electricity">
-                ⚡ Electricity
+                ⚡Electricity
+              </option>
+
+              <option value="Water">
+                💧Water
               </option>
 
               <option value="DSTV">
