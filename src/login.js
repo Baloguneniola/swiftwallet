@@ -2,13 +2,23 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 function Login() {
+
 const [email, setEmail] = useState("");
+const [password, setPassword] = useState("");
+
 const navigate = useNavigate();
 
 const handleLogin = () => {
+
 if (email.trim() === "") {
-alert("Please enter your email address.");
-return;
+  alert("Please enter your email address.");
+  return;
+}
+
+
+if (password.trim() === "") {
+  alert("Please enter your password.");
+  return;
 }
 
 
@@ -16,58 +26,71 @@ const username = email
   .split("@")[0]
   .split(/[._-]/)[0];
 
+
 const formattedName =
   username.charAt(0).toUpperCase() +
   username.slice(1).toLowerCase();
 
-localStorage.setItem("swiftWalletUser", formattedName);
+
+localStorage.setItem(
+  "swiftWalletUser",
+  formattedName
+);
+
 
 navigate("/dashboard");
-window.scrollTo(0, 0);
 
+window.scrollTo(0, 0);
 
 };
 
 return (
+
 <div
-style={{
-backgroundColor: "#0d0d0d",
-minHeight: "100vh",
-display: "flex",
-justifyContent: "center",
-alignItems: "center",
-position: "relative",
-}}
+  style={{
+    backgroundColor: "#0d0d0d",
+    minHeight: "100vh",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+  }}
 >
-<Link
-to="/"
-onClick={() => window.scrollTo(0, 0)}
-style={{
-position: "absolute",
-top: "35px",
-left: "50px",
-display: "flex",
-alignItems: "center",
-gap: "10px",
-textDecoration: "none",
-cursor: "pointer",
-}}
->
-<div
-style={{
-width: "40px",
-height: "40px",
-backgroundColor: "#22c55e",
-borderRadius: "10px",
-display: "flex",
-alignItems: "center",
-justifyContent: "center",
-fontWeight: "bold",
-fontSize: "16px",
-color: "#000",
-}}
->
-SW </div>
+
+
+  {/* Swift Wallet Logo */}
+  <Link
+    to="/"
+    onClick={() => window.scrollTo(0, 0)}
+    style={{
+      position: "absolute",
+      top: "35px",
+      left: "50px",
+      display: "flex",
+      alignItems: "center",
+      gap: "10px",
+      textDecoration: "none",
+      cursor: "pointer",
+    }}
+  >
+
+    <div
+      style={{
+        width: "40px",
+        height: "40px",
+        backgroundColor: "#22c55e",
+        borderRadius: "10px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontWeight: "bold",
+        fontSize: "16px",
+        color: "#000",
+      }}
+    >
+      SW
+    </div>
+
 
     <span
       style={{
@@ -78,8 +101,12 @@ SW </div>
     >
       Swift Wallet
     </span>
+
   </Link>
 
+
+
+  {/* Login Card */}
   <div
     style={{
       backgroundColor: "#1a1a1a",
@@ -88,9 +115,12 @@ SW </div>
       width: "380px",
       textAlign: "center",
       border: "1px solid #2a2a2a",
-      boxShadow: "0 0 20px rgba(34,197,94,0.15)",
+      boxShadow:
+        "0 0 20px rgba(34,197,94,0.15)",
     }}
   >
+
+
     <h1
       style={{
         color: "#22c55e",
@@ -100,6 +130,7 @@ SW </div>
     >
       Welcome back
     </h1>
+
 
     <p
       style={{
@@ -111,19 +142,35 @@ SW </div>
       Sign in to access your Swift Wallet.
     </p>
 
+
+
     <input
       type="email"
+      name="swift-wallet-email"
       placeholder="Email Address"
       style={inputStyle}
       value={email}
-      onChange={(e) => setEmail(e.target.value)}
+      autoComplete="off"
+      onChange={(e) =>
+        setEmail(e.target.value)
+      }
     />
+
+
 
     <input
       type="password"
+      name="swift-wallet-password"
       placeholder="Password"
       style={inputStyle}
+      value={password}
+      autoComplete="new-password"
+      onChange={(e) =>
+        setPassword(e.target.value)
+      }
     />
+
+
 
     <button
       type="button"
@@ -133,6 +180,8 @@ SW </div>
       Log In
     </button>
 
+
+
     <p
       style={{
         color: "#888",
@@ -141,6 +190,7 @@ SW </div>
       }}
     >
       Don't have an account?{" "}
+
       <Link
         to="/signup"
         style={{
@@ -151,14 +201,22 @@ SW </div>
       >
         Sign Up
       </Link>
+
     </p>
+
+
   </div>
+
+
 </div>
 
+
 );
+
 }
 
 const inputStyle = {
+
 width: "100%",
 padding: "14px",
 marginBottom: "18px",
@@ -169,9 +227,11 @@ borderRadius: "8px",
 outline: "none",
 boxSizing: "border-box",
 fontSize: "15px",
+
 };
 
 const buttonStyle = {
+
 width: "100%",
 padding: "14px",
 backgroundColor: "#22c55e",
@@ -181,6 +241,7 @@ borderRadius: "8px",
 fontWeight: "700",
 cursor: "pointer",
 fontSize: "15px",
+
 };
 
 export default Login;

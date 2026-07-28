@@ -1,171 +1,276 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 function Signup() {
+
+  const navigate = useNavigate();
+
+  const [signupData, setSignupData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+
+  const handleContinue = () => {
+
+    if (
+      !signupData.name ||
+      !signupData.email ||
+      !signupData.password ||
+      !signupData.confirmPassword
+    ) {
+      alert("Please fill in all fields.");
+      return;
+    }
+
+
+    if (signupData.password !== signupData.confirmPassword) {
+      alert("Passwords do not match.");
+      return;
+    }
+
+
+    localStorage.setItem(
+      "swiftWalletSignup",
+      JSON.stringify(signupData)
+    );
+
+
+    navigate("/verify-email");
+
+  };
+
+
   return (
     <div
       style={{
-        backgroundColor: "#0d0d0d",
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        position: "relative",
+        backgroundColor:"#0d0d0d",
+        minHeight:"100vh",
+        display:"flex",
+        justifyContent:"center",
+        alignItems:"center",
+        position:"relative",
+        color:"#fff",
       }}
     >
-      {/* Swift Wallet Logo */}
+
       <Link
         to="/"
+        onClick={() => window.scrollTo(0,0)}
         style={{
-          position: "absolute",
-          top: "35px",
-          left: "50px",
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-          textDecoration: "none",
-          cursor: "pointer",
+          position:"absolute",
+          top:"35px",
+          left:"50px",
+          display:"flex",
+          alignItems:"center",
+          gap:"10px",
+          textDecoration:"none",
         }}
       >
+
         <div
           style={{
-            width: "40px",
-            height: "40px",
-            backgroundColor: "#22c55e",
-            borderRadius: "10px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontWeight: "bold",
-            fontSize: "16px",
-            color: "#000",
+            width:"40px",
+            height:"40px",
+            backgroundColor:"#22c55e",
+            borderRadius:"10px",
+            display:"flex",
+            alignItems:"center",
+            justifyContent:"center",
+            fontWeight:"bold",
+            color:"#000",
           }}
         >
           SW
         </div>
 
+
         <span
           style={{
-            color: "#fff",
-            fontWeight: "700",
-            fontSize: "20px",
+            color:"#fff",
+            fontSize:"20px",
+            fontWeight:"700",
           }}
         >
           Swift Wallet
         </span>
+
       </Link>
+
+
 
       <div
         style={{
-          backgroundColor: "#1a1a1a",
-          padding: "40px",
-          borderRadius: "15px",
-          width: "380px",
-          textAlign: "center",
-          border: "1px solid #2a2a2a",
-          boxShadow: "0 0 20px rgba(34,197,94,0.15)",
+          width:"380px",
+          backgroundColor:"#1a1a1a",
+          border:"1px solid #2a2a2a",
+          borderRadius:"15px",
+          padding:"40px",
+          boxShadow:"0 0 20px rgba(34,197,94,0.15)",
+          textAlign:"center",
         }}
       >
+
+
         <h1
           style={{
-            color: "#22c55e",
-            marginBottom: "10px",
-            fontSize: "32px",
+            color:"#22c55e",
+            fontSize:"32px",
+            marginBottom:"10px",
           }}
         >
           Create Account
         </h1>
 
+
         <p
           style={{
-            color: "#aaa",
-            marginBottom: "30px",
-            fontSize: "15px",
+            color:"#999",
+            marginBottom:"30px",
           }}
         >
           Join Swift Wallet and start sending money instantly.
         </p>
 
+
+
         <input
           type="text"
           placeholder="Full Name"
+          autoComplete="off"
           style={inputStyle}
+          value={signupData.name}
+          onChange={(e)=>
+            setSignupData({
+              ...signupData,
+              name:e.target.value,
+            })
+          }
         />
+
+
 
         <input
           type="email"
           placeholder="Email Address"
+          autoComplete="off"
           style={inputStyle}
+          value={signupData.email}
+          onChange={(e)=>
+            setSignupData({
+              ...signupData,
+              email:e.target.value,
+            })
+          }
         />
+
+
 
         <input
           type="password"
           placeholder="Password"
+          autoComplete="new-password"
           style={inputStyle}
+          value={signupData.password}
+          onChange={(e)=>
+            setSignupData({
+              ...signupData,
+              password:e.target.value,
+            })
+          }
         />
+
+
 
         <input
           type="password"
           placeholder="Confirm Password"
+          autoComplete="new-password"
           style={inputStyle}
+          value={signupData.confirmPassword}
+          onChange={(e)=>
+            setSignupData({
+              ...signupData,
+              confirmPassword:e.target.value,
+            })
+          }
         />
 
-        <Link
-          to="/verify-email"
-          style={{ textDecoration: "none" }}
+
+
+        <button
+          onClick={handleContinue}
+          style={buttonStyle}
         >
-          <button style={buttonStyle}>
-            Continue
-          </button>
-        </Link>   
+          Continue
+        </button>
+
+
 
         <p
           style={{
-            color: "#888",
-            marginTop: "25px",
-            fontSize: "14px",
+            color:"#888",
+            marginTop:"25px",
+            fontSize:"14px",
           }}
         >
           Already have an account?{" "}
+
           <Link
             to="/login"
             style={{
-              color: "#22c55e",
-              textDecoration: "none",
-              fontWeight: "600",
+              color:"#22c55e",
+              textDecoration:"none",
+              fontWeight:"600",
             }}
           >
             Log In
           </Link>
+
         </p>
+
+
       </div>
+
     </div>
   );
 }
 
+
+
 const inputStyle = {
-  width: "100%",
-  padding: "14px",
-  marginBottom: "18px",
-  backgroundColor: "#111",
-  border: "1px solid #333",
-  color: "#fff",
-  borderRadius: "8px",
-  outline: "none",
-  boxSizing: "border-box",
-  fontSize: "15px",
+
+  width:"100%",
+  padding:"14px",
+  marginBottom:"18px",
+  backgroundColor:"#111",
+  border:"1px solid #333",
+  color:"#fff",
+  borderRadius:"8px",
+  outline:"none",
+  fontSize:"15px",
+  boxSizing:"border-box",
+
 };
 
+
+
 const buttonStyle = {
-  width: "100%",
-  padding: "14px",
-  backgroundColor: "#22c55e",
-  color: "#000",
-  border: "none",
-  borderRadius: "8px",
-  fontWeight: "700",
-  cursor: "pointer",
-  fontSize: "15px",
+
+  width:"100%",
+  padding:"14px",
+  backgroundColor:"#22c55e",
+  color:"#000",
+  border:"none",
+  borderRadius:"8px",
+  fontWeight:"700",
+  fontSize:"15px",
+  cursor:"pointer",
+
 };
+
+
 
 export default Signup;

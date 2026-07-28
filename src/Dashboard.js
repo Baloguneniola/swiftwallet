@@ -10,10 +10,10 @@ localStorage.getItem("swiftWalletUser") || "User";
 const handleLogout = () => {
 localStorage.removeItem("swiftWalletUser");
 
-```
+
 navigate("/login");
 window.scrollTo(0, 0);
-```
+
 
 };
 
@@ -59,7 +59,6 @@ fontWeight: "bold",
 >
 SW </div>
 
-```
       <span
         style={{
           color: "#fff",
@@ -209,7 +208,7 @@ SW </div>
         amount: "- ₦12,000",
       },
       {
-        name: "Transfer from John",
+        name: "Transfer from Toby",
         date: "5 Days Ago",
         amount: "+ ₦25,000",
       },

@@ -143,6 +143,7 @@ function SendMoney() {
     }
   >
     <option value="">Select Bank</option>
+    <option>Ecobank</option>
     <option>Access Bank</option>
     <option>GTBank</option>
     <option>First Bank</option>
