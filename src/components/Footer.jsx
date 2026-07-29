@@ -13,7 +13,14 @@ const Footer = () => {
         borderTop: "1px solid #1a1a1a",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+      {/* Logo */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+        }}
+      >
         <div
           style={{
             width: "28px",
@@ -42,14 +49,16 @@ const Footer = () => {
         </span>
       </div>
 
+
+      {/* Footer Links */}
       <div
         style={{
           display: "flex",
           gap: "24px",
         }}
       >
-        <a
-          href="#"
+        <Link
+          to="/privacy"
           style={{
             color: "#888",
             textDecoration: "none",
@@ -57,7 +66,7 @@ const Footer = () => {
           }}
         >
           Privacy
-        </a>
+        </Link>
 
         <Link
           to="/terms"
@@ -70,16 +79,16 @@ const Footer = () => {
           Terms
         </Link>
 
-<Link
-  to="/support"
-  style={{
-    color: "#888",
-    textDecoration: "none",
-    fontSize: "13px",
-  }}
->
-  Support
-</Link>
+        <Link
+          to="/support"
+          style={{
+            color: "#888",
+            textDecoration: "none",
+            fontSize: "13px",
+          }}
+        >
+          Support
+        </Link>
 
         <a
           href="#"
@@ -93,13 +102,15 @@ const Footer = () => {
         </a>
       </div>
 
+
+      {/* Copyright */}
       <div
         style={{
           color: "#555",
           fontSize: "12px",
         }}
       >
-        © 2026 Swift Wallet Inc.
+        © 2026 Swift Wallet Inc. All rights reserved.
       </div>
     </footer>
   );

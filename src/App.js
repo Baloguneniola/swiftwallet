@@ -18,6 +18,7 @@ import Features from "./Features"
 import Terms from "./Terms";
 import Support from "./Support";
 import ConfirmTransfer from "./ConfirmTransfer.js";
+import Privacy from "./Privacy";
 
 
 function App() {
@@ -39,8 +40,8 @@ function App() {
         <Route path="/features" element={<Features />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/support" element={<Support />} />
-        <Route path="/confirm-transfer" element={<ConfirmTransfer />}
-/>
+        <Route path="/confirm-transfer" element={<ConfirmTransfer />} />
+        <Route path="/privacy" element={<Privacy />} />
       </Routes>
     </BrowserRouter>
   );
