@@ -8,12 +8,10 @@ const Navbar = () => {
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
+        flexWrap: "wrap",
         padding: "16px 40px",
         backgroundColor: "#0d0d0d",
         borderBottom: "1px solid #1a1a1a",
-        position: "sticky",
-        top: "0",
-        zIndex: "1000",
       }}
     >
       {/* Logo */}
@@ -61,28 +59,21 @@ const Navbar = () => {
           display: "flex",
           gap: "32px",
           alignItems: "center",
+          flexWrap: "wrap",
         }}
       >
-
-        {/* Home Scroll */}
-        <a
-          href="#top"
-          style={{
-            color: "#aaa",
-            textDecoration: "none",
-            fontSize: "14px",
-          }}
+        <Link
+          to="/"
+          onClick={() => window.scrollTo(0, 0)}
+          style={linkStyle}
         >
           Home
-        </a>
+        </Link>
 
 
-        <Link to="/features"
-          style={{
-            color: "#aaa",
-            textDecoration: "none",
-            fontSize: "14px",
-          }}
+        <Link
+          to="/features"
+          style={linkStyle}
         >
           Features
         </Link>
@@ -90,11 +81,7 @@ const Navbar = () => {
 
         <Link
           to="/login"
-          style={{
-            color: "#aaa",
-            textDecoration: "none",
-            fontSize: "14px",
-          }}
+          style={linkStyle}
         >
           Log In
         </Link>
@@ -121,11 +108,17 @@ const Navbar = () => {
             Open an Account
           </button>
         </Link>
-
-
       </div>
     </nav>
   );
 };
+
+
+const linkStyle = {
+  color: "#aaa",
+  textDecoration: "none",
+  fontSize: "14px",
+};
+
 
 export default Navbar;

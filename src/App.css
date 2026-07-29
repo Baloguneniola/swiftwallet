@@ -1,5 +1,74 @@
-.App {
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
   background-color: #0d0d0d;
-  min-height: 100vh;
-  color: #ffffff;
+  color: white;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+button {
+  font-family: inherit;
+}
+
+/* Mobile Responsive */
+
+@media (max-width: 768px) {
+
+  /* Navbar */
+  nav {
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px !important;
+  }
+
+  nav div {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+
+  /* Hero Section */
+  section {
+    flex-direction: column !important;
+    padding: 40px 20px !important;
+    text-align: center;
+  }
+
+  section h1 {
+    font-size: 38px !important;
+  }
+
+  section p {
+    margin: auto;
+  }
+
+
+  /* Buttons */
+  button {
+    width: 100%;
+  }
+
+
+  /* Stats */
+  section div {
+    max-width: 100%;
+  }
+
+
+  /* Footer */
+  footer {
+    flex-direction: column;
+    gap: 20px;
+    text-align: center;
+  }
+
+
+  /* Cards */
+  .card-grid {
+    grid-template-columns: 1fr !important;
+  }
+
 }

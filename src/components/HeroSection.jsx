@@ -3,15 +3,14 @@ import { Link } from 'react-router-dom';
 
 const HeroSection = () => {
   return (
-    <section
+      <section
       style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '60px 40px',
-        backgroundColor: '#0d0d0d',
-        gap: '40px',
-      }}
+        display:'flex',
+        justifyContent:'space-between',
+        alignItems:'center',
+        padding:'60px 40px',
+        flexWrap:"wrap",
+    }}
     >
       {/* Left Content */}
       <div style={{ flex: 1, maxWidth: '500px' }}>
@@ -22,7 +21,7 @@ const HeroSection = () => {
             lineHeight: '1.1',
             marginBottom: '20px',
             color: '#fff',
-          }}
+            }}
         >
           Send money
           <br />

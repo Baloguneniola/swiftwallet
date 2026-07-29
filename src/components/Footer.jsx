@@ -10,9 +10,12 @@ const Footer = () => {
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
+        flexWrap: "wrap",
+        gap: "20px",
         borderTop: "1px solid #1a1a1a",
       }}
     >
+
       {/* Logo */}
       <div
         style={{
@@ -38,6 +41,7 @@ const Footer = () => {
           SW
         </div>
 
+
         <span
           style={{
             fontWeight: "700",
@@ -55,51 +59,41 @@ const Footer = () => {
         style={{
           display: "flex",
           gap: "24px",
+          flexWrap: "wrap",
         }}
       >
+
         <Link
           to="/privacy"
-          style={{
-            color: "#888",
-            textDecoration: "none",
-            fontSize: "13px",
-          }}
+          style={footerLink}
         >
           Privacy
         </Link>
 
+
         <Link
           to="/terms"
-          style={{
-            color: "#888",
-            textDecoration: "none",
-            fontSize: "13px",
-          }}
+          style={footerLink}
         >
           Terms
         </Link>
 
+
         <Link
           to="/support"
-          style={{
-            color: "#888",
-            textDecoration: "none",
-            fontSize: "13px",
-          }}
+          style={footerLink}
         >
           Support
         </Link>
 
+
         <a
           href="#"
-          style={{
-            color: "#888",
-            textDecoration: "none",
-            fontSize: "13px",
-          }}
+          style={footerLink}
         >
           Careers
         </a>
+
       </div>
 
 
@@ -112,8 +106,17 @@ const Footer = () => {
       >
         © 2026 Swift Wallet Inc. All rights reserved.
       </div>
+
     </footer>
   );
 };
+
+
+const footerLink = {
+  color: "#888",
+  textDecoration: "none",
+  fontSize: "13px",
+};
+
 
 export default Footer;
