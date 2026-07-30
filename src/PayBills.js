@@ -2,8 +2,86 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
 function PayBills() {
+  const [balance, setBalance] = useState(200350);
+
   const [selectedBill, setSelectedBill] = useState("");
+  const [provider, setProvider] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
   const [amount, setAmount] = useState("");
+
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [transactionId, setTransactionId] = useState("");
+
+  const [recentPayments, setRecentPayments] = useState([
+    {
+      service: "Electricity",
+      amount: "- ₦12,000",
+      date: "Today",
+    },
+    {
+      service: "DSTV",
+      amount: "- ₦8,500",
+      date: "Yesterday",
+    },
+    {
+      service: "MTN Airtime",
+      amount: "- ₦2,000",
+      date: "Last Week",
+    },
+  ]);
+
+  const handlePayBill = () => {
+    if (
+      !selectedBill ||
+      !provider ||
+      !accountNumber ||
+      !amount
+    ) {
+      alert("Please complete all fields.");
+      return;
+    }
+
+    const billAmount = Number(amount);
+
+    if (billAmount <= 0) {
+      alert("Enter a valid amount.");
+      return;
+    }
+
+    if (billAmount > balance) {
+      alert("Insufficient balance.");
+      return;
+    }
+
+    setLoading(true);
+
+    setTimeout(() => {
+      setBalance((prev) => prev - billAmount);
+
+      setRecentPayments((prev) => [
+        {
+          service: selectedBill,
+          amount: `- ₦${billAmount.toLocaleString("en-NG")}`,
+          date: "Just now",
+        },
+        ...prev,
+      ]);
+
+      setTransactionId(
+        "TXN" + Math.floor(Math.random() * 1000000)
+      );
+
+      setSuccessMessage("Bill paid successfully ✅");
+
+      setSelectedBill("");
+      setProvider("");
+      setAccountNumber("");
+      setAmount("");
+
+      setLoading(false);
+    }, 1500);
+  };
 
   return (
     <div
@@ -13,7 +91,8 @@ function PayBills() {
         color: "#fff",
       }}
     >
-      {/* Navbar */}
+      {/* HEADER */}
+
       <div
         style={{
           display: "flex",
@@ -61,8 +140,8 @@ function PayBills() {
         </Link>
       </div>
 
+      {/* MAIN */}
 
-      {/* Main */}
       <div
         style={{
           maxWidth: "700px",
@@ -70,7 +149,6 @@ function PayBills() {
           padding: "0 20px",
         }}
       >
-
         <h1
           style={{
             color: "#22c55e",
@@ -90,205 +168,72 @@ function PayBills() {
           Pay your everyday bills quickly and securely.
         </p>
 
+        {/* BALANCE */}
 
+        <div style={cardStyle}>
+          <p style={{ color: "#999" }}>
+            Available Balance
+          </p>
 
-        {/* Popular Services */}
-        <div
-          style={{
-            backgroundColor: "#1a1a1a",
-            border: "1px solid #2a2a2a",
-            borderRadius: "15px",
-            padding: "30px",
-            marginBottom: "30px",
-          }}
-        >
-
-          <h3
+          <h2
             style={{
               color: "#22c55e",
-              marginBottom: "20px",
+              fontSize: "40px",
+              margin: 0,
             }}
           >
-            Popular Services
-          </h3>
-
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(2,1fr)",
-              gap: "15px",
-            }}
-          >
-
-            {[
-              {
-                name: "Electricity",
-                icon: "⚡",
-              },
-              {
-                name: "DSTV",
-                icon: "📺",
-              },
-              {
-                name: "Wi-Fi",
-                icon: "📶",
-              },
-              {
-                name: "Airtime",
-                icon: "📱",
-              },
-            ].map((service) => (
-
-              <button
-                key={service.name}
-                onClick={() => setSelectedBill(service.name)}
-                style={{
-                  backgroundColor:
-                    selectedBill === service.name
-                      ? "#22c55e"
-                      : "#111",
-
-                  color:
-                    selectedBill === service.name
-                      ? "#000"
-                      : "#fff",
-
-                  border: "1px solid #333",
-                  borderRadius: "10px",
-                  padding: "18px",
-                  cursor: "pointer",
-                  fontWeight: "600",
-                  fontSize: "15px",
-                }}
-              >
-                {service.icon} {service.name}
-              </button>
-
-            ))}
-
-          </div>
-
+            ₦{balance.toLocaleString("en-NG")}.00
+          </h2>
         </div>
 
+        {/* BILL PAYMENT */}
 
-
-        {/* Bill Details */}
         <div
           style={{
-            backgroundColor: "#1a1a1a",
-            border: "1px solid #2a2a2a",
-            borderRadius: "15px",
-            padding: "30px",
-            marginBottom: "30px",
+            ...cardStyle,
+            marginTop: "25px",
           }}
         >
+          <h2 style={titleStyle}>
+            🧾 Pay a Bill
+          </h2>
 
-          <h3
-            style={{
-              color: "#22c55e",
-              marginBottom: "20px",
-            }}
+          <p style={textStyle}>
+            Select a service and enter your payment details.
+          </p>
+
+          <select
+            style={inputStyle}
+            value={selectedBill}
+            onChange={(e) => setSelectedBill(e.target.value)}
           >
-            Bill Details
-          </h3>
-
-
-
-          {/* Dropdown */}
-          <div
-            style={{
-              position: "relative",
-            }}
-          >
-
-            <select
-              style={inputStyle}
-              value={selectedBill}
-              onChange={(e) => setSelectedBill(e.target.value)}
-            >
-
-              <option value="">
-                Choose a bill
-              </option>
-
-              <option value="Electricity">
-                ⚡Electricity
-              </option>
-
-              <option value="Water">
-                💧Water
-              </option>
-
-              <option value="DSTV">
-                📺 DSTV
-              </option>
-
-              <option value="Wi-Fi">
-                📶 Wi-Fi
-              </option>
-
-              <option value="Airtime">
-                📱 Airtime
-              </option>
-
-            </select>
-
-
-            <span
-              style={{
-                position: "absolute",
-                right: "10px",
-                top: "40%",
-                transform: "translateY(-50%)",
-                pointerEvents: "none",
-                color: "#ffff",
-                fontSize: "12px",
-              }}
-            >
-              ▼
-            </span>
-
-          </div>
-
-
+            <option value="">Choose Service</option>
+            <option value="Electricity">⚡ Electricity</option>
+            <option value="Water">💧 Water</option>
+            <option value="DSTV">📺 DSTV</option>
+            <option value="Wi-Fi">📶 Wi-Fi</option>
+            <option value="Airtime">📱 Airtime</option>
+          </select>
 
           <input
-            type="text"
-            placeholder={
-              selectedBill === "Electricity"
-                ? "Provider (e.g. IKEDC)"
-                : selectedBill === "DSTV"
-                ? "Provider (e.g. DSTV)"
-                : selectedBill === "Airtime"
-                ? "Network (e.g. MTN)"
-                : "Provider"
-            }
             style={inputStyle}
+            placeholder="Provider"
+            value={provider}
+            onChange={(e) => setProvider(e.target.value)}
           />
 
-
-
           <input
-            type="text"
-            placeholder={
-              selectedBill === "Electricity"
-                ? "Meter Number"
-                : selectedBill === "DSTV"
-                ? "Smart Card Number"
-                : selectedBill === "Airtime"
-                ? "Phone Number"
-                : "Account Number"
-            }
             style={inputStyle}
+            placeholder="Account / Meter / Phone Number"
+            value={accountNumber}
+            onChange={(e) =>
+              setAccountNumber(e.target.value)
+            }
           />
 
-
-
           <input
-            type="text"
+            style={inputStyle}
             placeholder="Amount (₦)"
-            style={inputStyle}
             value={
               amount
                 ? Number(amount).toLocaleString("en-NG")
@@ -303,162 +248,162 @@ function PayBills() {
             }}
           />
 
-
-          <button style={buttonStyle}>
-            Pay Bill
+          <button
+            style={buttonStyle}
+            onClick={handlePayBill}
+            disabled={loading}
+          >
+            {loading ? "Processing..." : "Pay Bill"}
           </button>
 
+                    {successMessage && (
+            <div
+              style={{
+                marginTop: "25px",
+                padding: "18px",
+                backgroundColor: "#111",
+                border: "1px solid #22c55e",
+                borderRadius: "10px",
+                textAlign: "center",
+              }}
+            >
+              <p
+                style={{
+                  color: "#22c55e",
+                  fontWeight: "700",
+                  marginBottom: "8px",
+                }}
+              >
+                {successMessage}
+              </p>
+
+              <small style={{ color: "#999" }}>
+                Transaction ID: {transactionId}
+              </small>
+            </div>
+          )}
         </div>
 
-                {/* Recent Payments */}
+        {/* RECENT PAYMENTS */}
+
         <div
           style={{
-            backgroundColor:"#1a1a1a",
-            border:"1px solid #2a2a2a",
-            borderRadius:"15px",
-            padding:"30px",
+            ...cardStyle,
+            marginTop: "30px",
           }}
         >
-
-          <h3
+          <h2
             style={{
-              color:"#22c55e",
-              marginBottom:"20px",
+              marginBottom: "20px",
             }}
           >
             Recent Payments
-          </h3>
+          </h2>
 
-
-          {[
-            {
-              service:"Electricity",
-              amount:"- ₦12,000",
-              date:"Today",
-            },
-            {
-              service:"DSTV",
-              amount:"- ₦8,500",
-              date:"Yesterday",
-            },
-            {
-              service:"MTN Airtime",
-              amount:"- ₦2,000",
-              date:"Last Week",
-            },
-
-          ].map((payment)=>(
-
+          {recentPayments.map((payment, index) => (
             <div
-              key={payment.service}
+              key={index}
               style={{
-                display:"flex",
-                justifyContent:"space-between",
-                alignItems:"center",
-                borderBottom:"1px solid #2a2a2a",
-                padding:"15px 0",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "15px 0",
+                borderBottom: "1px solid #2a2a2a",
               }}
             >
-
               <div>
-
-                <div>
+                <p
+                  style={{
+                    margin: 0,
+                    fontWeight: "600",
+                  }}
+                >
                   {payment.service}
-                </div>
-
+                </p>
 
                 <small
                   style={{
-                    color:"#888",
+                    color: "#888",
                   }}
                 >
                   {payment.date}
                 </small>
-
               </div>
-
 
               <span
                 style={{
-                  color:"#ff5f5f",
-                  fontWeight:"700",
+                  color: "#ff5f5f",
+                  fontWeight: "700",
                 }}
               >
                 {payment.amount}
               </span>
-
-
             </div>
-
           ))}
-
-
         </div>
-
-
-
-
 
         <Link
           to="/dashboard"
-          onClick={()=>window.scrollTo(0,0)}
+          onClick={() => window.scrollTo(0, 0)}
           style={{
-            textDecoration:"none",
+            textDecoration: "none",
           }}
         >
-
           <button
             style={{
               ...buttonStyle,
-              marginTop:"30px",
+              marginTop: "30px",
             }}
           >
             ← Back to Dashboard
           </button>
-
         </Link>
-
-
       </div>
-
     </div>
   );
 }
 
+const cardStyle = {
+  backgroundColor: "#1a1a1a",
+  border: "1px solid #2a2a2a",
+  borderRadius: "15px",
+  padding: "30px",
+};
 
+const titleStyle = {
+  color: "#22c55e",
+  marginBottom: "10px",
+};
 
+const textStyle = {
+  color: "#999",
+  lineHeight: "1.6",
+  marginBottom: "20px",
+};
 
 const inputStyle = {
-
-  width:"100%",
-  padding:"14px 50px 14px 14px",
-  marginBottom:"18px",
-  backgroundColor:"#111",
-  border:"1px solid #333",
-  color:"#fff",
-  borderRadius:"8px",
-  outline:"none",
-  fontSize:"15px",
-  boxSizing:"border-box",
-  appearance:"none",
-
+  width: "100%",
+  padding: "14px",
+  marginBottom: "18px",
+  backgroundColor: "#111",
+  border: "1px solid #333",
+  borderRadius: "8px",
+  color: "#fff",
+  outline: "none",
+  fontSize: "15px",
+  boxSizing: "border-box",
 };
-
-
 
 const buttonStyle = {
-
-  width:"100%",
-  padding:"14px",
-  backgroundColor:"#22c55e",
-  color:"#000",
-  border:"none",
-  borderRadius:"8px",
-  fontWeight:"700",
-  fontSize:"15px",
-  cursor:"pointer",
-
+  width: "100%",
+  padding: "14px",
+  backgroundColor: "#22c55e",
+  color: "#000",
+  border: "none",
+  borderRadius: "8px",
+  fontWeight: "700",
+  fontSize: "15px",
+  cursor: "pointer",
 };
-
 
 export default PayBills;
