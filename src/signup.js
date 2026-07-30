@@ -13,28 +13,94 @@ function Signup() {
   });
 
 
-  const handleContinue = () => {
+  const handleSignup = () => {
 
-    if (
-      !signupData.name ||
-      !signupData.email ||
-      !signupData.password ||
-      !signupData.confirmPassword
-    ) {
-      alert("Please fill in all fields.");
+    const {
+      name,
+      email,
+      password,
+      confirmPassword
+    } = signupData;
+
+
+    if (!name || !email || !password || !confirmPassword) {
+      alert("Please complete all fields");
       return;
     }
 
 
-    if (signupData.password !== signupData.confirmPassword) {
-      alert("Passwords do not match.");
+    if (password !== confirmPassword) {
+      alert("Passwords do not match");
       return;
     }
+
+
+    const existingUsers =
+      JSON.parse(localStorage.getItem("swiftWalletUsers")) || [];
+
+
+    const userExists = existingUsers.find(
+      (user) => user.email === email
+    );
+
+
+    if (userExists) {
+      alert("Account already exists");
+      return;
+    }
+
+
+
+    const newUser = {
+
+      id: Date.now(),
+
+      name: name,
+
+      email: email,
+
+      password: password,
+
+
+      balance: 50000,
+
+
+      transactions: [
+        {
+          name: "Welcome to Swift Wallet",
+          date: "Today",
+          amount: "+ ₦50,000",
+        }
+      ],
+
+
+      topUps: [],
+
+
+      payments: [],
+
+
+      accountNumber:
+        Math.floor(1000000000 + Math.random() * 9000000000)
+
+    };
+
 
 
     localStorage.setItem(
-      "swiftWalletSignup",
-      JSON.stringify(signupData)
+      "swiftWalletUsers",
+      JSON.stringify([
+        ...existingUsers,
+        newUser
+      ])
+    );
+
+
+
+    // Save temporary signup user
+    localStorage.setItem(
+      "pendingUserEmail",
+      email
     );
 
 
@@ -43,7 +109,9 @@ function Signup() {
   };
 
 
+
   return (
+
     <div
       style={{
         backgroundColor:"#0d0d0d",
@@ -56,9 +124,9 @@ function Signup() {
       }}
     >
 
+
       <Link
         to="/"
-        onClick={() => window.scrollTo(0,0)}
         style={{
           position:"absolute",
           top:"35px",
@@ -97,7 +165,9 @@ function Signup() {
           Swift Wallet
         </span>
 
+
       </Link>
+
 
 
 
@@ -125,6 +195,7 @@ function Signup() {
         </h1>
 
 
+
         <p
           style={{
             color:"#999",
@@ -133,6 +204,7 @@ function Signup() {
         >
           Join Swift Wallet and start sending money instantly.
         </p>
+
 
 
 
@@ -145,7 +217,7 @@ function Signup() {
           onChange={(e)=>
             setSignupData({
               ...signupData,
-              name:e.target.value,
+              name:e.target.value
             })
           }
         />
@@ -161,7 +233,7 @@ function Signup() {
           onChange={(e)=>
             setSignupData({
               ...signupData,
-              email:e.target.value,
+              email:e.target.value
             })
           }
         />
@@ -177,7 +249,7 @@ function Signup() {
           onChange={(e)=>
             setSignupData({
               ...signupData,
-              password:e.target.value,
+              password:e.target.value
             })
           }
         />
@@ -193,19 +265,21 @@ function Signup() {
           onChange={(e)=>
             setSignupData({
               ...signupData,
-              confirmPassword:e.target.value,
+              confirmPassword:e.target.value
             })
           }
         />
 
 
 
+
         <button
-          onClick={handleContinue}
+          onClick={handleSignup}
           style={buttonStyle}
         >
           Continue
         </button>
+
 
 
 
@@ -218,6 +292,7 @@ function Signup() {
         >
           Already have an account?{" "}
 
+
           <Link
             to="/login"
             style={{
@@ -229,12 +304,16 @@ function Signup() {
             Log In
           </Link>
 
+
         </p>
+
 
 
       </div>
 
+
     </div>
+
   );
 }
 
@@ -250,8 +329,8 @@ const inputStyle = {
   color:"#fff",
   borderRadius:"8px",
   outline:"none",
-  fontSize:"15px",
   boxSizing:"border-box",
+  fontSize:"15px",
 
 };
 
