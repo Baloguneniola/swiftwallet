@@ -12,9 +12,12 @@ const Navbar = () => {
         padding: "16px 40px",
         backgroundColor: "#0d0d0d",
         borderBottom: "1px solid #1a1a1a",
+        
+        position: "sticky",
+        top: "0",
+        zIndex: "1000",
       }}
     >
-      {/* Logo */}
       <Link
         to="/"
         style={{
@@ -52,8 +55,6 @@ const Navbar = () => {
         </span>
       </Link>
 
-
-      {/* Navigation Links */}
       <div
         style={{
           display: "flex",
@@ -70,7 +71,6 @@ const Navbar = () => {
           Home
         </Link>
 
-
         <Link
           to="/features"
           style={linkStyle}
@@ -78,14 +78,12 @@ const Navbar = () => {
           Features
         </Link>
 
-
         <Link
           to="/login"
           style={linkStyle}
         >
           Log In
         </Link>
-
 
         <Link
           to="/signup"
@@ -113,12 +111,10 @@ const Navbar = () => {
   );
 };
 
-
 const linkStyle = {
   color: "#aaa",
   textDecoration: "none",
   fontSize: "14px",
 };
-
 
 export default Navbar;
