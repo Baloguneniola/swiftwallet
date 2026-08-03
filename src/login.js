@@ -10,37 +10,45 @@ const navigate = useNavigate();
 
 const handleLogin = () => {
 
-if (email.trim() === "") {
-  alert("Please enter your email address.");
-  return;
-}
+  if (email.trim() === "") {
+    alert("Please enter your email address.");
+    return;
+  }
 
+  if (password.trim() === "") {
+    alert("Please enter your password.");
+    return;
+  }
 
-if (password.trim() === "") {
-  alert("Please enter your password.");
-  return;
-}
+  const users =
+    JSON.parse(
+      localStorage.getItem("swiftWalletUsers")
+    ) || [];
 
+  const user = users.find(
+    (u) =>
+      u.email === email &&
+      u.password === password
+  );
 
-const username = email
-  .split("@")[0]
-  .split(/[._-]/)[0];
+  if (!user) {
+    alert("Invalid email or password.");
+    return;
+  }
 
+  localStorage.setItem(
+    "swiftWalletCurrentUser",
+    JSON.stringify(user)
+  );
 
-const formattedName =
-  username.charAt(0).toUpperCase() +
-  username.slice(1).toLowerCase();
+  localStorage.setItem(
+    "swiftWalletUser",
+    user.name
+  );
 
+  navigate("/dashboard");
 
-localStorage.setItem(
-  "swiftWalletUser",
-  formattedName
-);
-
-
-navigate("/dashboard");
-
-window.scrollTo(0, 0);
+  window.scrollTo(0, 0);
 
 };
 
