@@ -19,6 +19,7 @@ import Terms from "./Terms";
 import Support from "./Support";
 import ConfirmTransfer from "./ConfirmTransfer.js";
 import Privacy from "./Privacy";
+import EnterPin from "./EnterPin";
 
 
 function App() {
@@ -41,7 +42,8 @@ function App() {
         <Route path="/terms" element={<Terms />} />
         <Route path="/support" element={<Support />} />
         <Route path="/confirm-transfer" element={<ConfirmTransfer />} />
-        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/enter-pin" element={<EnterPin />} />
+        
       </Routes>
     </BrowserRouter>
   );

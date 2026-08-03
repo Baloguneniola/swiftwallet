@@ -9,6 +9,7 @@ function CreatePin() {
   const [confirmPin, setConfirmPin] = useState("");
 
 
+
   const finishSetup = () => {
 
     const signupData = JSON.parse(
@@ -45,9 +46,7 @@ function CreatePin() {
 
       pin: pin,
 
-
       balance: 200350,
-
 
       accountNumber:
         Math.floor(
@@ -67,7 +66,6 @@ function CreatePin() {
 
       payments: [],
 
-
       topUps: [],
 
     };
@@ -82,8 +80,7 @@ function CreatePin() {
 
 
     const userExists = existingUsers.some(
-      (user) =>
-        user.email === newUser.email
+      (user) => user.email === newUser.email
     );
 
 
@@ -105,6 +102,13 @@ function CreatePin() {
 
 
 
+    localStorage.setItem(
+      "swiftWalletCurrentUser",
+      JSON.stringify(newUser)
+    );
+
+
+
     localStorage.removeItem(
       "swiftWalletSignup"
     );
@@ -117,7 +121,10 @@ function CreatePin() {
 
 
 
+
+
   return (
+
     <div
       style={{
         backgroundColor:"#0d0d0d",
@@ -130,6 +137,9 @@ function CreatePin() {
     >
 
 
+
+      {/* Swift Wallet Logo */}
+
       <Link
         to="/"
         style={{
@@ -140,9 +150,9 @@ function CreatePin() {
           alignItems:"center",
           gap:"10px",
           textDecoration:"none",
+          cursor:"pointer",
         }}
       >
-
 
         <div
           style={{
@@ -154,6 +164,7 @@ function CreatePin() {
             alignItems:"center",
             justifyContent:"center",
             fontWeight:"bold",
+            fontSize:"16px",
             color:"#000",
           }}
         >
@@ -161,17 +172,15 @@ function CreatePin() {
         </div>
 
 
-
         <span
           style={{
             color:"#fff",
-            fontSize:"20px",
             fontWeight:"700",
+            fontSize:"20px",
           }}
         >
           Swift Wallet
         </span>
-
 
       </Link>
 
@@ -179,15 +188,17 @@ function CreatePin() {
 
 
 
+      {/* Card */}
+
       <div
         style={{
           backgroundColor:"#1a1a1a",
           padding:"40px",
           borderRadius:"15px",
-          width:"420px",
+          width:"450px",
           textAlign:"center",
           border:"1px solid #2a2a2a",
-          boxShadow:"0 0 20px rgba(34,197,94,0.15)",
+          boxShadow:"0 0 20px rgba(34,197,green,0.15)",
         }}
       >
 
@@ -206,6 +217,8 @@ function CreatePin() {
 
 
 
+        {/* Progress Bar */}
+
         <div
           style={{
             width:"100%",
@@ -223,7 +236,7 @@ function CreatePin() {
               height:"100%",
               backgroundColor:"#22c55e",
             }}
-          ></div>
+          />
 
         </div>
 
@@ -240,6 +253,7 @@ function CreatePin() {
         >
           Create Your PIN
         </h1>
+
 
 
 
@@ -262,13 +276,13 @@ function CreatePin() {
         <input
           type="password"
           inputMode="numeric"
-          pattern="[0-9]*"
-          placeholder="Enter 4-digit PIN"
           maxLength="4"
-          style={inputStyle}
+          placeholder="Enter 4-digit PIN"
           value={pin}
           onChange={(e)=>setPin(e.target.value)}
+          style={inputStyle}
         />
+
 
 
 
@@ -276,12 +290,11 @@ function CreatePin() {
         <input
           type="password"
           inputMode="numeric"
-          pattern="[0-9]*"
-          placeholder="Confirm PIN"
           maxLength="4"
-          style={inputStyle}
+          placeholder="Confirm PIN"
           value={confirmPin}
           onChange={(e)=>setConfirmPin(e.target.value)}
+          style={inputStyle}
         />
 
 
@@ -310,11 +323,15 @@ function CreatePin() {
         </p>
 
 
+
       </div>
 
 
+
     </div>
+
   );
+
 }
 
 
@@ -339,6 +356,7 @@ const inputStyle = {
 
 
 
+
 const buttonStyle = {
 
   width:"100%",
@@ -352,6 +370,7 @@ const buttonStyle = {
   fontSize:"15px",
 
 };
+
 
 
 
