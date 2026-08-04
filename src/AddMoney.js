@@ -1,23 +1,24 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 function AddMoney() {
+  const navigate = useNavigate();
 
-  const [currentUser, setCurrentUser] = useState(
-    JSON.parse(localStorage.getItem("swiftWalletCurrentUser"))
-  );
+  const currentUser =
+    JSON.parse(localStorage.getItem("swiftWalletCurrentUser")) || null;
+
 
   const [amount, setAmount] = useState("");
+
   const [balance, setBalance] = useState(
     currentUser?.balance || 0
   );
 
-  const [showCardForm, setShowCardForm] = useState(false);
-  const [selectedCard, setSelectedCard] = useState("saved");
-  const [loading, setLoading] = useState(false);
 
-  const [successMessage, setSuccessMessage] = useState("");
-  const [transactionId, setTransactionId] = useState("");
+  const [showCardForm, setShowCardForm] = useState(false);
+
+  const [selectedCard, setSelectedCard] = useState("saved");
+
 
   const [cardDetails, setCardDetails] = useState({
     name: "",
@@ -29,17 +30,19 @@ function AddMoney() {
 
   const recentTopUps =
     currentUser?.transactions
-      ?.filter((transaction) =>
-        transaction.type === "credit"
+      ?.filter(
+        (transaction) =>
+          transaction.type === "credit"
       )
       .slice(-5)
       .reverse() || [];
 
 
+
   const handleContinue = () => {
 
-    if (!amount) {
-      alert("Please enter an amount");
+    if (!amount || Number(amount) <= 0) {
+      alert("Please enter a valid amount.");
       return;
     }
 
@@ -48,7 +51,14 @@ function AddMoney() {
   };
 
 
+
   const handleAddMoney = () => {
+
+    if (!currentUser) {
+      alert("User session not found.");
+      return;
+    }
+
 
     if (
       selectedCard === "new" &&
@@ -59,105 +69,19 @@ function AddMoney() {
         !cardDetails.cvv
       )
     ) {
-      alert("Please complete card details");
+      alert("Please complete card details.");
       return;
     }
 
 
-    const newAmount = Number(amount);
-
-
-    if (!currentUser) {
-      alert("User session not found.");
-      return;
-    }
-
-
-    setLoading(true);
-
-
-    setTimeout(() => {
-
-      const newTransaction = {
-        name: "Wallet Top Up",
-        date: "Today",
-        amount:
-          "+ ₦" +
-          newAmount.toLocaleString("en-NG"),
-        type: "credit",
-        method: "Debit Card",
-        transactionId:
-          "TXN" +
-          Math.floor(Math.random() * 1000000),
-      };
-
-
-      const updatedUser = {
-        ...currentUser,
-        balance:
-          currentUser.balance + newAmount,
-        transactions: [
-          ...(currentUser.transactions || []),
-          newTransaction,
-        ],
-      };
-
-
-      const users =
-        JSON.parse(
-          localStorage.getItem("swiftWalletUsers")
-        ) || [];
-
-
-      const updatedUsers = users.map((user) =>
-        user.email === updatedUser.email
-          ? updatedUser
-          : user
-      );
-
-
-      localStorage.setItem(
-        "swiftWalletUsers",
-        JSON.stringify(updatedUsers)
-      );
-
-
-      localStorage.setItem(
-        "swiftWalletCurrentUser",
-        JSON.stringify(updatedUser)
-      );
-
-
-      setCurrentUser(updatedUser);
-      setBalance(updatedUser.balance);
-
-
-      setTransactionId(
-        newTransaction.transactionId
-      );
-
-
-      setSuccessMessage(
-        "Money added successfully"
-      );
-
-
-      setAmount("");
-      setShowCardForm(false);
-      setLoading(false);
-
-
-      setCardDetails({
-        name: "",
-        number: "",
-        expiry: "",
-        cvv: "",
-      });
-
-
-    },1500);
+    navigate("/add-money-pin", {
+      state: {
+        amount: Number(amount),
+      },
+    });
 
   };
+
 
 
   return (
@@ -227,6 +151,7 @@ function AddMoney() {
         }}
       >
 
+
         <h1
           style={{
             color:"#22c55e",
@@ -266,7 +191,8 @@ function AddMoney() {
 
         </div>
 
-                <div
+
+        <div
           style={{
             ...cardStyle,
             marginTop:"25px",
@@ -288,8 +214,8 @@ function AddMoney() {
             placeholder="Amount (₦)"
             value={
               amount
-                ? Number(amount).toLocaleString("en-NG")
-                : ""
+              ? Number(amount).toLocaleString("en-NG")
+              : ""
             }
             onChange={(e)=>{
 
@@ -304,7 +230,6 @@ function AddMoney() {
           />
 
 
-
           {!showCardForm && (
 
             <button
@@ -315,7 +240,6 @@ function AddMoney() {
             </button>
 
           )}
-
 
 
           {showCardForm && (
@@ -366,9 +290,7 @@ function AddMoney() {
 
               </div>
 
-
-
-              {selectedCard === "new" && (
+                            {selectedCard === "new" && (
 
                 <>
 
@@ -398,39 +320,30 @@ function AddMoney() {
                   />
 
 
-                  <div
-                    style={{
-                      display:"flex",
-                      gap:"15px",
-                    }}
-                  >
-
-                    <input
-                      style={inputStyle}
-                      placeholder="Expiry Date"
-                      value={cardDetails.expiry}
-                      onChange={(e)=>
-                        setCardDetails({
-                          ...cardDetails,
-                          expiry:e.target.value,
-                        })
-                      }
-                    />
+                  <input
+                    style={inputStyle}
+                    placeholder="Expiry Date"
+                    value={cardDetails.expiry}
+                    onChange={(e)=>
+                      setCardDetails({
+                        ...cardDetails,
+                        expiry:e.target.value,
+                      })
+                    }
+                  />
 
 
-                    <input
-                      style={inputStyle}
-                      placeholder="CVV"
-                      value={cardDetails.cvv}
-                      onChange={(e)=>
-                        setCardDetails({
-                          ...cardDetails,
-                          cvv:e.target.value,
-                        })
-                      }
-                    />
-
-                  </div>
+                  <input
+                    style={inputStyle}
+                    placeholder="CVV"
+                    value={cardDetails.cvv}
+                    onChange={(e)=>
+                      setCardDetails({
+                        ...cardDetails,
+                        cvv:e.target.value,
+                      })
+                    }
+                  />
 
                 </>
 
@@ -441,56 +354,16 @@ function AddMoney() {
               <button
                 style={buttonStyle}
                 onClick={handleAddMoney}
-                disabled={loading}
               >
-
-                {
-                  loading
-                  ? "Processing..."
-                  : "Add Money"
-                }
-
+                Add Money
               </button>
+
 
             </>
 
           )}
 
-
-
-          {successMessage && (
-
-            <div
-              style={{
-                textAlign:"center",
-                marginTop:"20px",
-              }}
-            >
-
-              <p
-                style={{
-                  color:"#22c55e",
-                  fontWeight:"700",
-                }}
-              >
-                {successMessage}
-              </p>
-
-
-              <small
-                style={{
-                  color:"#888",
-                }}
-              >
-                Transaction ID: {transactionId}
-              </small>
-
-            </div>
-
-          )}
-
         </div>
-
 
 
 
@@ -504,6 +377,7 @@ function AddMoney() {
           <h2>
             Recent Top Ups
           </h2>
+
 
 
           {recentTopUps.map((item,index)=>(
@@ -524,6 +398,7 @@ function AddMoney() {
                   {item.name}
                 </span>
 
+
                 <small
                   style={{
                     display:"block",
@@ -537,6 +412,7 @@ function AddMoney() {
               </div>
 
 
+
               <span
                 style={{
                   color:"#22c55e",
@@ -546,9 +422,11 @@ function AddMoney() {
                 {item.amount}
               </span>
 
+
             </div>
 
           ))}
+
 
         </div>
 
@@ -591,9 +469,11 @@ const cardStyle = {
 };
 
 
+
 const titleStyle = {
   color:"#22c55e",
 };
+
 
 
 const labelStyle = {
@@ -601,9 +481,11 @@ const labelStyle = {
 };
 
 
+
 const textStyle = {
   color:"#999",
 };
+
 
 
 const inputStyle = {
@@ -619,6 +501,7 @@ const inputStyle = {
 };
 
 
+
 const buttonStyle = {
   width:"100%",
   padding:"14px",
@@ -629,6 +512,7 @@ const buttonStyle = {
   fontWeight:"700",
   cursor:"pointer",
 };
+
 
 
 const cardOption = {
@@ -643,4 +527,6 @@ const cardOption = {
 };
 
 
+
 export default AddMoney;
+

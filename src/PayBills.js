@@ -1,33 +1,39 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 function PayBills() {
-  const currentUser = JSON.parse(
-    localStorage.getItem("swiftWalletCurrentUser")
-  );
+
+  const navigate = useNavigate();
+
+  const currentUser =
+    JSON.parse(
+      localStorage.getItem("swiftWalletCurrentUser")
+    ) || null;
+
 
   const [selectedBill, setSelectedBill] = useState("");
   const [provider, setProvider] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [amount, setAmount] = useState("");
 
-  const [loading, setLoading] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [transactionId, setTransactionId] = useState("");
 
-  const [balance, setBalance] = useState(
-    currentUser?.balance || 0
-  );
+  const balance =
+    currentUser?.balance || 0;
 
-  const [recentPayments, setRecentPayments] = useState(
+
+  const recentPayments =
     currentUser?.transactions
-      ?.filter((transaction) => transaction.type === "debit")
-      .slice(-3)
-      .reverse() || []
-  );
+      ?.filter(
+        (transaction) =>
+          transaction.type === "debit"
+      )
+      .slice(-5)
+      .reverse() || [];
 
 
-  const handlePayBill = () => {
+
+  const handleContinue = () => {
+
     if (
       !selectedBill ||
       !provider ||
@@ -54,94 +60,23 @@ function PayBills() {
     }
 
 
-    setLoading(true);
+    navigate("/pay-bills-pin", {
 
+      state: {
+        selectedBill,
+        provider,
+        accountNumber,
+        amount: billAmount,
+      },
 
-    setTimeout(() => {
-
-      const newTransaction = {
-        name: `${selectedBill} Payment`,
-        date: new Date().toLocaleDateString(),
-        amount:
-          "- ₦" +
-          billAmount.toLocaleString("en-NG"),
-        type: "debit",
-        description:
-          `${provider} - ${accountNumber}`,
-        transactionId:
-          "TXN" + Math.floor(Math.random() * 1000000),
-      };
-
-
-      const updatedUser = {
-        ...currentUser,
-        balance:
-          currentUser.balance - billAmount,
-        transactions: [
-          ...(currentUser.transactions || []),
-          newTransaction,
-        ],
-      };
-
-
-      const users =
-        JSON.parse(
-          localStorage.getItem("swiftWalletUsers")
-        ) || [];
-
-
-      const updatedUsers = users.map((user) =>
-        user.email === updatedUser.email
-          ? updatedUser
-          : user
-      );
-
-
-      localStorage.setItem(
-        "swiftWalletUsers",
-        JSON.stringify(updatedUsers)
-      );
-
-
-      localStorage.setItem(
-        "swiftWalletCurrentUser",
-        JSON.stringify(updatedUser)
-      );
-
-
-      setBalance(updatedUser.balance);
-
-
-      setRecentPayments([
-        newTransaction,
-        ...recentPayments,
-      ]);
-
-
-      setTransactionId(
-        newTransaction.transactionId
-      );
-
-
-      setSuccessMessage(
-        "Bill paid successfully."
-      );
-
-
-      setSelectedBill("");
-      setProvider("");
-      setAccountNumber("");
-      setAmount("");
-
-      setLoading(false);
-
-
-    },1500);
+    });
 
   };
 
 
+
   return (
+
     <div
       style={{
         backgroundColor:"#0d0d0d",
@@ -152,8 +87,6 @@ function PayBills() {
 
       <div
         style={{
-          display:"flex",
-          alignItems:"center",
           padding:"25px 50px",
           borderBottom:"1px solid #222",
         }}
@@ -197,9 +130,12 @@ function PayBills() {
             Swift Wallet
           </span>
 
+
         </Link>
 
+
       </div>
+
 
 
       <div
@@ -210,11 +146,11 @@ function PayBills() {
         }}
       >
 
+
         <h1
           style={{
             color:"#22c55e",
             fontSize:"38px",
-            marginBottom:"10px",
           }}
         >
           Pay Bills
@@ -234,7 +170,11 @@ function PayBills() {
 
         <div style={cardStyle}>
 
-          <p style={{color:"#999"}}>
+          <p
+            style={{
+              color:"#999",
+            }}
+          >
             Available Balance
           </p>
 
@@ -247,10 +187,9 @@ function PayBills() {
             }}
           >
             ₦
-            {balance.toLocaleString("en-NG",{
-              minimumFractionDigits:2,
-            })}
+            {balance.toLocaleString("en-NG")}
           </h2>
+
 
         </div>
 
@@ -273,33 +212,36 @@ function PayBills() {
           </p>
 
 
+
           <select
             style={inputStyle}
             value={selectedBill}
-            onChange={(e)=>setSelectedBill(e.target.value)}
+            onChange={(e)=>
+              setSelectedBill(e.target.value)
+            }
           >
 
             <option value="">
               Choose Service
             </option>
 
-            <option>
+            <option value="Electricity">
               Electricity
             </option>
 
-            <option>
+            <option value="Water">
               Water
             </option>
 
-            <option>
+            <option value="DSTV">
               DSTV
             </option>
 
-            <option>
+            <option value="Wi-Fi">
               Wi-Fi
             </option>
 
-            <option>
+            <option value="Airtime">
               Airtime
             </option>
 
@@ -311,7 +253,9 @@ function PayBills() {
             style={inputStyle}
             placeholder="Provider"
             value={provider}
-            onChange={(e)=>setProvider(e.target.value)}
+            onChange={(e)=>
+              setProvider(e.target.value)
+            }
           />
 
 
@@ -320,7 +264,9 @@ function PayBills() {
             style={inputStyle}
             placeholder="Account / Meter / Phone Number"
             value={accountNumber}
-            onChange={(e)=>setAccountNumber(e.target.value)}
+            onChange={(e)=>
+              setAccountNumber(e.target.value)
+            }
           />
 
 
@@ -336,7 +282,8 @@ function PayBills() {
             onChange={(e)=>{
 
               const value =
-              e.target.value.replace(/,/g,"");
+                e.target.value.replace(/,/g,"");
+
 
               if(!isNaN(value)){
                 setAmount(value);
@@ -349,50 +296,14 @@ function PayBills() {
 
           <button
             style={buttonStyle}
-            onClick={handlePayBill}
-            disabled={loading}
+            onClick={handleContinue}
           >
-            {
-              loading
-              ? "Processing..."
-              : "Pay Bill"
-            }
+            Continue
           </button>
 
 
-
-          {successMessage && (
-
-            <div
-              style={{
-                marginTop:"25px",
-                padding:"18px",
-                backgroundColor:"#111",
-                border:"1px solid #22c55e",
-                borderRadius:"10px",
-                textAlign:"center",
-              }}
-            >
-
-              <p
-                style={{
-                  color:"#22c55e",
-                  fontWeight:"700",
-                }}
-              >
-                {successMessage}
-              </p>
-
-
-              <small style={{color:"#999"}}>
-                Transaction ID: {transactionId}
-              </small>
-
-            </div>
-
-          )}
-
         </div>
+
 
 
 
@@ -408,53 +319,77 @@ function PayBills() {
           </h2>
 
 
-          {recentPayments.map((payment,index)=>(
 
-            <div
-              key={index}
-              style={{
-                display:"flex",
-                justifyContent:"space-between",
-                padding:"15px 0",
-                borderBottom:"1px solid #2a2a2a",
-              }}
-            >
+          {
+            recentPayments.length === 0 ?
 
-              <div>
+            <p style={{color:"#999"}}>
+              No payments yet.
+            </p>
 
-                <p style={{margin:0}}>
-                  {payment.name}
-                </p>
+            :
+
+            recentPayments.map(
+              (payment,index)=>(
+
+              <div
+                key={index}
+                style={{
+                  display:"flex",
+                  justifyContent:"space-between",
+                  padding:"15px 0",
+                  borderBottom:"1px solid #2a2a2a",
+                }}
+              >
+
+                <div>
+
+                  <p
+                    style={{
+                      margin:0,
+                    }}
+                  >
+                    {payment.name}
+                  </p>
 
 
-                <small style={{color:"#888"}}>
-                  {payment.date}
-                </small>
+                  <small
+                    style={{
+                      color:"#888",
+                    }}
+                  >
+                    {payment.date}
+                  </small>
+
+
+                </div>
+
+
+                <span
+                  style={{
+                    color:"#ff5f5f",
+                    fontWeight:"700",
+                  }}
+                >
+                  {payment.amount}
+                </span>
+
 
               </div>
 
+            ))
 
-              <span
-                style={{
-                  color:"#ff5f5f",
-                  fontWeight:"700",
-                }}
-              >
-                {payment.amount}
-              </span>
+          }
 
-
-            </div>
-
-          ))}
 
         </div>
 
 
 
+
         <Link
           to="/dashboard"
-          onClick={()=>window.scrollTo(0,0)}
+          onClick={() => window.scrollTo(0,0)}
           style={{
             textDecoration:"none",
           }}
@@ -469,13 +404,17 @@ function PayBills() {
             ← Back to Dashboard
           </button>
 
+
         </Link>
 
 
       </div>
 
+
     </div>
+
   );
+
 }
 
 
@@ -490,20 +429,18 @@ const cardStyle = {
 
 const titleStyle = {
   color:"#22c55e",
-  marginBottom:"10px",
 };
 
 
 const textStyle = {
   color:"#999",
-  lineHeight:"1.6",
-  marginBottom:"20px",
 };
 
 
 const inputStyle = {
   width:"100%",
   padding:"14px",
+  marginTop:"15px",
   marginBottom:"18px",
   backgroundColor:"#111",
   border:"1px solid #333",

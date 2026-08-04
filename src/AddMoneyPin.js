@@ -1,14 +1,15 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
-function EnterPin() {
+function AddMoneyPin() {
 
   const [pin, setPin] = useState("");
 
   const navigate = useNavigate();
   const location = useLocation();
 
-  const transferData = location.state;
+
+  const amount = location.state?.amount;
 
 
   const handleContinue = () => {
@@ -25,8 +26,8 @@ function EnterPin() {
     }
 
 
-    if (!transferData) {
-      alert("Transfer information missing.");
+    if (!amount) {
+      alert("Amount information missing.");
       return;
     }
 
@@ -37,21 +38,50 @@ function EnterPin() {
     }
 
 
-    const transferAmount =
-      Number(transferData.amount);
+    const newAmount = Number(amount);
+
+
+    const newTransaction = {
+
+      name: "Wallet Top Up",
+
+      date:
+        new Date().toLocaleDateString(),
+
+      amount:
+        "+ ₦" +
+        newAmount.toLocaleString("en-NG"),
+
+      type: "credit",
+
+      method: "Debit Card",
+
+      transactionId:
+        "TXN" +
+        Math.floor(
+          Math.random() * 1000000
+        ),
+
+    };
 
 
 
-    if (transferAmount <= 0) {
-      alert("Invalid transfer amount.");
-      return;
-    }
+    const updatedUser = {
 
+      ...currentUser,
 
-    if (transferAmount > currentUser.balance) {
-      alert("Insufficient balance.");
-      return;
-    }
+      balance:
+        currentUser.balance + newAmount,
+
+      transactions: [
+
+        ...(currentUser.transactions || []),
+
+        newTransaction,
+
+      ],
+
+    };
 
 
 
@@ -62,140 +92,16 @@ function EnterPin() {
 
 
 
-    const transactionId =
-      "TXN" +
-      Math.floor(
-        Math.random() * 1000000
-      );
-
-
-
-    const senderTransaction = {
-
-      name:
-        "Transfer to " +
-        transferData.recipient,
-
-      date:
-        new Date().toLocaleDateString(),
-
-      amount:
-        "- ₦" +
-        transferAmount.toLocaleString("en-NG"),
-
-      type:
-        "debit",
-
-      bank:
-        transferData.bank,
-
-      accountNumber:
-        transferData.accountNumber,
-
-      description:
-        transferData.description || "Transfer",
-
-      transactionId,
-
-    };
-
-
-
-    const receiverTransaction = {
-
-      name:
-        "Received from " +
-        currentUser.name,
-
-      date:
-        new Date().toLocaleDateString(),
-
-      amount:
-        "+ ₦" +
-        transferAmount.toLocaleString("en-NG"),
-
-      type:
-        "credit",
-
-      bank:
-        transferData.bank,
-
-      accountNumber:
-        transferData.accountNumber,
-
-      description:
-        transferData.description || "Transfer received",
-
-      transactionId,
-
-    };
-
-
-
-    const updatedSender = {
-
-      ...currentUser,
-
-      balance:
-        currentUser.balance - transferAmount,
-
-      transactions:[
-
-        ...(currentUser.transactions || []),
-
-        senderTransaction,
-
-      ],
-
-    };
-
-
-
     const updatedUsers =
-      users.map((user)=>{
+      users.map((user) =>
 
+        user.email === updatedUser.email
 
-        if(user.email === currentUser.email){
+        ? updatedUser
 
-          return updatedSender;
+        : user
 
-        }
-
-
-        if(
-          user.accountNumber ===
-          transferData.accountNumber
-          ||
-          user.name ===
-          transferData.recipient
-        ){
-
-          return {
-
-            ...user,
-
-            balance:
-              (user.balance || 0)
-              + transferAmount,
-
-
-            transactions:[
-
-              ...(user.transactions || []),
-
-              receiverTransaction,
-
-            ],
-
-          };
-
-        }
-
-
-        return user;
-
-
-      });
+      );
 
 
 
@@ -205,34 +111,22 @@ function EnterPin() {
     );
 
 
-
     localStorage.setItem(
       "swiftWalletCurrentUser",
-      JSON.stringify(updatedSender)
+      JSON.stringify(updatedUser)
     );
 
 
 
-    navigate(
-      "/transfer-success",
-      {
+    navigate("/add-money-success", {
+        state: {
+        amount: newAmount,
+        transaction: newTransaction,
+        newBalance: updatedUser.balance,
+        },
+    });
 
-        state:{
-
-          transferData,
-
-          transaction:
-            senderTransaction,
-
-          newBalance:
-            updatedSender.balance,
-
-        }
-
-      }
-
-    );
-
+    window.scrollTo(0,0);
 
   };
 
@@ -248,13 +142,13 @@ function EnterPin() {
         justifyContent:"center",
         alignItems:"center",
         position:"relative",
+        color:"#fff",
       }}
     >
 
 
       <Link
-        to="/confirm-transfer"
-        state={transferData}
+        to="/dashboard"
         style={{
           position:"absolute",
           top:"35px",
@@ -275,8 +169,8 @@ function EnterPin() {
             display:"flex",
             justifyContent:"center",
             alignItems:"center",
-            fontWeight:"bold",
             color:"#000",
+            fontWeight:"bold",
           }}
         >
           SW
@@ -298,6 +192,7 @@ function EnterPin() {
 
 
 
+
       <div
         style={{
           width:"420px",
@@ -313,41 +208,70 @@ function EnterPin() {
         <h1
           style={{
             color:"#22c55e",
+            marginBottom:"10px",
           }}
         >
           Enter Transaction PIN
         </h1>
 
 
-
         <p
           style={{
             color:"#aaa",
+            marginBottom:"25px",
           }}
         >
-          Enter your 4-digit PIN to complete transfer.
+          Enter your PIN to complete adding money.
         </p>
 
 
 
+        <div
+          style={{
+            backgroundColor:"#111",
+            padding:"15px",
+            borderRadius:"10px",
+            marginBottom:"20px",
+          }}
+        >
+
+          <p
+            style={{
+              color:"#888",
+              margin:0,
+            }}
+          >
+            Amount
+          </p>
+
+
+          <h2
+            style={{
+              color:"#22c55e",
+              margin:0,
+            }}
+          >
+            ₦
+            {Number(amount || 0)
+              .toLocaleString("en-NG")}
+          </h2>
+
+
+        </div>
+
+
+
+
         <input
-
           type="password"
-
           inputMode="numeric"
-
           maxLength="4"
-
-          placeholder="Enter PIN"
-
+          placeholder="Enter 4-digit PIN"
           value={pin}
-
           onChange={(e)=>
             setPin(e.target.value)
           }
-
           style={inputStyle}
-
         />
 
 
@@ -356,9 +280,29 @@ function EnterPin() {
           onClick={handleContinue}
           style={buttonStyle}
         >
-          Confirm Transfer
+          Confirm Payment
         </button>
 
+
+
+        <Link
+          to="/add-money"
+          style={{
+            textDecoration:"none",
+          }}
+        >
+
+          <button
+            style={{
+              ...secondaryButton,
+              marginTop:"15px",
+            }}
+          >
+            ← Back to Add Money
+          </button>
+
+
+        </Link>
 
 
       </div>
@@ -376,11 +320,13 @@ const inputStyle = {
 
   width:"100%",
   padding:"14px",
-  marginBottom:"20px",
+  marginBottom:"18px",
   backgroundColor:"#111",
   border:"1px solid #333",
   borderRadius:"8px",
   color:"#fff",
+  fontSize:"15px",
+  outline:"none",
   boxSizing:"border-box",
 
 };
@@ -402,4 +348,19 @@ const buttonStyle = {
 
 
 
-export default EnterPin;
+const secondaryButton = {
+
+  width:"100%",
+  padding:"14px",
+  backgroundColor:"transparent",
+  color:"#22c55e",
+  border:"1px solid #22c55e",
+  borderRadius:"8px",
+  fontWeight:"700",
+  cursor:"pointer",
+
+};
+
+
+
+export default AddMoneyPin;

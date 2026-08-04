@@ -1,14 +1,21 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
-function EnterPin() {
+function PayBillsPin() {
 
   const [pin, setPin] = useState("");
 
   const navigate = useNavigate();
   const location = useLocation();
 
-  const transferData = location.state;
+
+  const {
+    selectedBill,
+    provider,
+    accountNumber,
+    amount,
+  } = location.state || {};
+
 
 
   const handleContinue = () => {
@@ -25,8 +32,8 @@ function EnterPin() {
     }
 
 
-    if (!transferData) {
-      alert("Transfer information missing.");
+    if (!amount) {
+      alert("Payment information missing.");
       return;
     }
 
@@ -37,21 +44,58 @@ function EnterPin() {
     }
 
 
-    const transferAmount =
-      Number(transferData.amount);
+    const billAmount = Number(amount);
 
 
 
-    if (transferAmount <= 0) {
-      alert("Invalid transfer amount.");
-      return;
-    }
+    const newTransaction = {
+
+      name:
+        `${selectedBill} Payment`,
+
+      date:
+        new Date().toLocaleDateString(),
+
+      amount:
+        "- ₦" +
+        billAmount.toLocaleString("en-NG"),
+
+      type:
+        "debit",
+
+      method:
+        "Wallet Balance",
+
+      description:
+        `${provider} - ${accountNumber}`,
+
+      transactionId:
+        "TXN" +
+        Math.floor(
+          Math.random() * 1000000
+        ),
+
+    };
 
 
-    if (transferAmount > currentUser.balance) {
-      alert("Insufficient balance.");
-      return;
-    }
+
+    const updatedUser = {
+
+      ...currentUser,
+
+      balance:
+        currentUser.balance - billAmount,
+
+
+      transactions: [
+
+        ...(currentUser.transactions || []),
+
+        newTransaction,
+
+      ],
+
+    };
 
 
 
@@ -62,140 +106,14 @@ function EnterPin() {
 
 
 
-    const transactionId =
-      "TXN" +
-      Math.floor(
-        Math.random() * 1000000
-      );
-
-
-
-    const senderTransaction = {
-
-      name:
-        "Transfer to " +
-        transferData.recipient,
-
-      date:
-        new Date().toLocaleDateString(),
-
-      amount:
-        "- ₦" +
-        transferAmount.toLocaleString("en-NG"),
-
-      type:
-        "debit",
-
-      bank:
-        transferData.bank,
-
-      accountNumber:
-        transferData.accountNumber,
-
-      description:
-        transferData.description || "Transfer",
-
-      transactionId,
-
-    };
-
-
-
-    const receiverTransaction = {
-
-      name:
-        "Received from " +
-        currentUser.name,
-
-      date:
-        new Date().toLocaleDateString(),
-
-      amount:
-        "+ ₦" +
-        transferAmount.toLocaleString("en-NG"),
-
-      type:
-        "credit",
-
-      bank:
-        transferData.bank,
-
-      accountNumber:
-        transferData.accountNumber,
-
-      description:
-        transferData.description || "Transfer received",
-
-      transactionId,
-
-    };
-
-
-
-    const updatedSender = {
-
-      ...currentUser,
-
-      balance:
-        currentUser.balance - transferAmount,
-
-      transactions:[
-
-        ...(currentUser.transactions || []),
-
-        senderTransaction,
-
-      ],
-
-    };
-
-
-
     const updatedUsers =
-      users.map((user)=>{
+      users.map((user) =>
 
+        user.email === updatedUser.email
+          ? updatedUser
+          : user
 
-        if(user.email === currentUser.email){
-
-          return updatedSender;
-
-        }
-
-
-        if(
-          user.accountNumber ===
-          transferData.accountNumber
-          ||
-          user.name ===
-          transferData.recipient
-        ){
-
-          return {
-
-            ...user,
-
-            balance:
-              (user.balance || 0)
-              + transferAmount,
-
-
-            transactions:[
-
-              ...(user.transactions || []),
-
-              receiverTransaction,
-
-            ],
-
-          };
-
-        }
-
-
-        return user;
-
-
-      });
+      );
 
 
 
@@ -205,34 +123,33 @@ function EnterPin() {
     );
 
 
-
     localStorage.setItem(
       "swiftWalletCurrentUser",
-      JSON.stringify(updatedSender)
+      JSON.stringify(updatedUser)
     );
 
 
 
     navigate(
-      "/transfer-success",
+      "/pay-bill-success",
       {
+        state: {
 
-        state:{
+          transactionId:
+            newTransaction.transactionId,
 
-          transferData,
+          selectedBill,
 
-          transaction:
-            senderTransaction,
+          provider,
 
-          newBalance:
-            updatedSender.balance,
+          accountNumber,
+
+          amount:
+            billAmount,
 
         }
-
       }
-
     );
-
 
   };
 
@@ -247,14 +164,13 @@ function EnterPin() {
         display:"flex",
         justifyContent:"center",
         alignItems:"center",
-        position:"relative",
+        color:"#fff",
       }}
     >
 
 
       <Link
-        to="/confirm-transfer"
-        state={transferData}
+        to="/pay-bills"
         style={{
           position:"absolute",
           top:"35px",
@@ -275,8 +191,8 @@ function EnterPin() {
             display:"flex",
             justifyContent:"center",
             alignItems:"center",
-            fontWeight:"bold",
             color:"#000",
+            fontWeight:"bold",
           }}
         >
           SW
@@ -319,35 +235,68 @@ function EnterPin() {
         </h1>
 
 
-
         <p
           style={{
-            color:"#aaa",
+            color:"#999",
           }}
         >
-          Enter your 4-digit PIN to complete transfer.
+          Confirm your bill payment.
         </p>
 
 
 
+        <div
+          style={{
+            backgroundColor:"#111",
+            padding:"20px",
+            borderRadius:"10px",
+            margin:"25px 0",
+          }}
+        >
+
+          <p
+            style={{
+              color:"#888",
+            }}
+          >
+            {selectedBill}
+          </p>
+
+
+          <h2
+            style={{
+              color:"#22c55e",
+            }}
+          >
+            ₦
+            {Number(amount || 0)
+              .toLocaleString("en-NG")}
+          </h2>
+
+
+          <small
+            style={{
+              color:"#999",
+            }}
+          >
+            {provider}
+          </small>
+
+
+        </div>
+
+
+
         <input
-
           type="password"
-
-          inputMode="numeric"
-
           maxLength="4"
-
-          placeholder="Enter PIN"
-
+          inputMode="numeric"
+          placeholder="Enter 4-digit PIN"
           value={pin}
-
           onChange={(e)=>
             setPin(e.target.value)
           }
-
           style={inputStyle}
-
         />
 
 
@@ -356,9 +305,25 @@ function EnterPin() {
           onClick={handleContinue}
           style={buttonStyle}
         >
-          Confirm Transfer
+          Confirm Payment
         </button>
 
+
+
+        <Link
+          to="/pay-bills"
+          style={{
+            textDecoration:"none",
+          }}
+        >
+
+          <button
+            style={secondaryButton}
+          >
+            ← Back
+          </button>
+
+        </Link>
 
 
       </div>
@@ -376,7 +341,7 @@ const inputStyle = {
 
   width:"100%",
   padding:"14px",
-  marginBottom:"20px",
+  marginBottom:"15px",
   backgroundColor:"#111",
   border:"1px solid #333",
   borderRadius:"8px",
@@ -402,4 +367,20 @@ const buttonStyle = {
 
 
 
-export default EnterPin;
+const secondaryButton = {
+
+  width:"100%",
+  padding:"14px",
+  marginTop:"15px",
+  backgroundColor:"transparent",
+  color:"#22c55e",
+  border:"1px solid #22c55e",
+  borderRadius:"8px",
+  fontWeight:"700",
+  cursor:"pointer",
+
+};
+
+
+
+export default PayBillsPin;

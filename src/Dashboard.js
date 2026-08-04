@@ -5,7 +5,9 @@ function Dashboard() {
   const navigate = useNavigate();
 
   const currentUser =
-    JSON.parse(localStorage.getItem("swiftWalletCurrentUser")) || {};
+    JSON.parse(
+      localStorage.getItem("swiftWalletCurrentUser")
+    ) || {};
 
   const userName =
     currentUser.name ||
@@ -15,13 +17,17 @@ function Dashboard() {
   const balance = currentUser.balance || 0;
 
   const transactions =
-    currentUser.transactions?.slice(-5).reverse() || [];
+    currentUser.transactions
+      ?.slice(-5)
+      .reverse() || [];
 
   const handleLogout = () => {
     localStorage.removeItem("swiftWalletUser");
     localStorage.removeItem("swiftWalletCurrentUser");
+    localStorage.removeItem("swiftWalletSignup");
 
     navigate("/login");
+
     window.scrollTo(0, 0);
   };
 
@@ -284,7 +290,6 @@ const actionButton = {
   cursor: "pointer",
   fontSize: "16px",
   minWidth: "180px",
-  transition: "0.3s",
 };
 
 export default Dashboard;

@@ -5,7 +5,8 @@ function TransactionHistory() {
   const currentUser =
     JSON.parse(localStorage.getItem("swiftWalletCurrentUser")) || {};
 
-  const transactions = currentUser.transactions || [];
+  const transactions =
+    currentUser.transactions?.slice().reverse() || [];
 
   const [filter, setFilter] = useState("All");
   const [search, setSearch] = useState("");
@@ -16,174 +17,180 @@ function TransactionHistory() {
       (filter === "Credit" && transaction.type === "credit") ||
       (filter === "Debit" && transaction.type === "debit");
 
-    const matchesSearch = transaction.name
-      .toLowerCase()
-      .includes(search.toLowerCase());
+    const matchesSearch =
+      transaction.name
+        ?.toLowerCase()
+        .includes(search.toLowerCase());
 
     return matchesFilter && matchesSearch;
   });
+
 
   const moneyIn = transactions
     .filter((transaction) => transaction.type === "credit")
     .reduce(
       (total, transaction) =>
-        total + Number(transaction.amount.replace(/[^\d]/g, "")),
+        total +
+        Number(
+          transaction.amount.replace(/[^\d]/g, "")
+        ),
       0
     );
+
 
   const moneyOut = transactions
     .filter((transaction) => transaction.type === "debit")
     .reduce(
       (total, transaction) =>
-        total + Number(transaction.amount.replace(/[^\d]/g, "")),
+        total +
+        Number(
+          transaction.amount.replace(/[^\d]/g, "")
+        ),
       0
     );
+
 
   return (
     <div
       style={{
-        backgroundColor: "#0d0d0d",
-        minHeight: "100vh",
-        color: "#fff",
+        backgroundColor:"#0d0d0d",
+        minHeight:"100vh",
+        color:"#fff",
       }}
     >
+
       <div
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          padding: "25px 50px",
-          borderBottom: "1px solid #222",
+          padding:"25px 50px",
+          borderBottom:"1px solid #222",
         }}
       >
+
         <Link
           to="/dashboard"
-          onClick={() => window.scrollTo(0, 0)}
+          onClick={() => window.scrollTo(0,0)}
           style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-            textDecoration: "none",
+            display:"flex",
+            alignItems:"center",
+            gap:"10px",
+            textDecoration:"none",
           }}
         >
+
           <div
             style={{
-              width: "40px",
-              height: "40px",
-              backgroundColor: "#22c55e",
-              borderRadius: "10px",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              fontWeight: "bold",
-              color: "#000",
+              width:"40px",
+              height:"40px",
+              backgroundColor:"#22c55e",
+              borderRadius:"10px",
+              display:"flex",
+              justifyContent:"center",
+              alignItems:"center",
+              color:"#000",
+              fontWeight:"bold",
             }}
           >
             SW
           </div>
 
+
           <span
             style={{
-              color: "#fff",
-              fontWeight: "700",
-              fontSize: "20px",
+              color:"#fff",
+              fontSize:"20px",
+              fontWeight:"700",
             }}
           >
             Swift Wallet
           </span>
+
         </Link>
+
       </div>
+
+
 
       <div
         style={{
-          maxWidth: "700px",
-          margin: "50px auto",
-          padding: "0 20px",
+          maxWidth:"750px",
+          margin:"50px auto",
+          padding:"0 20px",
         }}
       >
+
         <h1
           style={{
-            color: "#22c55e",
-            fontSize: "38px",
-            marginBottom: "10px",
+            color:"#22c55e",
+            fontSize:"38px",
           }}
         >
           Transaction History
         </h1>
 
+
         <p
           style={{
-            color: "#999",
-            marginBottom: "35px",
+            color:"#999",
+            marginBottom:"35px",
           }}
         >
-          A full record of your account activity.
+          View all wallet activity.
         </p>
+
+
 
         <div
           style={{
-            backgroundColor: "#1a1a1a",
-            border: "1px solid #2a2a2a",
-            borderRadius: "15px",
-            padding: "30px",
-            marginBottom: "30px",
-            display: "flex",
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-            gap: "20px",
+            ...cardStyle,
+            display:"flex",
+            justifyContent:"space-between",
+            marginBottom:"30px",
           }}
         >
+
           <div>
-            <p
-              style={{
-                color: "#999",
-                marginBottom: "10px",
-              }}
-            >
+            <p style={labelStyle}>
               Money In
             </p>
 
             <h2
               style={{
-                color: "#22c55e",
-                margin: 0,
+                color:"#22c55e",
+                margin:0,
               }}
             >
               + ₦{moneyIn.toLocaleString("en-NG")}
             </h2>
           </div>
 
+
           <div>
-            <p
-              style={{
-                color: "#999",
-                marginBottom: "10px",
-              }}
-            >
+            <p style={labelStyle}>
               Money Out
             </p>
 
             <h2
               style={{
-                color: "#ff5f5f",
-                margin: 0,
+                color:"#ff5f5f",
+                margin:0,
               }}
             >
               - ₦{moneyOut.toLocaleString("en-NG")}
             </h2>
           </div>
+
         </div>
 
+
+
         <div style={cardStyle}>
-          <h3 style={titleStyle}>
-            Filter Transactions
-          </h3>
 
           <select
             style={inputStyle}
             value={filter}
-            onChange={(e) => setFilter(e.target.value)}
+            onChange={(e)=>setFilter(e.target.value)}
           >
+
             <option value="All">
               All Transactions
             </option>
@@ -195,140 +202,205 @@ function TransactionHistory() {
             <option value="Debit">
               Money Out
             </option>
+
           </select>
 
+
+
           <input
-            type="text"
-            placeholder="Search transactions"
             style={inputStyle}
+            placeholder="Search transactions"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e)=>setSearch(e.target.value)}
           />
+
         </div>
+
+
 
         <div
           style={{
             ...cardStyle,
-            marginTop: "30px",
+            marginTop:"30px",
           }}
         >
-          <h3 style={titleStyle}>
+
+          <h2 style={titleStyle}>
             Transactions
-          </h3>
+          </h2>
+
 
           {filteredTransactions.length === 0 ? (
-            <p
-              style={{
-                color: "#999",
-              }}
-            >
+
+            <p style={{color:"#999"}}>
               No transactions found.
             </p>
+
           ) : (
-            filteredTransactions.map((transaction, index) => (
+
+            filteredTransactions.map((transaction,index)=>(
+
               <div
                 key={index}
                 style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  padding: "15px 0",
+                  padding:"20px 0",
                   borderBottom:
                     index === filteredTransactions.length - 1
-                      ? "none"
-                      : "1px solid #2a2a2a",
+                    ? "none"
+                    : "1px solid #2a2a2a",
                 }}
               >
-                <div>
-                  <div
-                    style={{
-                      fontWeight: "600",
-                    }}
-                  >
-                    {transaction.name}
-                  </div>
 
-                  <small
-                    style={{
-                      color: "#888",
-                    }}
-                  >
-                    {transaction.date}
-                  </small>
-                </div>
-
-                <span
+                <div
                   style={{
-                    color:
-                      transaction.type === "credit"
-                        ? "#22c55e"
-                        : "#ff5f5f",
-                    fontWeight: "700",
+                    display:"flex",
+                    justifyContent:"space-between",
                   }}
                 >
-                  {transaction.amount}
-                </span>
+
+                  <div>
+
+                    <strong>
+                      {transaction.name}
+                    </strong>
+
+
+                    <p
+                      style={{
+                        color:"#888",
+                        margin:"6px 0",
+                        fontSize:"14px",
+                      }}
+                    >
+                      {transaction.date}
+                    </p>
+
+
+                    <p
+                      style={{
+                        color:"#aaa",
+                        margin:"5px 0",
+                        fontSize:"14px",
+                      }}
+                    >
+
+                      {transaction.bank &&
+                        `Bank: ${transaction.bank}`}
+
+
+                      {transaction.description &&
+                        ` ${transaction.description}`}
+
+
+                      {transaction.method &&
+                        ` Method: ${transaction.method}`}
+
+                    </p>
+
+
+                    <small
+                      style={{
+                        color:"#666",
+                      }}
+                    >
+                      ID: {transaction.transactionId}
+                    </small>
+
+                  </div>
+
+
+                  <span
+                    style={{
+                      color:
+                        transaction.type === "credit"
+                        ? "#22c55e"
+                        : "#ff5f5f",
+                      fontWeight:"700",
+                    }}
+                  >
+                    {transaction.amount}
+                  </span>
+
+
+                </div>
+
               </div>
+
             ))
+
           )}
+
         </div>
+
+
 
         <Link
           to="/dashboard"
-          onClick={() => window.scrollTo(0, 0)}
+          onClick={()=>window.scrollTo(0,0)}
           style={{
-            textDecoration: "none",
+            textDecoration:"none",
           }}
         >
+
           <button
             style={{
               ...buttonStyle,
-              marginTop: "30px",
+              marginTop:"30px",
             }}
           >
             ← Back to Dashboard
           </button>
+
         </Link>
+
+
       </div>
+
     </div>
   );
 }
 
+
 const cardStyle = {
-  backgroundColor: "#1a1a1a",
-  border: "1px solid #2a2a2a",
-  borderRadius: "15px",
-  padding: "30px",
+  backgroundColor:"#1a1a1a",
+  border:"1px solid #2a2a2a",
+  borderRadius:"15px",
+  padding:"30px",
 };
+
 
 const titleStyle = {
-  color: "#22c55e",
-  marginBottom: "20px",
+  color:"#22c55e",
 };
+
+
+const labelStyle = {
+  color:"#999",
+};
+
 
 const inputStyle = {
-  width: "100%",
-  padding: "14px",
-  marginBottom: "18px",
-  backgroundColor: "#111",
-  border: "1px solid #333",
-  color: "#fff",
-  borderRadius: "8px",
-  outline: "none",
-  fontSize: "15px",
-  boxSizing: "border-box",
+  width:"100%",
+  padding:"14px",
+  marginBottom:"18px",
+  backgroundColor:"#111",
+  border:"1px solid #333",
+  borderRadius:"8px",
+  color:"#fff",
+  boxSizing:"border-box",
 };
 
+
 const buttonStyle = {
-  width: "100%",
-  padding: "14px",
-  backgroundColor: "#22c55e",
-  color: "#000",
-  border: "none",
-  borderRadius: "8px",
-  fontWeight: "700",
-  fontSize: "15px",
-  cursor: "pointer",
+  width:"100%",
+  padding:"14px",
+  backgroundColor:"#22c55e",
+  color:"#000",
+  border:"none",
+  borderRadius:"8px",
+  fontWeight:"700",
+  cursor:"pointer",
 };
+
 
 export default TransactionHistory;
