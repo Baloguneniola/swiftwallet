@@ -103,9 +103,10 @@ function EnterPin() {
     );
 
 
-    navigate("/transfer-success", {
+    navigate("/confirm-transfer", {
       state: {
-        transferData,
+        ...transferData,
+        completed: true,
         transaction: newTransaction,
         newBalance: updatedUser.balance,
       },

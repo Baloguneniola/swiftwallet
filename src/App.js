@@ -20,6 +20,7 @@ import Support from "./Support";
 import ConfirmTransfer from "./ConfirmTransfer.js";
 import Privacy from "./Privacy";
 import EnterPin from "./EnterPin";
+import TransferSuccess from "./TransferSuccess";
 
 
 function App() {
@@ -44,6 +45,7 @@ function App() {
         <Route path="/confirm-transfer" element={<ConfirmTransfer />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/enter-pin" element={<EnterPin />} />
+        <Route path="/transfer-success" element={<TransferSuccess />} />
         
       </Routes>
     </BrowserRouter>

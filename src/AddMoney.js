@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
 function AddMoney() {
-  const currentUser = JSON.parse(
-    localStorage.getItem("swiftWalletCurrentUser")
+
+  const [currentUser, setCurrentUser] = useState(
+    JSON.parse(localStorage.getItem("swiftWalletCurrentUser"))
   );
 
   const [amount, setAmount] = useState("");
@@ -36,12 +37,14 @@ function AddMoney() {
 
 
   const handleContinue = () => {
+
     if (!amount) {
       alert("Please enter an amount");
       return;
     }
 
     setShowCardForm(true);
+
   };
 
 
@@ -125,6 +128,7 @@ function AddMoney() {
       );
 
 
+      setCurrentUser(updatedUser);
       setBalance(updatedUser.balance);
 
 
@@ -215,7 +219,6 @@ function AddMoney() {
       </div>
 
 
-
       <div
         style={{
           maxWidth:"700px",
@@ -244,7 +247,6 @@ function AddMoney() {
         </p>
 
 
-
         <div style={cardStyle}>
 
           <p style={labelStyle}>
@@ -259,16 +261,12 @@ function AddMoney() {
               margin:0,
             }}
           >
-            ₦
-            {balance.toLocaleString("en-NG")}
-            .00
+            ₦{balance.toLocaleString("en-NG")}.00
           </h2>
 
         </div>
 
-
-
-        <div
+                <div
           style={{
             ...cardStyle,
             marginTop:"25px",
@@ -399,6 +397,41 @@ function AddMoney() {
                     }
                   />
 
+
+                  <div
+                    style={{
+                      display:"flex",
+                      gap:"15px",
+                    }}
+                  >
+
+                    <input
+                      style={inputStyle}
+                      placeholder="Expiry Date"
+                      value={cardDetails.expiry}
+                      onChange={(e)=>
+                        setCardDetails({
+                          ...cardDetails,
+                          expiry:e.target.value,
+                        })
+                      }
+                    />
+
+
+                    <input
+                      style={inputStyle}
+                      placeholder="CVV"
+                      value={cardDetails.cvv}
+                      onChange={(e)=>
+                        setCardDetails({
+                          ...cardDetails,
+                          cvv:e.target.value,
+                        })
+                      }
+                    />
+
+                  </div>
+
                 </>
 
               )}
@@ -410,9 +443,13 @@ function AddMoney() {
                 onClick={handleAddMoney}
                 disabled={loading}
               >
-                {loading
+
+                {
+                  loading
                   ? "Processing..."
-                  : "Add Money"}
+                  : "Add Money"
+                }
+
               </button>
 
             </>
@@ -481,9 +518,23 @@ function AddMoney() {
               }}
             >
 
-              <span>
-                {item.name}
-              </span>
+              <div>
+
+                <span>
+                  {item.name}
+                </span>
+
+                <small
+                  style={{
+                    display:"block",
+                    color:"#888",
+                    marginTop:"5px",
+                  }}
+                >
+                  {item.date}
+                </small>
+
+              </div>
 
 
               <span
@@ -527,6 +578,7 @@ function AddMoney() {
 
     </div>
   );
+
 }
 
 
@@ -535,7 +587,7 @@ const cardStyle = {
   backgroundColor:"#1a1a1a",
   border:"1px solid #2a2a2a",
   borderRadius:"15px",
-  padding:"30px",
+  padding:"25px",
 };
 
 
@@ -556,7 +608,8 @@ const textStyle = {
 
 const inputStyle = {
   width:"100%",
-  padding:"14px",
+  padding:"15px",
+  marginTop:"10px",
   marginBottom:"15px",
   backgroundColor:"#111",
   border:"1px solid #333",
