@@ -1,7 +1,6 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
-
 function ConfirmTransfer() {
 
   const location = useLocation();
@@ -9,7 +8,11 @@ function ConfirmTransfer() {
 
   const transfer = location.state;
 
+  const isSuccess = transfer?.completed || false;
 
+  const transactionId =
+    transfer?.transactionId ||
+    ("TXN" + Math.floor(Math.random() * 1000000));
 
   const handleConfirmTransfer = () => {
 
@@ -18,8 +21,6 @@ function ConfirmTransfer() {
     });
 
   };
-
-
 
   return (
 
@@ -35,9 +36,6 @@ function ConfirmTransfer() {
       }}
     >
 
-
-      {/* LOGO */}
-
       <Link
         to="/dashboard"
         style={{
@@ -50,7 +48,6 @@ function ConfirmTransfer() {
           textDecoration:"none",
         }}
       >
-
         <div
           style={{
             width:"40px",
@@ -67,7 +64,6 @@ function ConfirmTransfer() {
           SW
         </div>
 
-
         <span
           style={{
             color:"#fff",
@@ -78,11 +74,7 @@ function ConfirmTransfer() {
           Swift Wallet
         </span>
 
-
       </Link>
-
-
-
 
       <div
         style={{
@@ -91,131 +83,161 @@ function ConfirmTransfer() {
           padding:"40px",
           borderRadius:"15px",
           border:"1px solid #2a2a2a",
+          boxShadow:"0 0 20px rgba(34,197,94,0.15)",
         }}
       >
 
+        {!isSuccess ? (
 
-        <h1
-          style={{
-            color:"#22c55e",
-            textAlign:"center",
-            marginBottom:"10px",
-          }}
-        >
-          Confirm Transfer
-        </h1>
+          <>
 
+            <h1
+              style={{
+                color:"#22c55e",
+                textAlign:"center",
+                marginBottom:"10px",
+              }}
+            >
+              Confirm Transfer
+            </h1>
 
+            <p
+              style={{
+                color:"#999",
+                textAlign:"center",
+                marginBottom:"30px",
+              }}
+            >
+              Please check the details before sending.
+            </p>
 
-        <p
-          style={{
-            color:"#999",
-            textAlign:"center",
-            marginBottom:"30px",
-          }}
-        >
-          Please check the details before sending.
-        </p>
+            <div
+              style={{
+                backgroundColor:"#111",
+                padding:"25px",
+                borderRadius:"12px",
+                border:"1px solid #333",
+                marginBottom:"25px",
+              }}
+            >
 
+              <Detail
+                label="Recipient"
+                value={transfer?.recipient}
+              />
 
+              <Detail
+                label="Bank"
+                value={transfer?.bank}
+              />
 
+              <Detail
+                label="Account Number"
+                value={transfer?.accountNumber}
+              />
 
+              <Detail
+                label="Amount"
+                value={
+                  `₦${Number(
+                    transfer?.amount || 0
+                  ).toLocaleString("en-NG",{
+                    minimumFractionDigits:2,
+                    maximumFractionDigits:2,
+                  })}`
+                }
+              />
 
-        <div
-          style={{
-            backgroundColor:"#111",
-            padding:"25px",
-            borderRadius:"12px",
-            border:"1px solid #333",
-            marginBottom:"25px",
-          }}
-        >
+              <Detail
+                label="Description"
+                value={transfer?.description || "None"}
+              />
 
+            </div>
 
-          <Detail
-            label="Recipient"
-            value={transfer?.recipient}
-          />
+            <button
+              style={confirmButton}
+              onClick={handleConfirmTransfer}
+            >
+              Confirm Transfer
+            </button>
 
+            <Link
+              to="/send-money"
+              style={{
+                textDecoration:"none",
+              }}
+            >
+              <button
+                style={cancelButton}
+              >
+                ← Edit Transfer
+              </button>
+            </Link>
 
-          <Detail
-            label="Bank"
-            value={transfer?.bank}
-          />
+          </>
 
+        ) : (
 
-          <Detail
-            label="Account Number"
-            value={transfer?.accountNumber}
-          />
+          <>
 
+            <h1
+              style={{
+                color:"#22c55e",
+                textAlign:"center",
+                marginBottom:"15px",
+              }}
+            >
+              Transfer Successful ✅
+            </h1>
 
-          <Detail
-            label="Amount"
-            value={
-              `₦${Number(
-                transfer?.amount || 0
-              ).toLocaleString("en-NG",{
-                minimumFractionDigits:2,
-                maximumFractionDigits:2,
-              })}`
-            }
-          />
+            <p
+              style={{
+                color:"#999",
+                textAlign:"center",
+                marginBottom:"25px",
+              }}
+            >
+              Your transfer has been completed successfully.
+            </p>
 
+            <div
+              style={{
+                backgroundColor:"#111",
+                padding:"25px",
+                borderRadius:"12px",
+                border:"1px solid #333",
+                marginBottom:"25px",
+                textAlign:"center",
+              }}
+            >
+              <p style={{color:"#888"}}>
+                Transaction ID
+              </p>
 
-          <Detail
-            label="Description"
-            value={transfer?.description || "None"}
-          />
+              <h3>
+                {transactionId}
+              </h3>
+            </div>
 
+            <button
+              style={confirmButton}
+              onClick={() => navigate("/dashboard")}
+            >
+              Back to Dashboard
+            </button>
 
-        </div>
+          </>
 
-
-
-
-
-        <button
-          style={confirmButton}
-          onClick={handleConfirmTransfer}
-        >
-          Confirm Transfer
-        </button>
-
-
-
-
-
-        <Link
-          to="/enter-pin"
-          style={{
-            textDecoration:"none",
-          }}
-        >
-
-          <button
-            style={cancelButton}
-          >
-            ← Edit Transfer
-          </button>
-
-
-        </Link>
-
-
+        )}
 
       </div>
-
 
     </div>
 
   );
 
 }
-
-
-
-
 
 function Detail({label,value}) {
 
@@ -228,7 +250,6 @@ function Detail({label,value}) {
         marginBottom:"15px",
       }}
     >
-
       <span
         style={{
           color:"#888",
@@ -236,8 +257,6 @@ function Detail({label,value}) {
       >
         {label}
       </span>
-
-
 
       <span
         style={{
@@ -247,17 +266,11 @@ function Detail({label,value}) {
       >
         {value || "-"}
       </span>
-
-
     </div>
 
   );
 
 }
-
-
-
-
 
 const confirmButton = {
 
@@ -274,8 +287,6 @@ const confirmButton = {
 
 };
 
-
-
 const cancelButton = {
 
   width:"100%",
@@ -289,7 +300,5 @@ const cancelButton = {
   cursor:"pointer",
 
 };
-
-
 
 export default ConfirmTransfer;

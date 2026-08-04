@@ -34,9 +34,14 @@ function EnterPin() {
     if (pin === currentUser.pin) {
 
 
-      navigate("/transfer-success", {
-        state: transferData
-      });
+    navigate("/confirm-transfer", {
+      state: {
+        ...transferData,
+        completed: true,
+        transactionId:
+          "TXN" + Math.floor(Math.random() * 1000000),
+      },
+    });
 
 
     } else {
