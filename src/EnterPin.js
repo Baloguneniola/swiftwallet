@@ -62,6 +62,35 @@ function EnterPin() {
 
 
 
+    const receiver =
+      users.find(
+        (user) =>
+          user.accountNumber ===
+          transferData.accountNumber
+      );
+
+
+
+    if (!receiver) {
+      alert(
+        "Recipient account not found."
+      );
+      return;
+    }
+
+
+
+    if (
+      receiver.email === currentUser.email
+    ) {
+      alert(
+        "You cannot transfer money to yourself."
+      );
+      return;
+    }
+
+
+
     const transactionId =
       "TXN" +
       Math.floor(
@@ -74,7 +103,7 @@ function EnterPin() {
 
       name:
         "Transfer to " +
-        transferData.recipient,
+        receiver.name,
 
       date:
         new Date().toLocaleDateString(),
@@ -93,7 +122,8 @@ function EnterPin() {
         transferData.accountNumber,
 
       description:
-        transferData.description || "Transfer",
+        transferData.description ||
+        "Transfer",
 
       transactionId,
 
@@ -121,10 +151,11 @@ function EnterPin() {
         transferData.bank,
 
       accountNumber:
-        transferData.accountNumber,
+        currentUser.accountNumber,
 
       description:
-        transferData.description || "Transfer received",
+        transferData.description ||
+        "Transfer received",
 
       transactionId,
 
@@ -137,7 +168,9 @@ function EnterPin() {
       ...currentUser,
 
       balance:
-        currentUser.balance - transferAmount,
+        currentUser.balance -
+        transferAmount,
+
 
       transactions:[
 
@@ -151,11 +184,34 @@ function EnterPin() {
 
 
 
+    const updatedReceiver = {
+
+      ...receiver,
+
+      balance:
+        (receiver.balance || 0) +
+        transferAmount,
+
+
+      transactions:[
+
+        ...(receiver.transactions || []),
+
+        receiverTransaction,
+
+      ],
+
+    };
+
+
+
     const updatedUsers =
       users.map((user)=>{
 
 
-        if(user.email === currentUser.email){
+        if(
+          user.email === currentUser.email
+        ){
 
           return updatedSender;
 
@@ -163,31 +219,10 @@ function EnterPin() {
 
 
         if(
-          user.accountNumber ===
-          transferData.accountNumber
-          ||
-          user.name ===
-          transferData.recipient
+          user.email === receiver.email
         ){
 
-          return {
-
-            ...user,
-
-            balance:
-              (user.balance || 0)
-              + transferAmount,
-
-
-            transactions:[
-
-              ...(user.transactions || []),
-
-              receiverTransaction,
-
-            ],
-
-          };
+          return updatedReceiver;
 
         }
 
@@ -230,7 +265,6 @@ function EnterPin() {
         }
 
       }
-
     );
 
 
@@ -376,6 +410,7 @@ const inputStyle = {
 
   width:"100%",
   padding:"14px",
+  marginTop:"20px",
   marginBottom:"20px",
   backgroundColor:"#111",
   border:"1px solid #333",

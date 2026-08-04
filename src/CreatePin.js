@@ -32,7 +32,9 @@ function CreatePin() {
       email: signupData.email,
       password: signupData.password,
       pin,
+
       balance: 200350,
+
       accountNumber: Math.floor(
         1000000000 + Math.random() * 9000000000
       ).toString(),
@@ -40,9 +42,11 @@ function CreatePin() {
       transactions: [
         {
           name: "Welcome Bonus",
-          date: "Today",
+          date: new Date().toLocaleDateString(),
           amount: "+ ₦200,350",
           type: "credit",
+          transactionId:
+            "TXN" + Math.floor(Math.random() * 1000000),
         },
       ],
 
@@ -55,34 +59,44 @@ function CreatePin() {
         localStorage.getItem("swiftWalletUsers")
       ) || [];
 
+
     const userExists = existingUsers.some(
-      (user) => user.email === newUser.email
+      (user) =>
+        user.email === newUser.email
     );
+
 
     if (userExists) {
       alert("An account with this email already exists.");
       return;
     }
 
+
     existingUsers.push(newUser);
+
 
     localStorage.setItem(
       "swiftWalletUsers",
       JSON.stringify(existingUsers)
     );
 
+
     localStorage.setItem(
       "swiftWalletCurrentUser",
       JSON.stringify(newUser)
     );
 
+
     localStorage.removeItem(
       "swiftWalletSignup"
     );
 
+
     navigate("/login");
+
     window.scrollTo(0, 0);
   };
+
 
   return (
     <div
@@ -93,8 +107,10 @@ function CreatePin() {
         justifyContent: "center",
         alignItems: "center",
         position: "relative",
+        color: "#fff",
       }}
     >
+
       <Link
         to="/"
         onClick={() => window.scrollTo(0, 0)}
@@ -108,6 +124,7 @@ function CreatePin() {
           textDecoration: "none",
         }}
       >
+
         <div
           style={{
             width: "40px",
@@ -124,6 +141,7 @@ function CreatePin() {
           SW
         </div>
 
+
         <span
           style={{
             color: "#fff",
@@ -133,7 +151,9 @@ function CreatePin() {
         >
           Swift Wallet
         </span>
+
       </Link>
+
 
       <div
         style={{
@@ -147,6 +167,7 @@ function CreatePin() {
             "0 0 20px rgba(34,197,94,0.15)",
         }}
       >
+
         <p
           style={{
             color: "#22c55e",
@@ -156,6 +177,7 @@ function CreatePin() {
         >
           Step 5 of 5
         </p>
+
 
         <div
           style={{
@@ -167,6 +189,7 @@ function CreatePin() {
             marginBottom: "30px",
           }}
         >
+
           <div
             style={{
               width: "100%",
@@ -174,7 +197,9 @@ function CreatePin() {
               backgroundColor: "#22c55e",
             }}
           />
+
         </div>
+
 
         <h1
           style={{
@@ -185,6 +210,7 @@ function CreatePin() {
         >
           Create Your PIN
         </h1>
+
 
         <p
           style={{
@@ -197,19 +223,21 @@ function CreatePin() {
           Create a secure 4-digit PIN to authorise transfers and payments.
         </p>
 
+
         <input
           type="password"
           inputMode="numeric"
           maxLength="4"
           placeholder="Enter 4-digit PIN"
           value={pin}
-          onChange={(e) => {
-            const value = e.target.value.replace(/\D/g, "");
-
-            setPin(value);
-          }}
+          onChange={(e) =>
+            setPin(
+              e.target.value.replace(/\D/g, "")
+            )
+          }
           style={inputStyle}
         />
+
 
         <input
           type="password"
@@ -217,13 +245,14 @@ function CreatePin() {
           maxLength="4"
           placeholder="Confirm PIN"
           value={confirmPin}
-          onChange={(e) => {
-            const value = e.target.value.replace(/\D/g, "");
-
-            setConfirmPin(value);
-          }}
+          onChange={(e) =>
+            setConfirmPin(
+              e.target.value.replace(/\D/g, "")
+            )
+          }
           style={inputStyle}
         />
+
 
         <button
           onClick={finishSetup}
@@ -231,6 +260,7 @@ function CreatePin() {
         >
           Finish Setup
         </button>
+
 
         <p
           style={{
@@ -241,10 +271,13 @@ function CreatePin() {
         >
           Your PIN will be required whenever you make a transaction.
         </p>
+
       </div>
+
     </div>
   );
 }
+
 
 const inputStyle = {
   width: "100%",
@@ -259,6 +292,7 @@ const inputStyle = {
   fontSize: "15px",
 };
 
+
 const buttonStyle = {
   width: "100%",
   padding: "14px",
@@ -270,5 +304,6 @@ const buttonStyle = {
   cursor: "pointer",
   fontSize: "15px",
 };
+
 
 export default CreatePin;
