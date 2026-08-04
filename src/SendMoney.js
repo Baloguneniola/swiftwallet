@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 function SendMoney() {
+  const navigate = useNavigate();
 
   const [transferData, setTransferData] = useState({
     recipient: "",
@@ -11,6 +12,29 @@ function SendMoney() {
     description: "",
   });
 
+  const handleContinue = () => {
+    if (
+      !transferData.recipient ||
+      !transferData.bank ||
+      !transferData.accountNumber ||
+      !transferData.amount
+    ) {
+      alert("Please complete all required fields.");
+      return;
+    }
+
+    if (transferData.accountNumber.length < 10) {
+      alert("Please enter a valid account number.");
+      return;
+    }
+
+    navigate("/confirm-transfer", {
+      state: {
+        ...transferData,
+        amount: Number(transferData.amount),
+      },
+    });
+  };
 
   return (
     <div
@@ -23,8 +47,6 @@ function SendMoney() {
         position: "relative",
       }}
     >
-
-      {/* Swift Wallet Logo */}
       <Link
         to="/dashboard"
         onClick={() => window.scrollTo(0, 0)}
@@ -38,7 +60,6 @@ function SendMoney() {
           textDecoration: "none",
         }}
       >
-
         <div
           style={{
             width: "40px",
@@ -55,7 +76,6 @@ function SendMoney() {
           SW
         </div>
 
-
         <span
           style={{
             color: "#fff",
@@ -65,12 +85,8 @@ function SendMoney() {
         >
           Swift Wallet
         </span>
-
       </Link>
 
-
-
-      {/* Card */}
       <div
         style={{
           width: "450px",
@@ -78,10 +94,9 @@ function SendMoney() {
           padding: "40px",
           borderRadius: "15px",
           border: "1px solid #2a2a2a",
-          boxShadow: "0 0 20px rgba(34,197,94,0.15)",
+          boxShadow: "0 0 20px rgba(34,197,34,0.15)",
         }}
       >
-
         <h1
           style={{
             color: "#22c55e",
@@ -92,7 +107,6 @@ function SendMoney() {
           Send Money
         </h1>
 
-
         <p
           style={{
             color: "#aaa",
@@ -102,8 +116,6 @@ function SendMoney() {
         >
           Transfer money quickly and securely.
         </p>
-
-
 
         <input
           type="text"
@@ -118,57 +130,52 @@ function SendMoney() {
           }
         />
 
-
         <div
-  style={{
-    position: "relative",
-    marginBottom: "18px",
-  }}
->
-  <select
-    style={{
-      ...inputStyle,
-      appearance: "none",
-      WebkitAppearance: "none",
-      MozAppearance: "none",
-      paddingRight: "40px",
-      marginBottom: "0",
-    }}
-    value={transferData.bank}
-    onChange={(e) =>
-      setTransferData({
-        ...transferData,
-        bank: e.target.value,
-      })
-    }
-  >
-    <option value="">Select Bank</option>
-    <option>Ecobank</option>
-    <option>Access Bank</option>
-    <option>GTBank</option>
-    <option>First Bank</option>
-    <option>UBA</option>
-    <option>Zenith Bank</option>
-    <option>Kuda</option>
-    <option>Opay</option>
-  </select>
+          style={{
+            position: "relative",
+            marginBottom: "18px",
+          }}
+        >
+          <select
+            style={{
+              ...inputStyle,
+              appearance: "none",
+              paddingRight: "40px",
+              marginBottom: "0",
+            }}
+            value={transferData.bank}
+            onChange={(e) =>
+              setTransferData({
+                ...transferData,
+                bank: e.target.value,
+              })
+            }
+          >
+            <option value="">Select Bank</option>
+            <option>Ecobank</option>
+            <option>Access Bank</option>
+            <option>GTBank</option>
+            <option>First Bank</option>
+            <option>UBA</option>
+            <option>Zenith Bank</option>
+            <option>Kuda</option>
+            <option>Opay</option>
+          </select>
 
-  <span
-    style={{
-      position: "absolute",
-      right: "10px",
-      top: "55%",
-      transform: "translateY(-50%)",
-      pointerEvents: "none",
-      color: "#fff",
-      fontSize: "12px",
-    }}
-  >
-    ▼
-  </span>
-</div>
-
-
+          <span
+            style={{
+              position: "absolute",
+              right: "10px",
+              top: "55%",
+              transform: "translateY(-50%)",
+              pointerEvents: "none",
+              color: "#fff",
+              fontSize: "12px",
+            }}
+          >
+            ▼
+          </span>
+        </div>
 
         <input
           type="text"
@@ -183,30 +190,26 @@ function SendMoney() {
           }
         />
 
-
-
-      <input
-        type="text"
-        placeholder="Amount (₦)"
-        style={inputStyle}
-        value={
-          transferData.amount
-          ?  Number(transferData.amount).toLocaleString("en-NG")
-          : ""
-        }
-        onChange={(e) => {
-          const value = e.target.value.replace(/,/g, "");
-
-          if (!isNaN(value)) {
-            setTransferData({
-              ...transferData,
-              amount: value,
-            });
+        <input
+          type="text"
+          placeholder="Amount (₦)"
+          style={inputStyle}
+          value={
+            transferData.amount
+              ? Number(transferData.amount).toLocaleString("en-NG")
+              : ""
           }
-        }}
-      />
+          onChange={(e) => {
+            const value = e.target.value.replace(/,/g, "");
 
-
+            if (!isNaN(value)) {
+              setTransferData({
+                ...transferData,
+                amount: value,
+              });
+            }
+          }}
+        />
 
         <textarea
           placeholder="Description (Optional)"
@@ -220,25 +223,16 @@ function SendMoney() {
           }
         />
 
-
-
-        <Link
-          to="/confirm-transfer"
-          state={transferData}
-          style={{
-            textDecoration: "none",
-          }}
+        <button
+          onClick={handleContinue}
+          style={buttonStyle}
         >
-          <button style={buttonStyle}>
-            Continue
-          </button>
-        </Link>
-
-
+          Continue
+        </button>
 
         <Link
           to="/dashboard"
-          onClick={() => window.scrollTo(0,0)}
+          onClick={() => window.scrollTo(0, 0)}
           style={{
             textDecoration: "none",
           }}
@@ -252,15 +246,10 @@ function SendMoney() {
             ← Back to Dashboard
           </button>
         </Link>
-
-
       </div>
-
     </div>
   );
 }
-
-
 
 const inputStyle = {
   width: "100%",
@@ -274,7 +263,6 @@ const inputStyle = {
   outline: "none",
   boxSizing: "border-box",
 };
-
 
 const textAreaStyle = {
   width: "100%",
@@ -291,7 +279,6 @@ const textAreaStyle = {
   boxSizing: "border-box",
 };
 
-
 const buttonStyle = {
   width: "100%",
   padding: "14px",
@@ -304,7 +291,6 @@ const buttonStyle = {
   cursor: "pointer",
 };
 
-
 const secondaryButton = {
   width: "100%",
   padding: "14px",
@@ -316,6 +302,5 @@ const secondaryButton = {
   fontSize: "15px",
   cursor: "pointer",
 };
-
 
 export default SendMoney;

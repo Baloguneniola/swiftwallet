@@ -1,35 +1,43 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
-const transactions = [
-  { name: "Netflix Subscription", date: "Today", amount: "- ₦4,500", type: "debit" },
-  { name: "Monthly Salary", date: "Yesterday", amount: "+ ₦180,000", type: "credit" },
-  { name: "Electricity Bill", date: "2 Days Ago", amount: "- ₦12,000", type: "debit" },
-  { name: "Transfer from Toby", date: "5 Days Ago", amount: "+ ₦25,000", type: "credit" },
-  { name: "Jumia Order #4471", date: "6 Days Ago", amount: "- ₦18,250", type: "debit" },
-  { name: "Transfer to Lola", date: "1 Week Ago", amount: "- ₦10,000", type: "debit" },
-  { name: "Spotify Premium", date: "1 Week Ago", amount: "- ₦1,900", type: "debit" },
-  { name: "Freelance Payment", date: "2 Weeks Ago", amount: "+ ₦65,000", type: "credit" },
-  { name: "MTN Airtime", date: "2 Weeks Ago", amount: "- ₦2,000", type: "debit" },
-  { name: "DSTV Subscription", date: "3 Weeks Ago", amount: "- ₦21,000", type: "debit" },
-];
-
 function TransactionHistory() {
+  const currentUser =
+    JSON.parse(localStorage.getItem("swiftWalletCurrentUser")) || {};
+
+  const transactions = currentUser.transactions || [];
+
   const [filter, setFilter] = useState("All");
   const [search, setSearch] = useState("");
 
-  const filtered = transactions.filter((t) => {
+  const filteredTransactions = transactions.filter((transaction) => {
     const matchesFilter =
       filter === "All" ||
-      (filter === "Credit" && t.type === "credit") ||
-      (filter === "Debit" && t.type === "debit");
+      (filter === "Credit" && transaction.type === "credit") ||
+      (filter === "Debit" && transaction.type === "debit");
 
-    const matchesSearch = t.name
+    const matchesSearch = transaction.name
       .toLowerCase()
       .includes(search.toLowerCase());
 
     return matchesFilter && matchesSearch;
   });
+
+  const moneyIn = transactions
+    .filter((transaction) => transaction.type === "credit")
+    .reduce(
+      (total, transaction) =>
+        total + Number(transaction.amount.replace(/[^\d]/g, "")),
+      0
+    );
+
+  const moneyOut = transactions
+    .filter((transaction) => transaction.type === "debit")
+    .reduce(
+      (total, transaction) =>
+        total + Number(transaction.amount.replace(/[^\d]/g, "")),
+      0
+    );
 
   return (
     <div
@@ -109,7 +117,7 @@ function TransactionHistory() {
             marginBottom: "35px",
           }}
         >
-          A full record of the money moving in and out of your account.
+          A full record of your account activity.
         </p>
 
         <div
@@ -126,34 +134,42 @@ function TransactionHistory() {
           }}
         >
           <div>
-            <p style={{ color: "#999", marginBottom: "10px" }}>
+            <p
+              style={{
+                color: "#999",
+                marginBottom: "10px",
+              }}
+            >
               Money In
             </p>
 
             <h2
               style={{
                 color: "#22c55e",
-                fontSize: "28px",
                 margin: 0,
               }}
             >
-              + ₦270,000
+              + ₦{moneyIn.toLocaleString("en-NG")}
             </h2>
           </div>
 
           <div>
-            <p style={{ color: "#999", marginBottom: "10px" }}>
+            <p
+              style={{
+                color: "#999",
+                marginBottom: "10px",
+              }}
+            >
               Money Out
             </p>
 
             <h2
               style={{
                 color: "#ff5f5f",
-                fontSize: "28px",
                 margin: 0,
               }}
             >
-              - ₦69,650
+              - ₦{moneyOut.toLocaleString("en-NG")}
             </h2>
           </div>
         </div>
@@ -163,56 +179,28 @@ function TransactionHistory() {
             Filter Transactions
           </h3>
 
-          <div
-            style={{
-              position: "relative",
-              marginBottom: "18px",
-            }}
+          <select
+            style={inputStyle}
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
           >
-            <select
-              style={{
-                ...inputStyle,
-                appearance: "none",
-                WebkitAppearance: "none",
-                MozAppearance: "none",
-                paddingRight: "40px",
-                marginBottom: "0",
-              }}
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-            >
-              <option value="All">
-                All Transactions
-              </option>
+            <option value="All">
+              All Transactions
+            </option>
 
-              <option value="Credit">
-                Money In
-              </option>
+            <option value="Credit">
+              Money In
+            </option>
 
-              <option value="Debit">
-                Money Out
-              </option>
-            </select>
-
-            <span
-              style={{
-                position: "absolute",
-                right: "10px",
-                top: "55%",
-                transform: "translateY(-50%)",
-                pointerEvents: "none",
-                color: "#fff",
-                fontSize: "12px",
-              }}
-            >
-              ▼
-            </span>
-          </div>
+            <option value="Debit">
+              Money Out
+            </option>
+          </select>
 
           <input
             type="text"
-            placeholder="Search by name"
-            style={{ ...inputStyle, marginBottom: 0 }}
+            placeholder="Search transactions"
+            style={inputStyle}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -225,50 +213,60 @@ function TransactionHistory() {
           }}
         >
           <h3 style={titleStyle}>
-            {filter === "All"
-              ? "All Transactions"
-              : filter === "Credit"
-              ? "Money In"
-              : "Money Out"}
+            Transactions
           </h3>
 
-          {filtered.length === 0 ? (
-            <p style={{ color: "#999" }}>
+          {filteredTransactions.length === 0 ? (
+            <p
+              style={{
+                color: "#999",
+              }}
+            >
               No transactions found.
             </p>
           ) : (
-            filtered.map((t, index) => (
+            filteredTransactions.map((transaction, index) => (
               <div
                 key={index}
                 style={{
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
+                  padding: "15px 0",
                   borderBottom:
-                    index === filtered.length - 1
+                    index === filteredTransactions.length - 1
                       ? "none"
                       : "1px solid #2a2a2a",
-                  padding: "15px 0",
                 }}
               >
                 <div>
-                  <div>{t.name}</div>
+                  <div
+                    style={{
+                      fontWeight: "600",
+                    }}
+                  >
+                    {transaction.name}
+                  </div>
 
-                  <small style={{ color: "#888" }}>
-                    {t.date}
+                  <small
+                    style={{
+                      color: "#888",
+                    }}
+                  >
+                    {transaction.date}
                   </small>
                 </div>
 
                 <span
                   style={{
                     color:
-                      t.type === "credit"
+                      transaction.type === "credit"
                         ? "#22c55e"
                         : "#ff5f5f",
                     fontWeight: "700",
                   }}
                 >
-                  {t.amount}
+                  {transaction.amount}
                 </span>
               </div>
             ))

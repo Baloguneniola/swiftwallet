@@ -2,13 +2,17 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
 function AddMoney() {
+  const currentUser = JSON.parse(
+    localStorage.getItem("swiftWalletCurrentUser")
+  );
 
   const [amount, setAmount] = useState("");
-  const [balance, setBalance] = useState(200350);
+  const [balance, setBalance] = useState(
+    currentUser?.balance || 0
+  );
 
   const [showCardForm, setShowCardForm] = useState(false);
   const [selectedCard, setSelectedCard] = useState("saved");
-
   const [loading, setLoading] = useState(false);
 
   const [successMessage, setSuccessMessage] = useState("");
@@ -22,34 +26,22 @@ function AddMoney() {
   });
 
 
-  const [recentTopUps, setRecentTopUps] = useState([
-    {
-      amount: "+ ₦10,000",
-      method: "Debit Card",
-      date: "Today",
-    },
-    {
-      amount: "+ ₦25,000",
-      method: "Bank Transfer",
-      date: "Yesterday",
-    },
-    {
-      amount: "+ ₦5,000",
-      method: "Debit Card",
-      date: "Last Week",
-    },
-  ]);
+  const recentTopUps =
+    currentUser?.transactions
+      ?.filter((transaction) =>
+        transaction.type === "credit"
+      )
+      .slice(-5)
+      .reverse() || [];
 
 
   const handleContinue = () => {
-
     if (!amount) {
       alert("Please enter an amount");
       return;
     }
 
     setShowCardForm(true);
-
   };
 
 
@@ -71,37 +63,84 @@ function AddMoney() {
 
     const newAmount = Number(amount);
 
+
+    if (!currentUser) {
+      alert("User session not found.");
+      return;
+    }
+
+
     setLoading(true);
 
 
     setTimeout(() => {
 
-      setBalance(balance + newAmount);
+      const newTransaction = {
+        name: "Wallet Top Up",
+        date: "Today",
+        amount:
+          "+ ₦" +
+          newAmount.toLocaleString("en-NG"),
+        type: "credit",
+        method: "Debit Card",
+        transactionId:
+          "TXN" +
+          Math.floor(Math.random() * 1000000),
+      };
 
 
-      setRecentTopUps([
-        {
-          amount: `+ ₦${newAmount.toLocaleString("en-NG")}`,
-          method: "Debit Card",
-          date: "Just now",
-        },
-        ...recentTopUps,
-      ]);
+      const updatedUser = {
+        ...currentUser,
+        balance:
+          currentUser.balance + newAmount,
+        transactions: [
+          ...(currentUser.transactions || []),
+          newTransaction,
+        ],
+      };
+
+
+      const users =
+        JSON.parse(
+          localStorage.getItem("swiftWalletUsers")
+        ) || [];
+
+
+      const updatedUsers = users.map((user) =>
+        user.email === updatedUser.email
+          ? updatedUser
+          : user
+      );
+
+
+      localStorage.setItem(
+        "swiftWalletUsers",
+        JSON.stringify(updatedUsers)
+      );
+
+
+      localStorage.setItem(
+        "swiftWalletCurrentUser",
+        JSON.stringify(updatedUser)
+      );
+
+
+      setBalance(updatedUser.balance);
 
 
       setTransactionId(
-        "TXN" + Math.floor(Math.random() * 1000000)
+        newTransaction.transactionId
       );
 
 
       setSuccessMessage(
-        "Money added successfully ✅"
+        "Money added successfully"
       );
 
 
-      setLoading(false);
       setAmount("");
       setShowCardForm(false);
+      setLoading(false);
 
 
       setCardDetails({
@@ -112,27 +151,24 @@ function AddMoney() {
       });
 
 
-    }, 1500);
+    },1500);
 
   };
 
 
   return (
-
     <div
       style={{
-        backgroundColor: "#0d0d0d",
-        minHeight: "100vh",
-        color: "#fff",
+        backgroundColor:"#0d0d0d",
+        minHeight:"100vh",
+        color:"#fff",
       }}
     >
 
-      {/* HEADER */}
-
       <div
         style={{
-          padding: "16px 40px",
-          borderBottom: "1px solid #222",
+          padding:"16px 40px",
+          borderBottom:"1px solid #222",
         }}
       >
 
@@ -154,14 +190,15 @@ function AddMoney() {
               backgroundColor:"#22c55e",
               borderRadius:"10px",
               display:"flex",
-              alignItems:"center",
               justifyContent:"center",
+              alignItems:"center",
               color:"#000",
               fontWeight:"bold",
             }}
           >
             SW
           </div>
+
 
           <span
             style={{
@@ -178,7 +215,6 @@ function AddMoney() {
       </div>
 
 
-      {/* CONTENT */}
 
       <div
         style={{
@@ -192,7 +228,6 @@ function AddMoney() {
           style={{
             color:"#22c55e",
             fontSize:"38px",
-            marginBottom:"10px",
           }}
         >
           Add Money
@@ -209,13 +244,13 @@ function AddMoney() {
         </p>
 
 
-        {/* BALANCE */}
 
         <div style={cardStyle}>
 
           <p style={labelStyle}>
             Current Balance
           </p>
+
 
           <h2
             style={{
@@ -224,13 +259,14 @@ function AddMoney() {
               margin:0,
             }}
           >
-            ₦{balance.toLocaleString("en-NG")}.00
+            ₦
+            {balance.toLocaleString("en-NG")}
+            .00
           </h2>
 
         </div>
 
 
-        {/* PAYMENT */}
 
         <div
           style={{
@@ -240,8 +276,9 @@ function AddMoney() {
         >
 
           <h2 style={titleStyle}>
-            💳 Card Payment
+            Card Payment
           </h2>
+
 
           <p style={textStyle}>
             Enter the amount and select your payment method.
@@ -251,17 +288,15 @@ function AddMoney() {
           <input
             style={inputStyle}
             placeholder="Amount (₦)"
-            autoComplete="off"
-            name="wallet_amount"
             value={
               amount
-              ? Number(amount).toLocaleString("en-NG")
-              : ""
+                ? Number(amount).toLocaleString("en-NG")
+                : ""
             }
             onChange={(e)=>{
 
               const value =
-              e.target.value.replace(/,/g,"");
+                e.target.value.replace(/,/g,"");
 
               if(!isNaN(value)){
                 setAmount(value);
@@ -269,6 +304,7 @@ function AddMoney() {
 
             }}
           />
+
 
 
           {!showCardForm && (
@@ -283,94 +319,52 @@ function AddMoney() {
           )}
 
 
+
           {showCardForm && (
 
-            <div
-              style={{
-                marginTop:"25px",
-              }}
-            >
-
-              <h3
-                style={{
-                  color:"#22c55e",
-                  marginBottom:"20px",
-                }}
-              >
-                Choose Payment Method
-              </h3>
-
-                            {/* SAVED CARD */}
+            <>
 
               <div
                 style={cardOption}
-                onClick={() => setSelectedCard("saved")}
+                onClick={() =>
+                  setSelectedCard("saved")
+                }
               >
 
                 <input
                   type="radio"
-                  checked={selectedCard === "saved"}
+                  checked={
+                    selectedCard === "saved"
+                  }
                   readOnly
                 />
 
-                <div>
-
-                  <p
-                    style={{
-                      margin:0,
-                      fontWeight:"700",
-                    }}
-                  >
-                    💳 Visa Card
-                  </p>
-
-                  <small
-                    style={{
-                      color:"#888",
-                    }}
-                  >
-                    **** **** **** 4242
-                  </small>
-
-                </div>
+                <span>
+                  Saved Visa Card
+                </span>
 
               </div>
 
 
 
-              {/* NEW CARD */}
-
               <div
                 style={cardOption}
-                onClick={() => setSelectedCard("new")}
+                onClick={() =>
+                  setSelectedCard("new")
+                }
               >
 
                 <input
                   type="radio"
-                  checked={selectedCard === "new"}
+                  checked={
+                    selectedCard === "new"
+                  }
                   readOnly
                 />
 
-                <div>
-
-                  <p
-                    style={{
-                      margin:0,
-                      fontWeight:"700",
-                    }}
-                  >
-                    ➕ Add New Card
-                  </p>
-
-                  <small
-                    style={{
-                      color:"#888",
-                    }}
-                  >
-                    Enter your card details manually
-                  </small>
-
-                </div>
+                <span>
+                  Add New Card
+                </span>
 
               </div>
 
@@ -378,13 +372,11 @@ function AddMoney() {
 
               {selectedCard === "new" && (
 
-                <div>
+                <>
 
                   <input
                     style={inputStyle}
                     placeholder="Card Holder Name"
-                    autoComplete="off"
-                    name="wallet_name"
                     value={cardDetails.name}
                     onChange={(e)=>
                       setCardDetails({
@@ -398,8 +390,6 @@ function AddMoney() {
                   <input
                     style={inputStyle}
                     placeholder="Card Number"
-                    autoComplete="off"
-                    name="wallet_number"
                     value={cardDetails.number}
                     onChange={(e)=>
                       setCardDetails({
@@ -409,46 +399,7 @@ function AddMoney() {
                     }
                   />
 
-
-                  <div
-                    style={{
-                      display:"flex",
-                      gap:"15px",
-                    }}
-                  >
-
-                    <input
-                      style={inputStyle}
-                      placeholder="Expiry Date"
-                      autoComplete="off"
-                      name="wallet_expiry"
-                      value={cardDetails.expiry}
-                      onChange={(e)=>
-                        setCardDetails({
-                          ...cardDetails,
-                          expiry:e.target.value,
-                        })
-                      }
-                    />
-
-
-                    <input
-                      style={inputStyle}
-                      placeholder="CVV"
-                      autoComplete="off"
-                      name="wallet_cvv"
-                      value={cardDetails.cvv}
-                      onChange={(e)=>
-                        setCardDetails({
-                          ...cardDetails,
-                          cvv:e.target.value,
-                        })
-                      }
-                    />
-
-                  </div>
-
-                </div>
+                </>
 
               )}
 
@@ -459,15 +410,12 @@ function AddMoney() {
                 onClick={handleAddMoney}
                 disabled={loading}
               >
-                {
-                  loading
+                {loading
                   ? "Processing..."
-                  : "Add Money"
-                }
+                  : "Add Money"}
               </button>
 
-
-            </div>
+            </>
 
           )}
 
@@ -477,8 +425,8 @@ function AddMoney() {
 
             <div
               style={{
-                marginTop:"20px",
                 textAlign:"center",
+                marginTop:"20px",
               }}
             >
 
@@ -508,7 +456,6 @@ function AddMoney() {
 
 
 
-        {/* RECENT TOP UPS */}
 
         <div
           style={{
@@ -529,32 +476,14 @@ function AddMoney() {
               style={{
                 display:"flex",
                 justifyContent:"space-between",
-                alignItems:"center",
                 padding:"15px 0",
                 borderBottom:"1px solid #2a2a2a",
               }}
             >
 
-              <div>
-
-                <p
-                  style={{
-                    margin:0,
-                  }}
-                >
-                  {item.method}
-                </p>
-
-
-                <small
-                  style={{
-                    color:"#888",
-                  }}
-                >
-                  {item.date}
-                </small>
-
-              </div>
+              <span>
+                {item.name}
+              </span>
 
 
               <span
@@ -571,7 +500,6 @@ function AddMoney() {
           ))}
 
         </div>
-
 
 
 
@@ -598,11 +526,8 @@ function AddMoney() {
       </div>
 
     </div>
-
   );
-
 }
-
 
 
 
@@ -616,7 +541,6 @@ const cardStyle = {
 
 const titleStyle = {
   color:"#22c55e",
-  marginBottom:"10px",
 };
 
 
@@ -627,7 +551,6 @@ const labelStyle = {
 
 const textStyle = {
   color:"#999",
-  lineHeight:"1.6",
 };
 
 
@@ -639,7 +562,6 @@ const inputStyle = {
   border:"1px solid #333",
   borderRadius:"8px",
   color:"#fff",
-  outline:"none",
   boxSizing:"border-box",
 };
 
@@ -652,7 +574,6 @@ const buttonStyle = {
   border:"none",
   borderRadius:"8px",
   fontWeight:"700",
-  fontSize:"15px",
   cursor:"pointer",
 };
 
@@ -665,7 +586,6 @@ const cardOption = {
   marginBottom:"15px",
   cursor:"pointer",
   display:"flex",
-  alignItems:"center",
   gap:"12px",
 };
 
