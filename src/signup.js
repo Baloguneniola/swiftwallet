@@ -5,12 +5,14 @@ function Signup() {
 
   const navigate = useNavigate();
 
+
   const [signupData, setSignupData] = useState({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
+
 
 
   const handleSignup = () => {
@@ -23,10 +25,12 @@ function Signup() {
     } = signupData;
 
 
+
     if (!name || !email || !password || !confirmPassword) {
       alert("Please complete all fields");
       return;
     }
+
 
 
     if (password !== confirmPassword) {
@@ -35,13 +39,18 @@ function Signup() {
     }
 
 
+
     const existingUsers =
-      JSON.parse(localStorage.getItem("swiftWalletUsers")) || [];
+      JSON.parse(
+        localStorage.getItem("swiftWalletUsers")
+      ) || [];
 
 
-    const userExists = existingUsers.find(
+
+    const userExists = existingUsers.some(
       (user) => user.email === email
     );
+
 
 
     if (userExists) {
@@ -51,62 +60,35 @@ function Signup() {
 
 
 
-    const newUser = {
 
-      id: Date.now(),
-
-      name: name,
-
-      email: email,
-
-      password: password,
-
-
-      balance: 50000,
-
-
-      transactions: [
-        {
-          name: "Welcome to Swift Wallet",
-          date: "Today",
-          amount: "+ ₦50,000",
-        }
-      ],
-
-
-      topUps: [],
-
-
-      payments: [],
-
-
-      accountNumber:
-        Math.floor(1000000000 + Math.random() * 9000000000)
-
-    };
-
-
+    // Save temporary signup details
+    // These will be used by CreatePin.js
 
     localStorage.setItem(
-      "swiftWalletUsers",
-      JSON.stringify([
-        ...existingUsers,
-        newUser
-      ])
+      "swiftWalletSignup",
+      JSON.stringify({
+        name,
+        email,
+        password
+      })
     );
 
 
 
-    // Save temporary signup user
+    // Used by verification page
+
     localStorage.setItem(
       "pendingUserEmail",
       email
     );
 
 
+
     navigate("/verify-email");
 
   };
+
+
 
 
 
@@ -125,6 +107,7 @@ function Signup() {
     >
 
 
+
       <Link
         to="/"
         style={{
@@ -137,6 +120,7 @@ function Signup() {
           textDecoration:"none",
         }}
       >
+
 
         <div
           style={{
@@ -155,6 +139,7 @@ function Signup() {
         </div>
 
 
+
         <span
           style={{
             color:"#fff",
@@ -167,6 +152,8 @@ function Signup() {
 
 
       </Link>
+
+
 
 
 
@@ -184,6 +171,7 @@ function Signup() {
       >
 
 
+
         <h1
           style={{
             color:"#22c55e",
@@ -193,6 +181,7 @@ function Signup() {
         >
           Create Account
         </h1>
+
 
 
 
@@ -208,10 +197,10 @@ function Signup() {
 
 
 
+
         <input
           type="text"
           placeholder="Full Name"
-          autoComplete="off"
           style={inputStyle}
           value={signupData.name}
           onChange={(e)=>
@@ -224,10 +213,11 @@ function Signup() {
 
 
 
+
+
         <input
           type="email"
           placeholder="Email Address"
-          autoComplete="off"
           style={inputStyle}
           value={signupData.email}
           onChange={(e)=>
@@ -240,10 +230,11 @@ function Signup() {
 
 
 
+
+
         <input
           type="password"
           placeholder="Password"
-          autoComplete="new-password"
           style={inputStyle}
           value={signupData.password}
           onChange={(e)=>
@@ -256,10 +247,11 @@ function Signup() {
 
 
 
+
+
         <input
           type="password"
           placeholder="Confirm Password"
-          autoComplete="new-password"
           style={inputStyle}
           value={signupData.confirmPassword}
           onChange={(e)=>
@@ -273,12 +265,15 @@ function Signup() {
 
 
 
+
+
         <button
           onClick={handleSignup}
           style={buttonStyle}
         >
           Continue
         </button>
+
 
 
 
@@ -308,14 +303,16 @@ function Signup() {
         </p>
 
 
-
       </div>
 
 
     </div>
 
   );
+
 }
+
+
 
 
 
@@ -333,6 +330,8 @@ const inputStyle = {
   fontSize:"15px",
 
 };
+
+
 
 
 
