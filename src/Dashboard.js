@@ -1,25 +1,32 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 
 function Dashboard() {
   const navigate = useNavigate();
 
+  const [showBalance, setShowBalance] = React.useState(true);
+
   const currentUser =
-    JSON.parse(
-      localStorage.getItem("swiftWalletCurrentUser")
-    ) || {};
+    JSON.parse(localStorage.getItem("swiftWalletCurrentUser")) || {};
 
   const userName =
     currentUser.name ||
     localStorage.getItem("swiftWalletUser") ||
     "User";
 
-  const balance = currentUser.balance || 0;
+  const balance = Number(currentUser.balance) || 0;
+
+  const accountNumber =
+    currentUser.accountNumber || "N/A";
 
   const transactions =
-    currentUser.transactions
-      ?.slice(-5)
-      .reverse() || [];
+    currentUser.transactions?.slice(-5).reverse() || [];
+
+  const copyAccountNumber = () => {
+    navigator.clipboard.writeText(accountNumber);
+    alert("Account number copied!");
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("swiftWalletUser");
@@ -49,7 +56,7 @@ function Dashboard() {
         }}
       >
         <Link
-          to="/"
+          to="/dashboard"
           onClick={() => window.scrollTo(0, 0)}
           style={{
             display: "flex",
@@ -133,14 +140,39 @@ function Dashboard() {
             marginBottom: "40px",
           }}
         >
-          <p
+          <div
             style={{
-              color: "#999",
-              marginBottom: "10px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
             }}
           >
-            Available Balance
-          </p>
+            <p
+              style={{
+                color: "#999",
+                marginBottom: "10px",
+              }}
+            >
+              Available Balance
+            </p>
+
+            <button
+              onClick={() => setShowBalance(!showBalance)}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#fff",
+                cursor: "pointer",
+                padding: "5px",
+              }}
+            >
+              {showBalance ? (
+                <Eye size={22} />
+              ) : (
+                <EyeOff size={22} />
+              )}
+            </button>
+          </div>
 
           <h2
             style={{
@@ -149,11 +181,60 @@ function Dashboard() {
               margin: 0,
             }}
           >
-            ₦
-            {balance.toLocaleString("en-NG", {
-              minimumFractionDigits: 2,
-            })}
+            {showBalance
+              ? `₦${balance.toLocaleString("en-NG", {
+                  minimumFractionDigits: 2,
+                })}`
+              : "₦••••••••"}
           </h2>
+        </div>
+
+        <div
+          style={{
+            backgroundColor: "#1a1a1a",
+            border: "1px solid #2a2a2a",
+            borderRadius: "15px",
+            padding: "25px 30px",
+            marginBottom: "40px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <div>
+            <p
+              style={{
+                color: "#999",
+                marginBottom: "8px",
+              }}
+            >
+              Account Number
+            </p>
+
+            <h3
+              style={{
+                margin: 0,
+                fontSize: "24px",
+              }}
+            >
+              {accountNumber}
+            </h3>
+          </div>
+
+          <button
+            onClick={copyAccountNumber}
+            style={{
+              backgroundColor: "#22c55e",
+              color: "#000",
+              border: "none",
+              padding: "10px 18px",
+              borderRadius: "8px",
+              fontWeight: "600",
+              cursor: "pointer",
+            }}
+          >
+            Copy
+          </button>
         </div>
 
         <h2
@@ -253,7 +334,10 @@ function Dashboard() {
                   fontWeight: "700",
                 }}
               >
-                {transaction.amount}
+                {transaction.type === "credit" ? "+" : "-"}₦
+                {Number(transaction.amount).toLocaleString("en-NG", {
+                  minimumFractionDigits: 2,
+                })}
               </span>
             </div>
           ))
@@ -273,23 +357,21 @@ function ActionLink({ to, text }) {
       }}
     >
       <button
-        style={actionButton}
+        style={{
+          backgroundColor: "#1a1a1a",
+          color: "#fff",
+          border: "1px solid #333",
+          borderRadius: "12px",
+          padding: "20px 30px",
+          cursor: "pointer",
+          fontSize: "16px",
+          minWidth: "180px",
+        }}
       >
         {text}
       </button>
     </Link>
   );
 }
-
-const actionButton = {
-  backgroundColor: "#1a1a1a",
-  color: "#fff",
-  border: "1px solid #333",
-  borderRadius: "12px",
-  padding: "20px 30px",
-  cursor: "pointer",
-  fontSize: "16px",
-  minWidth: "180px",
-};
 
 export default Dashboard;
