@@ -4,6 +4,8 @@ import { Link, useNavigate } from "react-router-dom";
 function SendMoney() {
   const navigate = useNavigate();
 
+  const [recipientName, setRecipientName] = useState("");
+
   const [transferData, setTransferData] = useState({
     recipient: "",
     bank: "",
@@ -14,7 +16,7 @@ function SendMoney() {
 
   const handleContinue = () => {
     if (
-      !transferData.recipient ||
+      !recipientName ||
       !transferData.bank ||
       !transferData.accountNumber ||
       !transferData.amount
@@ -31,6 +33,7 @@ function SendMoney() {
     navigate("/confirm-transfer", {
       state: {
         ...transferData,
+        recipient: recipientName,
         amount: Number(transferData.amount),
       },
     });
@@ -122,12 +125,7 @@ function SendMoney() {
           placeholder="Recipient Name"
           style={inputStyle}
           value={transferData.recipient}
-          onChange={(e) =>
-            setTransferData({
-              ...transferData,
-              recipient: e.target.value,
-            })
-          }
+          readOnly
         />
 
         <div
@@ -182,13 +180,56 @@ function SendMoney() {
           placeholder="Account Number"
           style={inputStyle}
           value={transferData.accountNumber}
-          onChange={(e) =>
+          onChange={(e) => {
+            const accountNumber = e.target.value;
+
             setTransferData({
               ...transferData,
-              accountNumber: e.target.value,
-            })
-          }
+              accountNumber,
+            });
+
+            const users =
+              JSON.parse(
+                localStorage.getItem("swiftWalletUsers")
+              ) || [];
+
+            const user = users.find(
+              (u) => u.accountNumber === accountNumber
+            );
+
+            if (user) {
+              setRecipientName(user.name);
+
+              setTransferData((prev) => ({
+                ...prev,
+                recipient: user.name,
+              }));
+            } else {
+              setRecipientName("");
+
+              setTransferData((prev) => ({
+                ...prev,
+                recipient: "",
+              }));
+            }
+          }}
         />
+
+        {recipientName && (
+          <div
+            style={{
+              backgroundColor: "#111",
+              border: "1px solid #22c55e",
+              borderRadius: "8px",
+              padding: "12px",
+              marginBottom: "18px",
+              color: "#22c55e",
+              fontWeight: "600",
+            }}
+          >
+            Account Name: {recipientName}
+          </div>
+        )}
 
         <input
           type="text"
@@ -196,7 +237,9 @@ function SendMoney() {
           style={inputStyle}
           value={
             transferData.amount
-              ? Number(transferData.amount).toLocaleString("en-NG")
+              ? Number(
+                  transferData.amount
+                ).toLocaleString("en-NG")
               : ""
           }
           onChange={(e) => {
