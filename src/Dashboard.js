@@ -963,7 +963,7 @@ const styles = {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: "20px 50px",
+    padding: "10px 20px",
     backgroundColor: "#0d0d0d",
     borderBottom: "1px solid #222",
     position: "sticky",
@@ -1063,9 +1063,9 @@ const styles = {
     display: "grid",
     gridTemplateColumns:
       "1fr 1fr",
-    gap: "25px",
+    gap: "20px",
     alignItems: "stretch",
-    marginBottom: "20px"
+    marginBottom: "15px"
   },
 
 
@@ -1073,8 +1073,8 @@ const styles = {
     backgroundColor: "#181818",
     border: "1px solid #292929",
     borderRadius: "18px",
-    padding: "28px",
-    minHeight: "230px",
+    padding: "20px",
+    minHeight: "170px",
     display: "flex",
     flexDirection: "column",
     justifyContent: "center"
@@ -1100,7 +1100,7 @@ const styles = {
   balance: {
     fontSize: "60px",
     color: "#22c55e",
-    margin: "15px 0"
+    margin: "10px 0"
   },
 
 
@@ -1116,7 +1116,7 @@ const styles = {
     color: "#000",
     borderRadius: "20px",
     padding: "28px",
-    minHeight: "150px"
+    minHeight: "190px"
   },
 
 
