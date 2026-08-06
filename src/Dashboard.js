@@ -686,7 +686,7 @@ function Dashboard() {
             icon={
               <History size={22} />
             }
-            title="History"
+            title="Transaction History"
           />
 
 
