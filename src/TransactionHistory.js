@@ -11,6 +11,16 @@ function TransactionHistory() {
   const [filter, setFilter] = useState("All");
   const [search, setSearch] = useState("");
 
+  const getAmount = (amount) => {
+    if (typeof amount === "number") {
+      return amount;
+    }
+
+    return Number(
+      String(amount).replace(/[^\d]/g, "")
+    );
+  };
+
   const filteredTransactions = transactions.filter((transaction) => {
     const matchesFilter =
       filter === "All" ||
@@ -27,25 +37,25 @@ function TransactionHistory() {
 
 
   const moneyIn = transactions
-    .filter((transaction) => transaction.type === "credit")
+    .filter(
+      (transaction) =>
+        transaction.type === "credit"
+    )
     .reduce(
       (total, transaction) =>
-        total +
-        Number(
-          transaction.amount.replace(/[^\d]/g, "")
-        ),
+        total + getAmount(transaction.amount),
       0
     );
 
 
   const moneyOut = transactions
-    .filter((transaction) => transaction.type === "debit")
+    .filter(
+      (transaction) =>
+        transaction.type === "debit"
+    )
     .reduce(
       (total, transaction) =>
-        total +
-        Number(
-          transaction.amount.replace(/[^\d]/g, "")
-        ),
+        total + getAmount(transaction.amount),
       0
     );
 
@@ -109,7 +119,6 @@ function TransactionHistory() {
       </div>
 
 
-
       <div
         style={{
           maxWidth:"750px",
@@ -136,7 +145,6 @@ function TransactionHistory() {
         >
           View all wallet activity.
         </p>
-
 
 
         <div
@@ -182,7 +190,6 @@ function TransactionHistory() {
         </div>
 
 
-
         <div style={cardStyle}>
 
           <select
@@ -206,7 +213,6 @@ function TransactionHistory() {
           </select>
 
 
-
           <input
             style={inputStyle}
             placeholder="Search transactions"
@@ -215,7 +221,6 @@ function TransactionHistory() {
           />
 
         </div>
-
 
 
         <div
@@ -318,7 +323,13 @@ function TransactionHistory() {
                       fontWeight:"700",
                     }}
                   >
-                    {transaction.amount}
+                    {transaction.type === "credit"
+                      ? "+"
+                      : "-"}
+                    ₦
+                    {getAmount(transaction.amount).toLocaleString("en-NG", {
+                      minimumFractionDigits:2,
+                    })}
                   </span>
 
 
@@ -331,7 +342,6 @@ function TransactionHistory() {
           )}
 
         </div>
-
 
 
         <Link

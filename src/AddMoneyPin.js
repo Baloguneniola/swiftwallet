@@ -2,18 +2,15 @@ import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 function AddMoneyPin() {
-
   const [pin, setPin] = useState("");
 
   const navigate = useNavigate();
   const location = useLocation();
 
-
   const amount = location.state?.amount;
 
 
   const handleContinue = () => {
-
     const currentUser =
       JSON.parse(
         localStorage.getItem("swiftWalletCurrentUser")
@@ -32,6 +29,12 @@ function AddMoneyPin() {
     }
 
 
+    if (pin.length !== 4) {
+      alert("Please enter your 4-digit PIN.");
+      return;
+    }
+
+
     if (pin !== currentUser.pin) {
       alert("Incorrect PIN");
       return;
@@ -41,46 +44,51 @@ function AddMoneyPin() {
     const newAmount = Number(amount);
 
 
-    const newTransaction = {
+    if (newAmount <= 0) {
+      alert("Invalid amount.");
+      return;
+    }
 
-      name: "Wallet Top Up",
+
+    const transactionId =
+      "TXN" +
+      Math.floor(
+        Math.random() * 1000000
+      );
+
+
+    const newTransaction = {
+      name:
+        "Wallet Top Up",
 
       date:
         new Date().toLocaleDateString(),
 
       amount:
-        "+ ₦" +
-        newAmount.toLocaleString("en-NG"),
+        newAmount,
 
-      type: "credit",
+      type:
+        "credit",
 
-      method: "Debit Card",
+      method:
+        "Debit Card",
 
-      transactionId:
-        "TXN" +
-        Math.floor(
-          Math.random() * 1000000
-        ),
-
+      transactionId,
     };
 
 
 
     const updatedUser = {
-
       ...currentUser,
 
       balance:
-        currentUser.balance + newAmount,
+        Number(currentUser.balance) +
+        newAmount,
 
       transactions: [
-
         ...(currentUser.transactions || []),
-
         newTransaction,
-
       ],
-
     };
 
 
@@ -94,13 +102,9 @@ function AddMoneyPin() {
 
     const updatedUsers =
       users.map((user) =>
-
         user.email === updatedUser.email
-
-        ? updatedUser
-
-        : user
-
+          ? updatedUser
+          : user
       );
 
 
@@ -117,23 +121,24 @@ function AddMoneyPin() {
     );
 
 
-
-    navigate("/add-money-success", {
+    navigate(
+      "/add-money-success",
+      {
         state: {
-        amount: newAmount,
-        transaction: newTransaction,
-        newBalance: updatedUser.balance,
+          amount: newAmount,
+          transaction: newTransaction,
+          newBalance: updatedUser.balance,
         },
-    });
+      }
+    );
 
-    window.scrollTo(0,0);
 
+    window.scrollTo(0, 0);
   };
 
 
 
   return (
-
     <div
       style={{
         backgroundColor:"#0d0d0d",
@@ -145,7 +150,6 @@ function AddMoneyPin() {
         color:"#fff",
       }}
     >
-
 
       <Link
         to="/dashboard"
@@ -187,9 +191,7 @@ function AddMoneyPin() {
           Swift Wallet
         </span>
 
-
       </Link>
-
 
 
 
@@ -203,7 +205,6 @@ function AddMoneyPin() {
           textAlign:"center",
         }}
       >
-
 
         <h1
           style={{
@@ -256,9 +257,7 @@ function AddMoneyPin() {
               .toLocaleString("en-NG")}
           </h2>
 
-
         </div>
-
 
 
 
@@ -301,23 +300,18 @@ function AddMoneyPin() {
             ← Back to Add Money
           </button>
 
-
         </Link>
 
 
       </div>
 
-
     </div>
-
   );
-
 }
 
 
 
 const inputStyle = {
-
   width:"100%",
   padding:"14px",
   marginBottom:"18px",
@@ -328,13 +322,10 @@ const inputStyle = {
   fontSize:"15px",
   outline:"none",
   boxSizing:"border-box",
-
 };
 
 
-
 const buttonStyle = {
-
   width:"100%",
   padding:"14px",
   backgroundColor:"#22c55e",
@@ -343,13 +334,10 @@ const buttonStyle = {
   borderRadius:"8px",
   fontWeight:"700",
   cursor:"pointer",
-
 };
 
 
-
 const secondaryButton = {
-
   width:"100%",
   padding:"14px",
   backgroundColor:"transparent",
@@ -358,9 +346,7 @@ const secondaryButton = {
   borderRadius:"8px",
   fontWeight:"700",
   cursor:"pointer",
-
 };
-
 
 
 export default AddMoneyPin;

@@ -2,12 +2,10 @@ import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 function PayBillsPin() {
-
   const [pin, setPin] = useState("");
 
   const navigate = useNavigate();
   const location = useLocation();
-
 
   const {
     selectedBill,
@@ -15,7 +13,6 @@ function PayBillsPin() {
     accountNumber,
     amount,
   } = location.state || {};
-
 
 
   const handleContinue = () => {
@@ -47,6 +44,18 @@ function PayBillsPin() {
     const billAmount = Number(amount);
 
 
+    if (billAmount <= 0) {
+      alert("Invalid payment amount.");
+      return;
+    }
+
+
+    if (billAmount > currentUser.balance) {
+      alert("Insufficient balance.");
+      return;
+    }
+
+
 
     const newTransaction = {
 
@@ -57,8 +66,7 @@ function PayBillsPin() {
         new Date().toLocaleDateString(),
 
       amount:
-        "- ₦" +
-        billAmount.toLocaleString("en-NG"),
+        Number(billAmount),
 
       type:
         "debit",
@@ -150,6 +158,9 @@ function PayBillsPin() {
         }
       }
     );
+
+
+    window.scrollTo(0,0);
 
   };
 
