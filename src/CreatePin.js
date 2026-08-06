@@ -39,6 +39,26 @@ function CreatePin() {
         1000000000 + Math.random() * 9000000000
       ).toString(),
 
+      cardNumber:
+        "4829 " +
+        Math.floor(
+          1000 + Math.random() * 9000
+        ) +
+        " " +
+        Math.floor(
+          1000 + Math.random() * 9000
+        ) +
+        " " +
+        Math.floor(
+          1000 + Math.random() * 9000
+        ),
+
+      expiryDate:
+        "12/" +
+        (29 + Math.floor(Math.random() * 3)),
+
+      cardFrozen: false,
+
       transactions: [
         {
           name: "Welcome Bonus",
@@ -54,16 +74,18 @@ function CreatePin() {
       topUps: [],
     };
 
+
     const existingUsers =
       JSON.parse(
         localStorage.getItem("swiftWalletUsers")
       ) || [];
 
 
-    const userExists = existingUsers.some(
-      (user) =>
-        user.email === newUser.email
-    );
+    const userExists =
+      existingUsers.some(
+        (user) =>
+          user.email === newUser.email
+      );
 
 
     if (userExists) {
@@ -113,40 +135,39 @@ function CreatePin() {
 
       <Link
         to="/"
-        onClick={() => window.scrollTo(0, 0)}
+        onClick={() => window.scrollTo(0,0)}
         style={{
-          position: "absolute",
-          top: "35px",
-          left: "50px",
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-          textDecoration: "none",
+          position:"absolute",
+          top:"35px",
+          left:"50px",
+          display:"flex",
+          alignItems:"center",
+          gap:"10px",
+          textDecoration:"none",
         }}
       >
 
         <div
           style={{
-            width: "40px",
-            height: "40px",
-            backgroundColor: "#22c55e",
-            borderRadius: "10px",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            fontWeight: "bold",
-            color: "#000",
+            width:"40px",
+            height:"40px",
+            backgroundColor:"#22c55e",
+            borderRadius:"10px",
+            display:"flex",
+            justifyContent:"center",
+            alignItems:"center",
+            fontWeight:"bold",
+            color:"#000",
           }}
         >
           SW
         </div>
 
-
         <span
           style={{
-            color: "#fff",
-            fontSize: "20px",
-            fontWeight: "700",
+            color:"#fff",
+            fontSize:"20px",
+            fontWeight:"700",
           }}
         >
           Swift Wallet
@@ -157,12 +178,12 @@ function CreatePin() {
 
       <div
         style={{
-          backgroundColor: "#1a1a1a",
-          padding: "40px",
-          borderRadius: "15px",
-          width: "450px",
-          textAlign: "center",
-          border: "1px solid #2a2a2a",
+          backgroundColor:"#1a1a1a",
+          padding:"40px",
+          borderRadius:"15px",
+          width:"450px",
+          textAlign:"center",
+          border:"1px solid #2a2a2a",
           boxShadow:
             "0 0 20px rgba(34,197,94,0.15)",
         }}
@@ -170,42 +191,18 @@ function CreatePin() {
 
         <p
           style={{
-            color: "#22c55e",
-            fontWeight: "600",
-            marginBottom: "10px",
+            color:"#22c55e",
+            fontWeight:"600",
           }}
         >
           Step 5 of 5
         </p>
 
 
-        <div
-          style={{
-            width: "100%",
-            height: "8px",
-            backgroundColor: "#333",
-            borderRadius: "10px",
-            overflow: "hidden",
-            marginBottom: "30px",
-          }}
-        >
-
-          <div
-            style={{
-              width: "100%",
-              height: "100%",
-              backgroundColor: "#22c55e",
-            }}
-          />
-
-        </div>
-
-
         <h1
           style={{
-            color: "#22c55e",
-            marginBottom: "10px",
-            fontSize: "32px",
+            color:"#22c55e",
+            marginBottom:"10px",
           }}
         >
           Create Your PIN
@@ -214,10 +211,8 @@ function CreatePin() {
 
         <p
           style={{
-            color: "#aaa",
-            marginBottom: "30px",
-            fontSize: "15px",
-            lineHeight: "1.5",
+            color:"#aaa",
+            marginBottom:"30px",
           }}
         >
           Create a secure 4-digit PIN to authorise transfers and payments.
@@ -230,9 +225,9 @@ function CreatePin() {
           maxLength="4"
           placeholder="Enter 4-digit PIN"
           value={pin}
-          onChange={(e) =>
+          onChange={(e)=>
             setPin(
-              e.target.value.replace(/\D/g, "")
+              e.target.value.replace(/\D/g,"")
             )
           }
           style={inputStyle}
@@ -245,9 +240,9 @@ function CreatePin() {
           maxLength="4"
           placeholder="Confirm PIN"
           value={confirmPin}
-          onChange={(e) =>
+          onChange={(e)=>
             setConfirmPin(
-              e.target.value.replace(/\D/g, "")
+              e.target.value.replace(/\D/g,"")
             )
           }
           style={inputStyle}
@@ -262,16 +257,6 @@ function CreatePin() {
         </button>
 
 
-        <p
-          style={{
-            color: "#888",
-            marginTop: "25px",
-            fontSize: "14px",
-          }}
-        >
-          Your PIN will be required whenever you make a transaction.
-        </p>
-
       </div>
 
     </div>
@@ -280,29 +265,27 @@ function CreatePin() {
 
 
 const inputStyle = {
-  width: "100%",
-  padding: "14px",
-  marginBottom: "18px",
-  backgroundColor: "#111",
-  border: "1px solid #333",
-  color: "#fff",
-  borderRadius: "8px",
-  outline: "none",
-  boxSizing: "border-box",
-  fontSize: "15px",
+  width:"100%",
+  padding:"14px",
+  marginBottom:"18px",
+  backgroundColor:"#111",
+  border:"1px solid #333",
+  color:"#fff",
+  borderRadius:"8px",
+  outline:"none",
+  boxSizing:"border-box",
 };
 
 
 const buttonStyle = {
-  width: "100%",
-  padding: "14px",
-  backgroundColor: "#22c55e",
-  color: "#000",
-  border: "none",
-  borderRadius: "8px",
-  fontWeight: "700",
-  cursor: "pointer",
-  fontSize: "15px",
+  width:"100%",
+  padding:"14px",
+  backgroundColor:"#22c55e",
+  color:"#000",
+  border:"none",
+  borderRadius:"8px",
+  fontWeight:"700",
+  cursor:"pointer",
 };
 
 

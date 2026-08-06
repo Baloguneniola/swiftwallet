@@ -7,9 +7,14 @@ import {
   User,
   LogOut,
   Settings,
-  HelpCircle,
-  Shield,
-  FileText
+  Send,
+  Plus,
+  Receipt,
+  History,
+  Snowflake,
+  CreditCard,
+  ArrowUpRight,
+  ArrowDownLeft
 } from "lucide-react";
 
 
@@ -17,47 +22,84 @@ function Dashboard() {
 
   const navigate = useNavigate();
 
-  const [showBalance, setShowBalance] = React.useState(true);
-  const [copied, setCopied] = React.useState(false);
-  const [menuOpen, setMenuOpen] = React.useState(false);
+
+  const [showBalance, setShowBalance] =
+    React.useState(true);
+
+  const [showCardNumber, setShowCardNumber] =
+    React.useState(false);
+
+  const [cardFrozen, setCardFrozen] =
+    React.useState(false);
+
+  const [copied, setCopied] =
+    React.useState(false);
+
+  const [cardCopied, setCardCopied] =
+    React.useState(false);
+
+  const [menuOpen, setMenuOpen] =
+    React.useState(false);
 
 
 
   const currentUser =
     JSON.parse(
-      localStorage.getItem("swiftWalletCurrentUser")
+      localStorage.getItem(
+        "swiftWalletCurrentUser"
+      )
     ) || {};
 
 
 
   const userName =
     currentUser.name ||
-    localStorage.getItem("swiftWalletUser") ||
+    localStorage.getItem(
+      "swiftWalletUser"
+    ) ||
     "User";
 
 
 
   const balance =
-    Number(currentUser.balance) || 0;
+    Number(
+      currentUser.balance
+    ) || 0;
 
 
 
   const accountNumber =
-    currentUser.accountNumber || "N/A";
+    currentUser.accountNumber ||
+    "N/A";
+
+
+
+  const cardNumber =
+    currentUser.cardNumber ||
+    "4532 8890 4456 7890";
+
+
+
+  const expiryDate =
+    currentUser.expiryDate ||
+    "12/29";
 
 
 
   const transactions =
-    Array.isArray(currentUser.transactions)
-      ? currentUser.transactions
+    Array.isArray(
+      currentUser.transactions
+    )
+      ?
+      currentUser.transactions
         .slice(-5)
         .reverse()
-      : [];
+      :
+      [];
 
 
 
-
-  const getTransactionAmount = (amount) => {
+  const formatAmount = (amount) => {
 
     if (typeof amount === "number") {
       return amount;
@@ -80,10 +122,11 @@ function Dashboard() {
 
 
 
-
   const copyAccountNumber = () => {
 
-    navigator.clipboard.writeText(accountNumber);
+    navigator.clipboard.writeText(
+      accountNumber
+    );
 
     setCopied(true);
 
@@ -96,29 +139,24 @@ function Dashboard() {
 
 
 
+  const copyCardNumber = () => {
 
-
-  const handleTransactionClick = (transaction) => {
-
-    navigate(
-      "/transaction-details",
-      {
-        state: {
-          transaction,
-        },
-      }
+    navigator.clipboard.writeText(
+      cardNumber
     );
 
+    setCardCopied(true);
 
-    window.scrollTo(0, 0);
+
+    setTimeout(() => {
+      setCardCopied(false);
+    }, 2000);
 
   };
 
 
 
-
-
-  const handleLogout = () => {
+  const logout = () => {
 
     localStorage.removeItem(
       "swiftWalletUser"
@@ -135,84 +173,74 @@ function Dashboard() {
     );
 
 
-    navigate("/login");
+    navigate(
+      "/login"
+    );
 
-    window.scrollTo(0, 0);
+
+    window.scrollTo(
+      0,
+      0
+    );
 
   };
 
 
+
+  const openTransaction = (
+    transaction
+  ) => {
+
+    navigate(
+      "/transaction-details",
+      {
+        state: {
+          transaction
+        }
+      }
+    );
+
+
+    window.scrollTo(
+      0,
+      0
+    );
+
+  };
 
 
 
   return (
 
     <div
-      style={{
-        backgroundColor: "#0d0d0d",
-        minHeight: "100vh",
-        color: "#fff",
-      }}
+      style={styles.page}
     >
 
 
-
-
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          padding: "25px 50px",
-          borderBottom: "1px solid #222",
-          backgroundColor: "#0d0d0d",
-          position: "sticky",
-          top: 0,
-          zIndex: 1000,
-        }}
+      <nav
+        style={styles.navbar}
       >
-
-
-
-
 
         <Link
           to="/dashboard"
-          onClick={() => window.scrollTo(0, 0)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-            textDecoration: "none",
-          }}
+          onClick={() =>
+            window.scrollTo(
+              0,
+              0
+            )
+          }
+          style={styles.logoContainer}
         >
 
-
           <div
-            style={{
-              width: "40px",
-              height: "40px",
-              backgroundColor: "#22c55e",
-              borderRadius: "10px",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              color: "#000",
-              fontWeight: "bold",
-            }}
+            style={styles.logo}
           >
             SW
           </div>
 
 
-
-
           <span
-            style={{
-              color: "#fff",
-              fontSize: "20px",
-              fontWeight: "700",
-            }}
+            style={styles.brand}
           >
             Swift Wallet
           </span>
@@ -222,32 +250,19 @@ function Dashboard() {
 
 
 
-
-
-
         <div
           style={{
-            position: "relative",
+            position: "relative"
           }}
         >
 
-
           <button
             onClick={() =>
-              setMenuOpen(!menuOpen)
+              setMenuOpen(
+                !menuOpen
+              )
             }
-            style={{
-              backgroundColor: "#1a1a1a",
-              color: "#fff",
-              border: "1px solid #333",
-              padding: "10px 18px",
-              borderRadius: "8px",
-              cursor: "pointer",
-              fontWeight: "600",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
+            style={styles.accountButton}
           >
 
             <User size={18} />
@@ -259,55 +274,33 @@ function Dashboard() {
 
 
 
-
           {
-            menuOpen && (
+            menuOpen &&
+            (
 
               <div
-                style={{
-                  position: "absolute",
-                  right: 0,
-                  top: "55px",
-                  width: "220px",
-                  backgroundColor: "#1a1a1a",
-                  border: "1px solid #333",
-                  borderRadius: "12px",
-                  padding: "10px",
-                  zIndex: 2000,
-                }}
+                style={styles.dropdown}
               >
-
 
                 <MenuLink
                   to="/settings"
-                  icon={<Settings size={17} />}
+                  icon={
+                    <Settings size={17} />
+                  }
                   text="Settings"
                 />
 
+
                 <button
-                  onClick={handleLogout}
-                  style={{
-                    width: "100%",
-                    marginTop: "8px",
-                    padding: "12px",
-                    backgroundColor: "transparent",
-                    color: "#ff5f5f",
-                    border: "none",
-                    borderTop: "1px solid #333",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "10px",
-                    fontWeight: "600",
-                  }}
+                  onClick={logout}
+                  style={styles.logoutButton}
                 >
 
                   <LogOut size={17} />
 
-                  Log Out
+                  Logout
 
                 </button>
-
 
 
               </div>
@@ -319,37 +312,24 @@ function Dashboard() {
         </div>
 
 
-
-      </div>
-
+      </nav>
 
 
 
-
-      <div
-        style={{
-          padding: "50px 50px",
-        }}
+      <main
+        style={styles.container}
       >
 
 
-
         <h1
-          style={{
-            fontSize: "36px",
-            marginBottom: "10px",
-          }}
+          style={styles.title}
         >
           Welcome back, {userName}
         </h1>
 
 
-
         <p
-          style={{
-            color: "#999",
-            marginBottom: "35px",
-          }}
+          style={styles.subtitle}
         >
           Here's an overview of your Swift Wallet account.
         </p>
@@ -358,152 +338,293 @@ function Dashboard() {
 
 
         <div
-          style={{
-            backgroundColor: "#1a1a1a",
-            border: "1px solid #2a2a2a",
-            borderRadius: "15px",
-            padding: "30px",
-            marginBottom: "40px",
-          }}
+          style={styles.topGrid}
         >
 
 
           <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
+            style={styles.balanceCard}
           >
 
-            <p
-              style={{
-                color: "#999",
-              }}
+            <div
+              style={styles.cardHeader}
             >
-              Available Balance
-            </p>
+
+              <span>
+                Available Balance
+              </span>
 
 
-            <button
-              onClick={() =>
-                setShowBalance(!showBalance)
-              }
-              style={{
-                background: "none",
-                border: "none",
-                color: "#fff",
-                cursor: "pointer",
-              }}
+              <button
+                onClick={() =>
+                  setShowBalance(
+                    !showBalance
+                  )
+                }
+                style={styles.iconButton}
+              >
+
+                {
+                  showBalance
+                    ?
+                    <Eye size={20} />
+                    :
+                    <EyeOff size={20} />
+                }
+
+
+              </button>
+
+
+            </div>
+
+
+
+            <h2
+              style={styles.balance}
             >
 
               {
                 showBalance
                   ?
-                  <Eye size={22} />
+                  `₦${balance.toLocaleString(
+                    "en-NG",
+                    {
+                      minimumFractionDigits: 2
+                    }
+                  )}`
                   :
-                  <EyeOff size={22} />
+                  "₦••••••"
               }
 
+            </h2>
 
-            </button>
+
+            <p
+              style={styles.balanceLabel}
+            >
+              Swift Wallet Account
+            </p>
 
 
           </div>
 
-
-
-          <h2
-            style={{
-              color: "#22c55e",
-              fontSize: "42px",
-              margin: 0,
-            }}
+          <div
+            style={styles.walletCard}
           >
 
-            {
-              showBalance
-                ?
-                `₦${balance.toLocaleString(
-                  "en-NG",
+            <div
+              style={styles.walletHeader}
+            >
+
+              <div>
+
+                <h2>
+                  Swift Wallet
+                </h2>
+
+
+                <p>
+                  Virtual Debit Card
+                </p>
+
+              </div>
+
+
+              <CreditCard size={34} />
+
+            </div>
+
+
+
+
+            <h3
+              style={styles.cardNumber}
+            >
+
+              {
+                showCardNumber
+                  ?
+                  cardNumber
+                  :
+                  "•••• •••• •••• 7890"
+              }
+
+            </h3>
+
+
+
+
+            <div
+              style={styles.cardDetails}
+            >
+
+              <div>
+
+                <small>
+                  Card Holder
+                </small>
+
+                <p>
+                  {userName}
+                </p>
+
+              </div>
+
+
+
+              <div>
+
+                <small>
+                  Expiry
+                </small>
+
+                <p>
+                  {expiryDate}
+                </p>
+
+              </div>
+
+
+
+              <div>
+
+                <small>
+                  Status
+                </small>
+
+                <p>
                   {
-                    minimumFractionDigits: 2,
+                    cardFrozen
+                      ?
+                      "Frozen"
+                      :
+                      "Active"
                   }
-                )}`
-                :
-                "₦••••••••"
-            }
+                </p>
+
+              </div>
 
 
-          </h2>
+            </div>
+
+
+
+
+
+            <div
+              style={styles.cardActions}
+            >
+
+              <button
+                style={styles.darkButton}
+                onClick={() =>
+                  setShowCardNumber(
+                    !showCardNumber
+                  )
+                }
+              >
+
+                {
+                  showCardNumber
+                    ?
+                    "Hide"
+                    :
+                    "Show"
+                }
+
+              </button>
+
+
+
+
+              <button
+                style={styles.darkButton}
+                onClick={copyCardNumber}
+              >
+
+                <Copy size={15} />
+
+                {
+                  cardCopied
+                    ?
+                    "Copied"
+                    :
+                    "Copy"
+                }
+
+              </button>
+
+
+
+
+              <button
+                style={styles.darkButton}
+                onClick={() =>
+                  setCardFrozen(
+                    !cardFrozen
+                  )
+                }
+              >
+
+                <Snowflake size={15} />
+
+                {
+                  cardFrozen
+                    ?
+                    "Unfreeze"
+                    :
+                    "Freeze"
+                }
+
+              </button>
+
+
+            </div>
+
+
+          </div>
 
 
         </div>
 
+
+
+
+
         <div
-          style={{
-            backgroundColor: "#1a1a1a",
-            border: "1px solid #2a2a2a",
-            borderRadius: "15px",
-            padding: "30px",
-            marginBottom: "60px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
+          style={styles.accountBar}
         >
 
           <div>
 
-            <p
-              style={{
-                color: "#999",
-                marginBottom: "15px",
-                fontSize: "14px",
-              }}
+            <span
+              style={styles.accountTitle}
             >
               Account Number
-            </p>
+            </span>
 
 
-            <h3
-              style={{
-                margin: 0,
-                fontSize: "28px",
-                letterSpacing: "1px",
-              }}
-            >
+            <strong>
               {accountNumber}
-            </h3>
+            </strong>
+
 
           </div>
-
 
 
 
           <button
             onClick={copyAccountNumber}
-            style={{
-              backgroundColor: "#22c55e",
-              color: "#000",
-              border: "none",
-              padding: "12px 18px",
-              borderRadius: "8px",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              cursor: "pointer",
-              fontWeight: "600",
-            }}
+            style={styles.copyButton}
           >
 
             <Copy size={16} />
 
-
             {
               copied
                 ?
-                "Copied!"
+                "Copied"
                 :
                 "Copy"
             }
@@ -516,10 +637,10 @@ function Dashboard() {
 
 
 
+
+
         <h2
-          style={{
-            marginBottom: "25px",
-          }}
+          style={styles.sectionTitle}
         >
           Quick Actions
         </h2>
@@ -529,37 +650,43 @@ function Dashboard() {
 
 
         <div
-          style={{
-            display: "grid",
-            gridTemplateColumns:
-              "repeat(auto-fit, minmax(220px, 1fr))",
-            gap: "25px",
-            marginBottom: "70px",
-          }}
+          style={styles.actionGrid}
         >
 
 
-          <ActionLink
+          <ActionCard
             to="/send-money"
-            text="Send Money"
+            icon={
+              <Send size={22} />
+            }
+            title="Send Money"
           />
 
 
-          <ActionLink
+          <ActionCard
             to="/add-money"
-            text="Add Money"
+            icon={
+              <Plus size={22} />
+            }
+            title="Add Money"
           />
 
 
-          <ActionLink
+          <ActionCard
             to="/pay-bills"
-            text="Pay Bills"
+            icon={
+              <Receipt size={22} />
+            }
+            title="Pay Bills"
           />
 
 
-          <ActionLink
+          <ActionCard
             to="/transaction-history"
-            text="Transaction History"
+            icon={
+              <History size={22} />
+            }
+            title="History"
           />
 
 
@@ -568,13 +695,9 @@ function Dashboard() {
 
 
 
+
         <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "20px",
-          }}
+          style={styles.transactionHeader}
         >
 
           <h2>
@@ -582,21 +705,15 @@ function Dashboard() {
           </h2>
 
 
-
           <Link
             to="/transaction-history"
-            style={{
-              color: "#22c55e",
-              textDecoration: "none",
-              fontWeight: "600",
-            }}
+            style={styles.viewAll}
           >
             View All
           </Link>
 
 
         </div>
-
 
 
 
@@ -609,7 +726,7 @@ function Dashboard() {
 
             <p
               style={{
-                color: "#888",
+                color: "#888"
               }}
             >
               No transactions yet.
@@ -620,58 +737,70 @@ function Dashboard() {
 
 
             transactions.map(
-              (transaction, index) => (
+              (
+                transaction,
+                index
+              ) => (
 
                 <div
                   key={index}
                   onClick={() =>
-                    handleTransactionClick(transaction)
+                    openTransaction(
+                      transaction
+                    )
                   }
-                  style={{
-                    backgroundColor: "#1a1a1a",
-                    border: "1px solid #2a2a2a",
-                    borderRadius: "12px",
-                    padding: "20px 25px",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: "15px",
-                    cursor: "pointer",
-                  }}
+                  style={styles.transaction}
                 >
 
 
-                  <div>
+                  <div
+                    style={styles.transactionLeft}
+                  >
 
 
                     <div
-                      style={{
-                        fontWeight: "600",
-                        marginBottom: "6px",
-                      }}
+                      style={
+                        transaction.type === "credit"
+                          ?
+                          styles.creditIcon
+                          :
+                          styles.debitIcon
+                      }
                     >
 
                       {
-                        transaction.name ||
-                        "Transaction"
+                        transaction.type === "credit"
+                          ?
+                          <ArrowDownLeft size={18} />
+                          :
+                          <ArrowUpRight size={18} />
                       }
+
 
                     </div>
 
 
 
 
-                    <div
-                      style={{
-                        color: "#888",
-                        fontSize: "13px",
-                      }}
-                    >
+                    <div>
 
-                      {
-                        transaction.date ||
-                        "Unknown date"
-                      }
+                      <strong>
+                        {
+                          transaction.name ||
+                          "Transaction"
+                        }
+                      </strong>
+
+
+                      <p
+                        style={styles.date}
+                      >
+                        {
+                          transaction.date ||
+                          "Unknown date"
+                        }
+                      </p>
+
 
                     </div>
 
@@ -681,19 +810,14 @@ function Dashboard() {
 
 
 
-
-
                   <span
-                    style={{
-                      color:
-                        transaction.type === "credit"
-                          ?
-                          "#22c55e"
-                          :
-                          "#ff5f5f",
-
-                      fontWeight: "700",
-                    }}
+                    style={
+                      transaction.type === "credit"
+                        ?
+                        styles.creditAmount
+                        :
+                        styles.debitAmount
+                    }
                   >
 
                     {
@@ -709,13 +833,13 @@ function Dashboard() {
 
 
                     {
-                      getTransactionAmount(
+                      formatAmount(
                         transaction.amount
                       )
                         .toLocaleString(
                           "en-NG",
                           {
-                            minimumFractionDigits: 2,
+                            minimumFractionDigits: 2
                           }
                         )
                     }
@@ -726,15 +850,14 @@ function Dashboard() {
 
                 </div>
 
-
               )
+
             )
 
         }
 
 
-
-      </div>
+      </main>
 
 
     </div>
@@ -743,39 +866,44 @@ function Dashboard() {
 
 }
 
-
-
-
-function ActionLink({ to, text }) {
+function ActionCard({
+  to,
+  icon,
+  title
+}) {
 
   return (
 
     <Link
       to={to}
-      onClick={() => window.scrollTo(0, 0)}
+      onClick={() =>
+        window.scrollTo(
+          0,
+          0
+        )
+      }
       style={{
-        textDecoration: "none",
+        textDecoration: "none"
       }}
     >
 
-
-      <button
-        style={{
-          backgroundColor: "#1a1a1a",
-          color: "#fff",
-          border: "1px solid #333",
-          borderRadius: "12px",
-          padding: "22px 25px",
-          cursor: "pointer",
-          fontSize: "16px",
-          width: "100%",
-          minHeight: "75px",
-        }}
+      <div
+        style={styles.actionCard}
       >
 
-        {text}
+        <div
+          style={styles.actionIcon}
+        >
+          {icon}
+        </div>
 
-      </button>
+
+        <span>
+          {title}
+        </span>
+
+
+      </div>
 
 
     </Link>
@@ -786,37 +914,423 @@ function ActionLink({ to, text }) {
 
 
 
-function MenuLink({ to, icon, text }) {
 
+
+function MenuLink({
+  to,
+  icon,
+  text
+}) {
 
   return (
 
     <Link
       to={to}
-      onClick={() => window.scrollTo(0, 0)}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "10px",
-        padding: "12px",
-        color: "#fff",
-        textDecoration: "none",
-        borderRadius: "8px",
-        fontWeight: "500",
-      }}
+      onClick={() =>
+        window.scrollTo(
+          0,
+          0
+        )
+      }
+      style={styles.menuLink}
     >
 
       {icon}
 
       {text}
 
-
     </Link>
-
 
   );
 
 }
+
+
+
+
+
+const styles = {
+
+
+  page: {
+    minHeight: "100vh",
+    backgroundColor: "#0d0d0d",
+    color: "#fff"
+  },
+
+
+  navbar: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "20px 50px",
+    backgroundColor: "#0d0d0d",
+    borderBottom: "1px solid #222",
+    position: "sticky",
+    top: 0,
+    zIndex: 1000
+  },
+
+
+  logoContainer: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    textDecoration: "none"
+  },
+
+
+  logo: {
+    width: "42px",
+    height: "42px",
+    borderRadius: "12px",
+    backgroundColor: "#22c55e",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    color: "#000",
+    fontWeight: "800"
+  },
+
+
+  brand: {
+    color: "#fff",
+    fontSize: "20px",
+    fontWeight: "700"
+  },
+
+
+  accountButton: {
+    backgroundColor: "#1a1a1a",
+    color: "#fff",
+    border: "1px solid #333",
+    padding: "10px 16px",
+    borderRadius: "10px",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    fontWeight: "600"
+  },
+
+
+  dropdown: {
+    position: "absolute",
+    right: 0,
+    top: "55px",
+    width: "220px",
+    backgroundColor: "#1a1a1a",
+    border: "1px solid #333",
+    borderRadius: "12px",
+    padding: "10px"
+  },
+
+
+  logoutButton: {
+    width: "100%",
+    marginTop: "10px",
+    padding: "12px",
+    background: "transparent",
+    color: "#ff5f5f",
+    border: "none",
+    borderTop: "1px solid #333",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    fontWeight: "600"
+  },
+
+
+  container: {
+    padding: "25px 50px"
+  },
+
+
+  title: {
+    fontSize: "32px",
+    marginBottom: "5px"
+  },
+
+
+  subtitle: {
+    color: "#888",
+    marginBottom: "20px"
+  },
+
+
+  topGrid: {
+    display: "grid",
+    gridTemplateColumns:
+      "1fr 1fr",
+    gap: "25px",
+    alignItems: "stretch",
+    marginBottom: "20px"
+  },
+
+
+  balanceCard: {
+    backgroundColor: "#181818",
+    border: "1px solid #292929",
+    borderRadius: "18px",
+    padding: "28px",
+    minHeight: "230px",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center"
+  },
+
+
+  cardHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    color: "#999"
+  },
+
+
+  iconButton: {
+    background: "transparent",
+    border: "none",
+    color: "#fff",
+    cursor: "pointer"
+  },
+
+
+  balance: {
+    fontSize: "60px",
+    color: "#22c55e",
+    margin: "15px 0"
+  },
+
+
+  balanceLabel: {
+    color: "#777",
+    fontSize: "16px"
+  },
+
+
+  walletCard: {
+    background:
+      "linear-gradient(135deg,#22c55e,#15803d)",
+    color: "#000",
+    borderRadius: "20px",
+    padding: "28px",
+    minHeight: "150px"
+  },
+
+
+  walletHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start"
+  },
+
+
+  walletHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start"
+  },
+
+
+  cardNumber: {
+    fontSize: "25px",
+    letterSpacing: "4px",
+    margin: "30px 0"
+  },
+
+
+  cardDetails: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: "15px"
+  },
+
+
+  cardActions: {
+    display: "flex",
+    gap: "10px",
+    flexWrap: "wrap",
+    marginTop: "25px"
+  },
+
+
+  darkButton: {
+    backgroundColor: "#000",
+    color: "#fff",
+    border: "none",
+    padding: "9px 13px",
+    borderRadius: "8px",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    fontWeight: "600"
+  },
+
+
+  accountBar: {
+    backgroundColor: "#181818",
+    border: "1px solid #292929",
+    borderRadius: "15px",
+    padding: "18px 22px",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "40px"
+  },
+
+
+  accountTitle: {
+    display: "block",
+    color: "#888",
+    fontSize: "13px",
+    marginBottom: "6px"
+  },
+
+
+  copyButton: {
+    backgroundColor: "#22c55e",
+    color: "#000",
+    border: "none",
+    padding: "10px 16px",
+    borderRadius: "8px",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    fontWeight: "600"
+  },
+
+
+  sectionTitle: {
+    marginBottom: "20px"
+  },
+
+
+  actionGrid: {
+    display: "grid",
+    gridTemplateColumns:
+      "repeat(auto-fit,minmax(190px,1fr))",
+    gap: "18px",
+    marginBottom: "55px"
+  },
+
+
+  actionCard: {
+    backgroundColor: "#181818",
+    border: "1px solid #292929",
+    borderRadius: "15px",
+    padding: "22px",
+    color: "#fff",
+    display: "flex",
+    flexDirection: "column",
+    gap: "15px",
+    fontWeight: "600"
+  },
+
+
+  actionIcon: {
+    width: "42px",
+    height: "42px",
+    borderRadius: "12px",
+    backgroundColor: "#22c55e",
+    color: "#000",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center"
+  },
+
+
+  transactionHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "20px"
+  },
+
+
+  viewAll: {
+    color: "#22c55e",
+    textDecoration: "none",
+    fontWeight: "600"
+  },
+
+
+  transaction: {
+    backgroundColor: "#181818",
+    border: "1px solid #292929",
+    borderRadius: "14px",
+    padding: "18px 22px",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "12px",
+    cursor: "pointer"
+  },
+
+
+  transactionLeft: {
+    display: "flex",
+    alignItems: "center",
+    gap: "14px"
+  },
+
+
+  creditIcon: {
+    width: "38px",
+    height: "38px",
+    borderRadius: "50%",
+    backgroundColor: "#123d23",
+    color: "#22c55e",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center"
+  },
+
+
+  debitIcon: {
+    width: "38px",
+    height: "38px",
+    borderRadius: "50%",
+    backgroundColor: "#3b1111",
+    color: "#ff5f5f",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center"
+  },
+
+
+  date: {
+    margin: "4px 0 0",
+    color: "#888",
+    fontSize: "13px"
+  },
+
+
+  creditAmount: {
+    color: "#22c55e",
+    fontWeight: "700"
+  },
+
+
+  debitAmount: {
+    color: "#ff5f5f",
+    fontWeight: "700"
+  },
+
+
+  menuLink: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    padding: "12px",
+    color: "#fff",
+    textDecoration: "none"
+  }
+
+};
 
 
 export default Dashboard;
