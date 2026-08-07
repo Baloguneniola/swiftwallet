@@ -707,6 +707,12 @@ function Dashboard() {
 
           <Link
             to="/transaction-history"
+            onClick={() =>
+              window.scrollTo(
+                0,
+                0
+              )
+            }
             style={styles.viewAll}
           >
             View All
@@ -963,7 +969,7 @@ const styles = {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: "10px 20px",
+    padding: "14px 50px",
     backgroundColor: "#0d0d0d",
     borderBottom: "1px solid #222",
     position: "sticky",
@@ -1098,7 +1104,7 @@ const styles = {
 
 
   balance: {
-    fontSize: "60px",
+    fontSize: "42px",
     color: "#22c55e",
     margin: "10px 0"
   },
@@ -1110,21 +1116,16 @@ const styles = {
   },
 
 
-  walletCard: {
-    background:
-      "linear-gradient(135deg,#22c55e,#15803d)",
-    color: "#000",
-    borderRadius: "20px",
-    padding: "28px",
-    minHeight: "190px"
-  },
-
-
-  walletHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "flex-start"
-  },
+walletCard: {
+background:
+"linear-gradient(135deg,#1f2937,#111827)",
+color:"#fff",
+borderRadius:"20px",
+padding:"28px",
+minHeight:"190px",
+border:"1px solid #333",
+boxShadow:"0 15px 30px rgba(0,0,0,0.3)"
+},
 
 
   walletHeader: {
@@ -1218,17 +1219,19 @@ const styles = {
   },
 
 
-  actionCard: {
-    backgroundColor: "#181818",
-    border: "1px solid #292929",
-    borderRadius: "15px",
-    padding: "22px",
-    color: "#fff",
-    display: "flex",
-    flexDirection: "column",
-    gap: "15px",
-    fontWeight: "600"
-  },
+actionCard: {
+backgroundColor:"#181818",
+border:"1px solid #292929",
+borderRadius:"15px",
+padding:"22px",
+color:"#fff",
+display:"flex",
+flexDirection:"column",
+gap:"15px",
+fontWeight:"600",
+transition:"0.3s",
+cursor:"pointer"
+},
 
 
   actionIcon: {
