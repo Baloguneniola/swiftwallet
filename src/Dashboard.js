@@ -1023,7 +1023,7 @@ const styles = {
   dropdown: {
     position: "absolute",
     right: 0,
-    top: "55px",
+    top: "42px",
     width: "220px",
     backgroundColor: "#1a1a1a",
     border: "1px solid #333",
