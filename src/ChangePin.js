@@ -100,7 +100,7 @@ function ChangePin() {
 
     setTimeout(() => {
 
-      navigate("/profile");
+      navigate("/settings");
 
     },1500);
 
@@ -136,14 +136,14 @@ function ChangePin() {
 
 
         <Link
-          to="/profile"
+          to="/settings"
           style={{
             color:"#22c55e",
             textDecoration:"none",
             fontWeight:"600",
           }}
         >
-          ← Back to Profile
+          ← Back to Settings
         </Link>
 
 

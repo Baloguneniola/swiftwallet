@@ -23,6 +23,7 @@ function Terms() {
           padding: "25px 50px",
           borderBottom: "1px solid #222",
         }}
+        
       >
         <Link
           to="/"

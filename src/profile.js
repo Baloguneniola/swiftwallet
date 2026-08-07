@@ -85,7 +85,7 @@ function Profile() {
 
 
         <Link
-          to="/dashboard"
+          to="/settings"
           onClick={() => window.scrollTo(0,0)}
           style={{
             color:"#22c55e",
@@ -93,7 +93,7 @@ function Profile() {
             fontWeight:"600",
           }}
         >
-          ← Back to Dashboard
+          ← Back to Settings
         </Link>
 
 
