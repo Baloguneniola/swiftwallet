@@ -1175,7 +1175,7 @@ boxShadow:"0 15px 30px rgba(0,0,0,0.3)"
     backgroundColor: "#181818",
     border: "1px solid #292929",
     borderRadius: "15px",
-    padding: "18px 22px",
+    padding: "10px 22px",
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
@@ -1229,7 +1229,7 @@ display:"flex",
 flexDirection:"column",
 gap:"15px",
 fontWeight:"600",
-transition:"0.3s",
+transition:"0.1s",
 cursor:"pointer"
 },
 
