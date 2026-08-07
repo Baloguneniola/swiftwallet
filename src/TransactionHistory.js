@@ -40,7 +40,7 @@ function TransactionHistory() {
 
   const getAmount = (amount) => {
 
-    if(typeof amount === "number"){
+    if (typeof amount === "number") {
       return amount;
     }
 
@@ -48,7 +48,7 @@ function TransactionHistory() {
     return (
       Number(
         String(amount)
-          .replace(/[^\d]/g,"")
+          .replace(/[^\d]/g, "")
       ) || 0
     );
 
@@ -79,10 +79,10 @@ function TransactionHistory() {
 
         const matchesSearch =
           transaction.name
-          ?.toLowerCase()
-          .includes(
-            search.toLowerCase()
-          );
+            ?.toLowerCase()
+            .includes(
+              search.toLowerCase()
+            );
 
 
 
@@ -108,7 +108,7 @@ function TransactionHistory() {
           transaction.type === "credit"
       )
       .reduce(
-        (total,transaction)=>
+        (total, transaction) =>
           total +
           getAmount(
             transaction.amount
@@ -127,7 +127,7 @@ function TransactionHistory() {
           transaction.type === "debit"
       )
       .reduce(
-        (total,transaction)=>
+        (total, transaction) =>
           total +
           getAmount(
             transaction.amount
@@ -157,7 +157,7 @@ function TransactionHistory() {
         <Link
           to="/dashboard"
           onClick={() =>
-            window.scrollTo(0,0)
+            window.scrollTo(0, 0)
           }
           style={styles.logoContainer}
         >
@@ -230,7 +230,7 @@ function TransactionHistory() {
               style={styles.summaryHeader}
             >
 
-              <TrendingUp size={20}/>
+              <TrendingUp size={20} />
 
               Money In
 
@@ -268,7 +268,7 @@ function TransactionHistory() {
               style={styles.summaryHeader}
             >
 
-              <TrendingDown size={20}/>
+              <TrendingDown size={20} />
 
               Money Out
 
@@ -304,7 +304,7 @@ function TransactionHistory() {
         <div
           style={{
             ...styles.card,
-            marginBottom:"30px"
+            marginBottom: "30px"
           }}
         >
 
@@ -313,14 +313,14 @@ function TransactionHistory() {
             style={styles.inputWrapper}
           >
 
-            <Search size={18}/>
+            <Search size={18} />
 
 
             <input
               style={styles.searchInput}
               placeholder="Search transactions"
               value={search}
-              onChange={(e)=>
+              onChange={(e) =>
                 setSearch(
                   e.target.value
                 )
@@ -333,46 +333,74 @@ function TransactionHistory() {
 
 
 
-          <select
-            style={styles.input}
-            value={filter}
-            onChange={(e)=>
-              setFilter(
-                e.target.value
-              )
-            }
+          <div
+            style={{
+              position: "relative"
+            }}
           >
 
-            <option value="All">
-              All Transactions
-            </option>
+            <select
+              style={{
+                ...styles.input,
+                appearance: "none",
+                cursor: "pointer"
+              }}
+              value={filter}
+              onChange={(e) =>
+                setFilter(
+                  e.target.value
+                )
+              }
+            >
+
+              <option value="All">
+                All Transactions
+              </option>
 
 
-            <option value="Credit">
-              Money In
-            </option>
+              <option value="Credit">
+                Money In
+              </option>
 
 
-            <option value="Debit">
-              Money Out
-            </option>
+              <option value="Debit">
+                Money Out
+              </option>
 
 
-          </select>
+            </select>
+
+
+            <span
+              style={{
+                position: "absolute",
+                right: "15px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                pointerEvents: "none",
+                color: "#fff",
+                fontSize: "12px"
+              }}
+            >
+              ▼
+            </span>
+
+
+          </div>
 
 
 
         </div>
 
-                <div
+        <div
           style={styles.card}
         >
 
 
           <h2
             style={{
-              color:"#22c55e",
-              marginBottom:"25px"
+              color: "#22c55e",
+              marginBottom: "25px"
             }}
           >
 
@@ -387,239 +415,239 @@ function TransactionHistory() {
           {
             filteredTransactions.length === 0
 
-            ?
+              ?
 
-            (
+              (
 
-              <p
-                style={{
-                  color:"#888"
-                }}
-              >
-                No transactions found.
-              </p>
+                <p
+                  style={{
+                    color: "#888"
+                  }}
+                >
+                  No transactions found.
+                </p>
 
-            )
+              )
 
-            :
+              :
 
-            (
+              (
 
-              filteredTransactions.map(
-                (transaction,index)=>(
-
-
-                  <div
-                    key={index}
-                    style={{
-                      ...styles.transaction,
-                      borderBottom:
-                        index === filteredTransactions.length - 1
-                        ?
-                        "none"
-                        :
-                        "1px solid #2a2a2a"
-                    }}
-                  >
-
-
+                filteredTransactions.map(
+                  (transaction, index) => (
 
 
                     <div
+                      key={index}
                       style={{
-                        display:"flex",
-                        alignItems:"center",
-                        gap:"15px"
+                        ...styles.transaction,
+                        borderBottom:
+                          index === filteredTransactions.length - 1
+                            ?
+                            "none"
+                            :
+                            "1px solid #2a2a2a"
                       }}
                     >
 
 
 
+
                       <div
-                        style={
-                          transaction.type === "credit"
-                          ?
-                          styles.creditIcon
-                          :
-                          styles.debitIcon
-                        }
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "15px"
+                        }}
+                      >
+
+
+
+                        <div
+                          style={
+                            transaction.type === "credit"
+                              ?
+                              styles.creditIcon
+                              :
+                              styles.debitIcon
+                          }
+                        >
+
+                          {
+                            transaction.type === "credit"
+                              ?
+
+                              <ArrowDownLeft
+                                size={20}
+                              />
+
+                              :
+
+                              <ArrowUpRight
+                                size={20}
+                              />
+
+                          }
+
+                        </div>
+
+
+
+
+
+
+                        <div>
+
+
+                          <strong>
+                            {
+                              transaction.name ||
+                              "Transaction"
+                            }
+                          </strong>
+
+
+
+
+                          <p
+                            style={{
+                              color: "#888",
+                              margin: "6px 0",
+                              fontSize: "13px"
+                            }}
+                          >
+
+                            {
+                              transaction.date ||
+                              "Unknown date"
+                            }
+
+                          </p>
+
+
+
+
+                          {
+                            (
+                              transaction.bank ||
+                              transaction.description ||
+                              transaction.method
+                            )
+
+                            &&
+
+                            <p
+                              style={{
+                                color: "#aaa",
+                                margin: "5px 0",
+                                fontSize: "13px"
+                              }}
+                            >
+
+                              {
+                                transaction.bank &&
+                                `Bank: ${transaction.bank}`
+                              }
+
+
+                              {
+                                transaction.description &&
+                                ` ${transaction.description}`
+                              }
+
+
+
+                              {
+                                transaction.method &&
+                                ` Method: ${transaction.method}`
+                              }
+
+
+                            </p>
+
+                          }
+
+
+
+
+
+                          {
+                            transaction.transactionId &&
+
+                            <small
+                              style={{
+                                color: "#666"
+                              }}
+                            >
+
+                              ID: {transaction.transactionId}
+
+                            </small>
+
+                          }
+
+
+
+                        </div>
+
+
+                      </div>
+
+
+
+
+
+
+
+                      <span
+                        style={{
+                          color:
+                            transaction.type === "credit"
+                              ?
+                              "#22c55e"
+                              :
+                              "#ff5f5f",
+
+                          fontWeight: "700",
+                          fontSize: "16px"
+                        }}
                       >
 
                         {
                           transaction.type === "credit"
-                          ?
-
-                          <ArrowDownLeft
-                            size={20}
-                          />
-
-                          :
-
-                          <ArrowUpRight
-                            size={20}
-                          />
-
+                            ?
+                            "+"
+                            :
+                            "-"
                         }
 
-                      </div>
 
-
-
-
-
-
-                      <div>
-
-
-                        <strong>
-                          {
-                            transaction.name ||
-                            "Transaction"
-                          }
-                        </strong>
-
-
-
-
-                        <p
-                          style={{
-                            color:"#888",
-                            margin:"6px 0",
-                            fontSize:"13px"
-                          }}
-                        >
-
-                          {
-                            transaction.date ||
-                            "Unknown date"
-                          }
-
-                        </p>
-
-
-
-
+                        ₦
                         {
-                          (
-                            transaction.bank ||
-                            transaction.description ||
-                            transaction.method
+                          getAmount(
+                            transaction.amount
                           )
-
-                          &&
-
-                          <p
-                            style={{
-                              color:"#aaa",
-                              margin:"5px 0",
-                              fontSize:"13px"
-                            }}
-                          >
-
-                            {
-                              transaction.bank &&
-                              `Bank: ${transaction.bank}`
-                            }
-
-
-                            {
-                              transaction.description &&
-                              ` ${transaction.description}`
-                            }
-
-
-
-                            {
-                              transaction.method &&
-                              ` Method: ${transaction.method}`
-                            }
-
-
-                          </p>
-
+                            .toLocaleString(
+                              "en-NG",
+                              {
+                                minimumFractionDigits: 2
+                              }
+                            )
                         }
 
 
+                      </span>
 
-
-
-                        {
-                          transaction.transactionId &&
-
-                          <small
-                            style={{
-                              color:"#666"
-                            }}
-                          >
-
-                            ID: {transaction.transactionId}
-
-                          </small>
-
-                        }
-
-
-
-                      </div>
 
 
                     </div>
 
 
-
-
-
-
-
-                    <span
-                      style={{
-                        color:
-                          transaction.type === "credit"
-                          ?
-                          "#22c55e"
-                          :
-                          "#ff5f5f",
-
-                        fontWeight:"700",
-                        fontSize:"16px"
-                      }}
-                    >
-
-                      {
-                        transaction.type === "credit"
-                        ?
-                        "+"
-                        :
-                        "-"
-                      }
-
-
-                      ₦
-                      {
-                        getAmount(
-                          transaction.amount
-                        )
-                        .toLocaleString(
-                          "en-NG",
-                          {
-                            minimumFractionDigits:2
-                          }
-                        )
-                      }
-
-
-                    </span>
-
-
-
-                  </div>
-
+                  )
 
                 )
 
               )
-
-            )
 
           }
 
@@ -637,17 +665,17 @@ function TransactionHistory() {
         <Link
           to="/dashboard"
           onClick={() =>
-            window.scrollTo(0,0)
+            window.scrollTo(0, 0)
           }
           style={{
-            textDecoration:"none"
+            textDecoration: "none"
           }}
         >
 
           <button
             style={{
               ...styles.button,
-              marginTop:"30px"
+              marginTop: "30px"
             }}
           >
 
@@ -680,209 +708,209 @@ function TransactionHistory() {
 const styles = {
 
 
-page:{
-  backgroundColor:"#0d0d0d",
-  minHeight:"100vh",
-  color:"#fff"
-},
+  page: {
+    backgroundColor: "#0d0d0d",
+    minHeight: "100vh",
+    color: "#fff"
+  },
 
 
 
-navbar:{
-  padding:"20px 50px",
-  borderBottom:"1px solid #222"
-},
+  navbar: {
+    padding: "20px 50px",
+    borderBottom: "1px solid #222"
+  },
 
 
 
-logoContainer:{
-  display:"flex",
-  alignItems:"center",
-  gap:"10px",
-  textDecoration:"none"
-},
+  logoContainer: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    textDecoration: "none"
+  },
 
 
 
-logo:{
-  width:"40px",
-  height:"40px",
-  backgroundColor:"#22c55e",
-  borderRadius:"10px",
-  display:"flex",
-  justifyContent:"center",
-  alignItems:"center",
-  color:"#000",
-  fontWeight:"800"
-},
+  logo: {
+    width: "40px",
+    height: "40px",
+    backgroundColor: "#22c55e",
+    borderRadius: "10px",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    color: "#000",
+    fontWeight: "800"
+  },
 
 
 
-brand:{
-  color:"#fff",
-  fontSize:"20px",
-  fontWeight:"700"
-},
+  brand: {
+    color: "#fff",
+    fontSize: "20px",
+    fontWeight: "700"
+  },
 
 
 
-container:{
-  maxWidth:"800px",
-  margin:"45px auto",
-  padding:"0 20px"
-},
+  container: {
+    maxWidth: "800px",
+    margin: "45px auto",
+    padding: "0 20px"
+  },
 
 
 
-heading:{
-  color:"#22c55e",
-  fontSize:"36px",
-  display:"flex",
-  alignItems:"center",
-  gap:"12px"
-},
+  heading: {
+    color: "#22c55e",
+    fontSize: "36px",
+    display: "flex",
+    alignItems: "center",
+    gap: "12px"
+  },
 
 
 
-subtitle:{
-  color:"#999",
-  marginBottom:"35px"
-},
+  subtitle: {
+    color: "#999",
+    marginBottom: "35px"
+  },
 
 
 
-summaryContainer:{
-  display:"grid",
-  gridTemplateColumns:
-    "repeat(auto-fit,minmax(250px,1fr))",
-  gap:"20px",
-  marginBottom:"30px"
-},
+  summaryContainer: {
+    display: "grid",
+    gridTemplateColumns:
+      "repeat(auto-fit,minmax(250px,1fr))",
+    gap: "20px",
+    marginBottom: "30px"
+  },
 
 
 
-summaryCard:{
-  backgroundColor:"#1a1a1a",
-  border:"1px solid #2a2a2a",
-  borderRadius:"16px",
-  padding:"25px"
-},
+  summaryCard: {
+    backgroundColor: "#1a1a1a",
+    border: "1px solid #2a2a2a",
+    borderRadius: "16px",
+    padding: "25px"
+  },
 
 
 
-summaryHeader:{
-  display:"flex",
-  alignItems:"center",
-  gap:"10px",
-  color:"#999"
-},
+  summaryHeader: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    color: "#999"
+  },
 
 
 
-creditAmount:{
-  color:"#22c55e",
-  marginBottom:0
-},
+  creditAmount: {
+    color: "#22c55e",
+    marginBottom: 0
+  },
 
 
 
-debitAmount:{
-  color:"#ff5f5f",
-  marginBottom:0
-},
+  debitAmount: {
+    color: "#ff5f5f",
+    marginBottom: 0
+  },
 
 
 
-card:{
-  backgroundColor:"#1a1a1a",
-  border:"1px solid #2a2a2a",
-  borderRadius:"16px",
-  padding:"25px"
-},
+  card: {
+    backgroundColor: "#1a1a1a",
+    border: "1px solid #2a2a2a",
+    borderRadius: "16px",
+    padding: "25px"
+  },
 
 
 
-inputWrapper:{
-  display:"flex",
-  alignItems:"center",
-  gap:"10px",
-  backgroundColor:"#111",
-  border:"1px solid #333",
-  borderRadius:"10px",
-  padding:"0 14px",
-  marginBottom:"15px"
-},
+  inputWrapper: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    backgroundColor: "#111",
+    border: "1px solid #333",
+    borderRadius: "10px",
+    padding: "0 14px",
+    marginBottom: "15px"
+  },
 
 
 
-searchInput:{
-  width:"100%",
-  padding:"15px 0",
-  background:"transparent",
-  border:"none",
-  color:"#fff",
-  outline:"none"
-},
+  searchInput: {
+    width: "100%",
+    padding: "15px 0",
+    background: "transparent",
+    border: "none",
+    color: "#fff",
+    outline: "none"
+  },
 
 
 
-input:{
-  width:"100%",
-  padding:"15px",
-  backgroundColor:"#111",
-  color:"#fff",
-  border:"1px solid #333",
-  borderRadius:"10px",
-  boxSizing:"border-box"
-},
+  input: {
+    width: "100%",
+    padding: "15px",
+    backgroundColor: "#111",
+    color: "#fff",
+    border: "1px solid #333",
+    borderRadius: "10px",
+    boxSizing: "border-box"
+  },
 
 
 
-transaction:{
-  display:"flex",
-  justifyContent:"space-between",
-  alignItems:"center",
-  padding:"20px 0"
-},
+  transaction: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "20px 0"
+  },
 
 
 
-creditIcon:{
-  width:"42px",
-  height:"42px",
-  borderRadius:"50%",
-  backgroundColor:"#123d23",
-  color:"#22c55e",
-  display:"flex",
-  justifyContent:"center",
-  alignItems:"center"
-},
+  creditIcon: {
+    width: "42px",
+    height: "42px",
+    borderRadius: "50%",
+    backgroundColor: "#123d23",
+    color: "#22c55e",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center"
+  },
 
 
 
-debitIcon:{
-  width:"42px",
-  height:"42px",
-  borderRadius:"50%",
-  backgroundColor:"#3b1111",
-  color:"#ff5f5f",
-  display:"flex",
-  justifyContent:"center",
-  alignItems:"center"
-},
+  debitIcon: {
+    width: "42px",
+    height: "42px",
+    borderRadius: "50%",
+    backgroundColor: "#3b1111",
+    color: "#ff5f5f",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center"
+  },
 
 
 
-button:{
-  width:"100%",
-  padding:"15px",
-  backgroundColor:"#22c55e",
-  color:"#000",
-  border:"none",
-  borderRadius:"10px",
-  fontWeight:"700",
-  cursor:"pointer"
-}
+  button: {
+    width: "100%",
+    padding: "15px",
+    backgroundColor: "#22c55e",
+    color: "#000",
+    border: "none",
+    borderRadius: "10px",
+    fontWeight: "700",
+    cursor: "pointer"
+  }
 
 
 };

@@ -58,12 +58,12 @@ function PayBills() {
 
   const handleContinue = () => {
 
-    if(
+    if (
       !selectedBill ||
       !provider ||
       !accountNumber ||
       !amount
-    ){
+    ) {
 
       alert(
         "Please complete all fields."
@@ -80,7 +80,7 @@ function PayBills() {
 
 
 
-    if(billAmount <= 0){
+    if (billAmount <= 0) {
 
       alert(
         "Enter a valid amount."
@@ -92,7 +92,7 @@ function PayBills() {
 
 
 
-    if(billAmount > balance){
+    if (billAmount > balance) {
 
       alert(
         "Insufficient balance."
@@ -107,11 +107,11 @@ function PayBills() {
     navigate(
       "/pay-bills-pin",
       {
-        state:{
+        state: {
           selectedBill,
           provider,
           accountNumber,
-          amount:billAmount
+          amount: billAmount
         }
       }
     );
@@ -126,24 +126,24 @@ function PayBills() {
 
   const getBillIcon = () => {
 
-    switch(selectedBill){
+    switch (selectedBill) {
 
       case "Electricity":
-        return <Zap size={22}/>;
+        return <Zap size={22} />;
 
       case "Water":
-        return <Droplets size={22}/>;
+        return <Droplets size={22} />;
 
       case "DSTV":
-        return <Tv size={22}/>;
+        return <Tv size={22} />;
 
 
       case "Wi-Fi":
-        return <Wifi size={22}/>;
+        return <Wifi size={22} />;
 
 
       case "Airtime":
-        return <Phone size={22}/>;
+        return <Phone size={22} />;
 
 
       default:
@@ -174,7 +174,7 @@ function PayBills() {
         <Link
           to="/dashboard"
           onClick={() =>
-            window.scrollTo(0,0)
+            window.scrollTo(0, 0)
           }
           style={styles.logoContainer}
         >
@@ -260,9 +260,9 @@ function PayBills() {
             ₦
             {
               Number(balance)
-              .toLocaleString(
-                "en-NG"
-              )
+                .toLocaleString(
+                  "en-NG"
+                )
             }
 
           </h2>
@@ -278,7 +278,7 @@ function PayBills() {
         <div
           style={{
             ...styles.card,
-            marginTop:"25px"
+            marginTop: "25px"
           }}
         >
 
@@ -295,7 +295,7 @@ function PayBills() {
 
             <h2
               style={{
-                margin:0
+                margin: 0
               }}
             >
               Pay a Bill
@@ -314,54 +314,69 @@ function PayBills() {
             Select a service and enter your payment details.
           </p>
 
-
-
-
-
-          <select
-            style={styles.input}
-            value={selectedBill}
-            onChange={(e)=>
-              setSelectedBill(
-                e.target.value
-              )
-            }
+          <div
+            style={{
+              position: "relative"
+            }}
           >
 
+            <select
+              style={{
+                ...styles.input,
+                appearance: "none",
+                cursor: "pointer"
+              }}
+              value={selectedBill}
+              onChange={(e) =>
+                setSelectedBill(
+                  e.target.value
+                )
+              }
+            >
 
-            <option value="">
-              Choose Service
-            </option>
+              <option value="">
+                Choose Service
+              </option>
+
+              <option value="Electricity">
+                Electricity
+              </option>
+
+              <option value="Water">
+                Water
+              </option>
+
+              <option value="DSTV">
+                DSTV
+              </option>
+
+              <option value="Wi-Fi">
+                Wi-Fi
+              </option>
+
+              <option value="Airtime">
+                Airtime
+              </option>
+
+            </select>
 
 
-            <option value="Electricity">
-              Electricity
-            </option>
+            <span
+              style={{
+                position: "absolute",
+                right: "15px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                pointerEvents: "none",
+                color: "#fff",
+                fontSize: "12px"
+              }}
+            >
+              ▼
+            </span>
 
 
-            <option value="Water">
-              Water
-            </option>
-
-
-            <option value="DSTV">
-              DSTV
-            </option>
-
-
-            <option value="Wi-Fi">
-              Wi-Fi
-            </option>
-
-
-            <option value="Airtime">
-              Airtime
-            </option>
-
-
-          </select>
-
-
+          </div>
 
 
 
@@ -369,7 +384,7 @@ function PayBills() {
             style={styles.input}
             placeholder="Provider"
             value={provider}
-            onChange={(e)=>
+            onChange={(e) =>
               setProvider(
                 e.target.value
               )
@@ -384,7 +399,7 @@ function PayBills() {
             style={styles.input}
             placeholder="Account / Meter / Phone Number"
             value={accountNumber}
-            onChange={(e)=>
+            onChange={(e) =>
               setAccountNumber(
                 e.target.value
               )
@@ -400,20 +415,20 @@ function PayBills() {
             placeholder="Amount (₦)"
             value={
               amount
-              ?
-              Number(amount)
-              .toLocaleString("en-NG")
-              :
-              ""
+                ?
+                Number(amount)
+                  .toLocaleString("en-NG")
+                :
+                ""
             }
-            onChange={(e)=>{
+            onChange={(e) => {
 
               const value =
                 e.target.value
-                .replace(/,/g,"");
+                  .replace(/,/g, "");
 
 
-              if(!isNaN(value)){
+              if (!isNaN(value)) {
                 setAmount(value);
               }
 
@@ -439,21 +454,21 @@ function PayBills() {
 
         </div>
 
-        
+
         <div
           style={{
             ...styles.card,
-            marginTop:"30px"
+            marginTop: "30px"
           }}
         >
 
 
           <h2
             style={{
-              display:"flex",
-              alignItems:"center",
-              gap:"10px",
-              marginBottom:"20px"
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              marginBottom: "20px"
             }}
           >
 
@@ -469,135 +484,135 @@ function PayBills() {
           {
             recentPayments.length === 0
 
-            ?
+              ?
 
-            (
+              (
 
-              <p
-                style={{
-                  color:"#888"
-                }}
-              >
-                No payments yet.
-              </p>
+                <p
+                  style={{
+                    color: "#888"
+                  }}
+                >
+                  No payments yet.
+                </p>
 
-            )
+              )
 
-            :
+              :
 
-            (
+              (
 
-              recentPayments.map(
-                (payment,index)=>(
-
-
-                  <div
-                    key={index}
-                    style={styles.transaction}
-                  >
-
+                recentPayments.map(
+                  (payment, index) => (
 
 
                     <div
-                      style={{
-                        display:"flex",
-                        alignItems:"center",
-                        gap:"14px"
-                      }}
+                      key={index}
+                      style={styles.transaction}
                     >
 
 
 
                       <div
-                        style={styles.debitIcon}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "14px"
+                        }}
                       >
 
-                        <ArrowUpRight
-                          size={18}
-                        />
-
-                      </div>
 
 
-
-
-
-                      <div>
-
-                        <strong>
-                          {
-                            payment.name ||
-                            "Bill Payment"
-                          }
-                        </strong>
-
-
-
-                        <p
-                          style={{
-                            color:"#888",
-                            margin:"5px 0 0",
-                            fontSize:"13px"
-                          }}
+                        <div
+                          style={styles.debitIcon}
                         >
 
-                          {
-                            payment.date ||
-                            "Unknown date"
-                          }
+                          <ArrowUpRight
+                            size={18}
+                          />
 
-                        </p>
+                        </div>
+
+
+
+
+
+                        <div>
+
+                          <strong>
+                            {
+                              payment.name ||
+                              "Bill Payment"
+                            }
+                          </strong>
+
+
+
+                          <p
+                            style={{
+                              color: "#888",
+                              margin: "5px 0 0",
+                              fontSize: "13px"
+                            }}
+                          >
+
+                            {
+                              payment.date ||
+                              "Unknown date"
+                            }
+
+                          </p>
+
+
+
+                        </div>
+
 
 
 
                       </div>
 
+
+
+
+
+                      <span
+                        style={{
+                          color: "#ff5f5f",
+                          fontWeight: "700"
+                        }}
+                      >
+
+                        -
+
+                        ₦
+                        {
+                          Number(
+                            String(
+                              payment.amount
+                            )
+                              .replace(/[^\d]/g, "")
+                          )
+                            .toLocaleString(
+                              "en-NG",
+                              {
+                                minimumFractionDigits: 2
+                              }
+                            )
+                        }
+
+
+                      </span>
 
 
 
                     </div>
 
 
-
-
-
-                    <span
-                      style={{
-                        color:"#ff5f5f",
-                        fontWeight:"700"
-                      }}
-                    >
-
-                      -
-
-                      ₦
-                      {
-                        Number(
-                          String(
-                            payment.amount
-                          )
-                          .replace(/[^\d]/g,"")
-                        )
-                        .toLocaleString(
-                          "en-NG",
-                          {
-                            minimumFractionDigits:2
-                          }
-                        )
-                      }
-
-
-                    </span>
-
-
-
-                  </div>
-
-
+                  )
                 )
-              )
 
-            )
+              )
 
           }
 
@@ -614,17 +629,17 @@ function PayBills() {
         <Link
           to="/dashboard"
           onClick={() =>
-            window.scrollTo(0,0)
+            window.scrollTo(0, 0)
           }
           style={{
-            textDecoration:"none"
+            textDecoration: "none"
           }}
         >
 
           <button
             style={{
               ...styles.button,
-              marginTop:"30px"
+              marginTop: "30px"
             }}
           >
 
@@ -654,22 +669,22 @@ function PayBills() {
 
 
 
-function WalletIcon(){
+function WalletIcon() {
 
   return (
 
     <div
       style={{
-        width:"22px",
-        height:"22px",
-        borderRadius:"50%",
-        backgroundColor:"#22c55e",
-        color:"#000",
-        display:"flex",
-        alignItems:"center",
-        justifyContent:"center",
-        fontSize:"12px",
-        fontWeight:"800"
+        width: "22px",
+        height: "22px",
+        borderRadius: "50%",
+        backgroundColor: "#22c55e",
+        color: "#000",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: "12px",
+        fontWeight: "800"
       }}
     >
 
@@ -691,156 +706,156 @@ function WalletIcon(){
 const styles = {
 
 
-page:{
-  backgroundColor:"#0d0d0d",
-  minHeight:"100vh",
-  color:"#fff"
-},
+  page: {
+    backgroundColor: "#0d0d0d",
+    minHeight: "100vh",
+    color: "#fff"
+  },
 
 
 
-navbar:{
-  padding:"20px 50px",
-  borderBottom:"1px solid #222"
-},
+  navbar: {
+    padding: "20px 50px",
+    borderBottom: "1px solid #222"
+  },
 
 
 
-logoContainer:{
-  display:"flex",
-  alignItems:"center",
-  gap:"10px",
-  textDecoration:"none"
-},
+  logoContainer: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    textDecoration: "none"
+  },
 
 
 
-logo:{
-  width:"40px",
-  height:"40px",
-  backgroundColor:"#22c55e",
-  borderRadius:"10px",
-  display:"flex",
-  justifyContent:"center",
-  alignItems:"center",
-  color:"#000",
-  fontWeight:"800"
-},
+  logo: {
+    width: "40px",
+    height: "40px",
+    backgroundColor: "#22c55e",
+    borderRadius: "10px",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    color: "#000",
+    fontWeight: "800"
+  },
 
 
 
-brand:{
-  color:"#fff",
-  fontSize:"20px",
-  fontWeight:"700"
-},
+  brand: {
+    color: "#fff",
+    fontSize: "20px",
+    fontWeight: "700"
+  },
 
 
 
-container:{
-  maxWidth:"700px",
-  margin:"45px auto",
-  padding:"0 20px"
-},
+  container: {
+    maxWidth: "700px",
+    margin: "45px auto",
+    padding: "0 20px"
+  },
 
 
 
-heading:{
-  color:"#22c55e",
-  fontSize:"36px",
-  display:"flex",
-  alignItems:"center",
-  gap:"12px"
-},
+  heading: {
+    color: "#22c55e",
+    fontSize: "36px",
+    display: "flex",
+    alignItems: "center",
+    gap: "12px"
+  },
 
 
 
-subtitle:{
-  color:"#999",
-  marginBottom:"35px"
-},
+  subtitle: {
+    color: "#999",
+    marginBottom: "35px"
+  },
 
 
 
-card:{
-  backgroundColor:"#1a1a1a",
-  border:"1px solid #2a2a2a",
-  borderRadius:"16px",
-  padding:"25px"
-},
+  card: {
+    backgroundColor: "#1a1a1a",
+    border: "1px solid #2a2a2a",
+    borderRadius: "16px",
+    padding: "25px"
+  },
 
 
 
-sectionHeader:{
-  display:"flex",
-  alignItems:"center",
-  gap:"10px"
-},
+  sectionHeader: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px"
+  },
 
 
 
-balance:{
-  color:"#22c55e",
-  fontSize:"38px",
-  marginBottom:0
-},
+  balance: {
+    color: "#22c55e",
+    fontSize: "38px",
+    marginBottom: 0
+  },
 
 
 
-text:{
-  color:"#999"
-},
+  text: {
+    color: "#999"
+  },
 
 
 
-input:{
-  width:"100%",
-  padding:"15px",
-  marginTop:"12px",
-  marginBottom:"15px",
-  backgroundColor:"#111",
-  border:"1px solid #333",
-  borderRadius:"10px",
-  color:"#fff",
-  boxSizing:"border-box",
-  outline:"none"
-},
+  input: {
+    width: "100%",
+    padding: "15px",
+    marginTop: "12px",
+    marginBottom: "15px",
+    backgroundColor: "#111",
+    border: "1px solid #333",
+    borderRadius: "10px",
+    color: "#fff",
+    boxSizing: "border-box",
+    outline: "none"
+  },
 
 
 
-button:{
-  width:"100%",
-  padding:"15px",
-  backgroundColor:"#22c55e",
-  color:"#000",
-  border:"none",
-  borderRadius:"10px",
-  fontWeight:"700",
-  cursor:"pointer"
-},
+  button: {
+    width: "100%",
+    padding: "15px",
+    backgroundColor: "#22c55e",
+    color: "#000",
+    border: "none",
+    borderRadius: "10px",
+    fontWeight: "700",
+    cursor: "pointer"
+  },
 
 
 
-transaction:{
-  display:"flex",
-  justifyContent:"space-between",
-  alignItems:"center",
-  padding:"16px 0",
-  borderBottom:"1px solid #2a2a2a"
-},
+  transaction: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "16px 0",
+    borderBottom: "1px solid #2a2a2a"
+  },
 
 
 
-debitIcon:{
-  width:"40px",
-  height:"40px",
-  borderRadius:"50%",
-  backgroundColor:"#3b1111",
-  color:"#ff5f5f",
-  display:"flex",
-  alignItems:"center",
-  justifyContent:"center"
-}
+  debitIcon: {
+    width: "40px",
+    height: "40px",
+    borderRadius: "50%",
+    backgroundColor: "#3b1111",
+    color: "#ff5f5f",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center"
+  }
 
 
 

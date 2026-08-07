@@ -125,7 +125,12 @@ function SendMoney() {
           placeholder="Recipient Name"
           style={inputStyle}
           value={transferData.recipient}
-          readOnly
+          onChange={(e) =>
+            setTransferData({
+              ...transferData,
+              recipient: e.target.value,
+            })
+          }
         />
 
         <div
@@ -238,8 +243,8 @@ function SendMoney() {
           value={
             transferData.amount
               ? Number(
-                  transferData.amount
-                ).toLocaleString("en-NG")
+                transferData.amount
+              ).toLocaleString("en-NG")
               : ""
           }
           onChange={(e) => {
