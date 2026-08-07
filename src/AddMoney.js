@@ -1,37 +1,64 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import {
+  PlusCircle,
+  Wallet,
+  CheckCircle,
+  CreditCard,
+  ArrowDownLeft
+} from "lucide-react";
+
 
 function AddMoney() {
+
   const navigate = useNavigate();
 
+
   const currentUser =
-    JSON.parse(localStorage.getItem("swiftWalletCurrentUser")) || null;
+    JSON.parse(
+      localStorage.getItem(
+        "swiftWalletCurrentUser"
+      )
+    ) || null;
 
 
-  const [amount, setAmount] = useState("");
 
-  const [balance, setBalance] = useState(
-    currentUser?.balance || 0
-  );
+  const [amount, setAmount] =
+    useState("");
 
 
-  const [showCardForm, setShowCardForm] = useState(false);
 
-  const [selectedCard, setSelectedCard] = useState("saved");
+  const [balance, setBalance] =
+    useState(
+      currentUser?.balance || 0
+    );
 
 
-  const [cardDetails, setCardDetails] = useState({
-    name: "",
-    number: "",
-    expiry: "",
-    cvv: "",
-  });
+
+  const [showCardForm, setShowCardForm] =
+    useState(false);
+
+
+
+  const [selectedCard, setSelectedCard] =
+    useState("saved");
+
+
+
+  const [cardDetails, setCardDetails] =
+    useState({
+      name:"",
+      number:"",
+      expiry:"",
+      cvv:"",
+    });
+
 
 
   const recentTopUps =
     currentUser?.transactions
       ?.filter(
-        (transaction) =>
+        transaction =>
           transaction.type === "credit"
       )
       .slice(-5)
@@ -39,12 +66,20 @@ function AddMoney() {
 
 
 
+
+
   const handleContinue = () => {
 
-    if (!amount || Number(amount) <= 0) {
-      alert("Please enter a valid amount.");
+    if(
+      !amount ||
+      Number(amount) <= 0
+    ){
+      alert(
+        "Please enter a valid amount."
+      );
       return;
     }
+
 
     setShowCardForm(true);
 
@@ -52,15 +87,23 @@ function AddMoney() {
 
 
 
+
+
   const handleAddMoney = () => {
 
-    if (!currentUser) {
-      alert("User session not found.");
+    if(!currentUser){
+
+      alert(
+        "User session not found."
+      );
+
       return;
+
     }
 
 
-    if (
+
+    if(
       selectedCard === "new" &&
       (
         !cardDetails.name ||
@@ -68,159 +111,195 @@ function AddMoney() {
         !cardDetails.expiry ||
         !cardDetails.cvv
       )
-    ) {
-      alert("Please complete card details.");
+    ){
+
+      alert(
+        "Please complete card details."
+      );
+
       return;
+
     }
 
 
-    navigate("/add-money-pin", {
-      state: {
-        amount: Number(amount),
-      },
-    });
+
+    navigate(
+      "/add-money-pin",
+      {
+        state:{
+          amount:Number(amount)
+        }
+      }
+    );
 
   };
 
 
 
+
+
+
   return (
+
     <div
-      style={{
-        backgroundColor:"#0d0d0d",
-        minHeight:"100vh",
-        color:"#fff",
-      }}
+      style={styles.page}
     >
 
+
       <div
-        style={{
-          padding:"16px 40px",
-          borderBottom:"1px solid #222",
-        }}
+        style={styles.navbar}
       >
 
         <Link
           to="/dashboard"
-          onClick={() => window.scrollTo(0,0)}
-          style={{
-            display:"flex",
-            alignItems:"center",
-            gap:"10px",
-            textDecoration:"none",
-          }}
+          onClick={() =>
+            window.scrollTo(0,0)
+          }
+          style={styles.logoContainer}
         >
 
           <div
-            style={{
-              width:"40px",
-              height:"40px",
-              backgroundColor:"#22c55e",
-              borderRadius:"10px",
-              display:"flex",
-              justifyContent:"center",
-              alignItems:"center",
-              color:"#000",
-              fontWeight:"bold",
-            }}
+            style={styles.logo}
           >
             SW
           </div>
 
 
           <span
-            style={{
-              color:"#fff",
-              fontSize:"20px",
-              fontWeight:"700",
-            }}
+            style={styles.brand}
           >
             Swift Wallet
           </span>
 
+
         </Link>
+
 
       </div>
 
 
+
+
+
       <div
-        style={{
-          maxWidth:"700px",
-          margin:"50px auto",
-          padding:"0 20px",
-        }}
+        style={styles.container}
       >
 
 
         <h1
-          style={{
-            color:"#22c55e",
-            fontSize:"38px",
-          }}
+          style={styles.heading}
         >
+
+          <PlusCircle size={34}/>
+
           Add Money
+
         </h1>
 
 
+
         <p
-          style={{
-            color:"#999",
-            marginBottom:"35px",
-          }}
+          style={styles.subtitle}
         >
           Add funds to your Swift Wallet securely.
         </p>
 
 
-        <div style={cardStyle}>
 
-          <p style={labelStyle}>
-            Current Balance
-          </p>
+
+
+        <div
+          style={styles.card}
+        >
+
+
+          <div
+            style={styles.sectionHeader}
+          >
+
+            <Wallet size={22}/>
+
+            <span>
+              Current Balance
+            </span>
+
+          </div>
+
 
 
           <h2
-            style={{
-              color:"#22c55e",
-              fontSize:"40px",
-              margin:0,
-            }}
+            style={styles.balance}
           >
-            ₦{balance.toLocaleString("en-NG")}.00
+
+            ₦
+            {Number(balance)
+              .toLocaleString(
+                "en-NG"
+              )
+            }
+
+            .00
+
           </h2>
+
 
         </div>
 
 
+
+
+
         <div
           style={{
-            ...cardStyle,
-            marginTop:"25px",
+            ...styles.card,
+            marginTop:"25px"
           }}
         >
 
-          <h2 style={titleStyle}>
-            Card Payment
-          </h2>
+
+          <div
+            style={styles.sectionHeader}
+          >
+
+            <CreditCard size={22}/>
+
+            <h2
+              style={{
+                margin:0
+              }}
+            >
+              Card Payment
+            </h2>
 
 
-          <p style={textStyle}>
+          </div>
+
+
+
+          <p
+            style={styles.text}
+          >
             Enter the amount and select your payment method.
           </p>
 
 
+
           <input
-            style={inputStyle}
+            style={styles.input}
             placeholder="Amount (₦)"
             value={
               amount
-              ? Number(amount).toLocaleString("en-NG")
-              : ""
+                ?
+                Number(amount)
+                .toLocaleString("en-NG")
+                :
+                ""
             }
             onChange={(e)=>{
 
               const value =
                 e.target.value.replace(/,/g,"");
+
 
               if(!isNaN(value)){
                 setAmount(value);
@@ -230,303 +309,554 @@ function AddMoney() {
           />
 
 
-          {!showCardForm && (
 
-            <button
-              style={buttonStyle}
-              onClick={handleContinue}
-            >
-              Continue
-            </button>
-
-          )}
-
-
-          {showCardForm && (
-
-            <>
-
-              <div
-                style={cardOption}
-                onClick={() =>
-                  setSelectedCard("saved")
-                }
-              >
-
-                <input
-                  type="radio"
-                  checked={
-                    selectedCard === "saved"
-                  }
-                  readOnly
-                />
-
-                <span>
-                  Saved Visa Card
-                </span>
-
-              </div>
-
-
-
-              <div
-                style={cardOption}
-                onClick={() =>
-                  setSelectedCard("new")
-                }
-              >
-
-                <input
-                  type="radio"
-                  checked={
-                    selectedCard === "new"
-                  }
-                  readOnly
-                />
-
-                <span>
-                  Add New Card
-                </span>
-
-              </div>
-
-                            {selectedCard === "new" && (
-
-                <>
-
-                  <input
-                    style={inputStyle}
-                    placeholder="Card Holder Name"
-                    value={cardDetails.name}
-                    onChange={(e)=>
-                      setCardDetails({
-                        ...cardDetails,
-                        name:e.target.value,
-                      })
-                    }
-                  />
-
-
-                  <input
-                    style={inputStyle}
-                    placeholder="Card Number"
-                    value={cardDetails.number}
-                    onChange={(e)=>
-                      setCardDetails({
-                        ...cardDetails,
-                        number:e.target.value,
-                      })
-                    }
-                  />
-
-
-                  <input
-                    style={inputStyle}
-                    placeholder="Expiry Date"
-                    value={cardDetails.expiry}
-                    onChange={(e)=>
-                      setCardDetails({
-                        ...cardDetails,
-                        expiry:e.target.value,
-                      })
-                    }
-                  />
-
-
-                  <input
-                    style={inputStyle}
-                    placeholder="CVV"
-                    value={cardDetails.cvv}
-                    onChange={(e)=>
-                      setCardDetails({
-                        ...cardDetails,
-                        cvv:e.target.value,
-                      })
-                    }
-                  />
-
-                </>
-
-              )}
-
-
+          {
+            !showCardForm &&
+            (
 
               <button
-                style={buttonStyle}
-                onClick={handleAddMoney}
+                style={styles.button}
+                onClick={handleContinue}
               >
-                Add Money
+                Continue
               </button>
 
+            )
+          }
 
-            </>
+                        {
+                showCardForm &&
+                (
 
-          )}
+                  <>
+
+                    <div
+                      style={styles.cardOption}
+                      onClick={() =>
+                        setSelectedCard("saved")
+                      }
+                    >
+
+                      <input
+                        type="radio"
+                        checked={
+                          selectedCard === "saved"
+                        }
+                        readOnly
+                      />
+
+                      <span>
+                        Saved Visa Card
+                      </span>
+
+
+                    </div>
+
+
+
+
+
+                    <div
+                      style={styles.cardOption}
+                      onClick={() =>
+                        setSelectedCard("new")
+                      }
+                    >
+
+                      <input
+                        type="radio"
+                        checked={
+                          selectedCard === "new"
+                        }
+                        readOnly
+                      />
+
+                      <span>
+                        Add New Card
+                      </span>
+
+
+                    </div>
+
+
+
+
+
+                    {
+                      selectedCard === "new" &&
+                      (
+
+                        <>
+
+
+                          <input
+                            style={styles.input}
+                            placeholder="Card Holder Name"
+                            value={
+                              cardDetails.name
+                            }
+                            onChange={(e)=>
+                              setCardDetails({
+                                ...cardDetails,
+                                name:e.target.value
+                              })
+                            }
+                          />
+
+
+
+                          <input
+                            style={styles.input}
+                            placeholder="Card Number"
+                            value={
+                              cardDetails.number
+                            }
+                            onChange={(e)=>
+                              setCardDetails({
+                                ...cardDetails,
+                                number:e.target.value
+                              })
+                            }
+                          />
+
+
+
+                          <input
+                            style={styles.input}
+                            placeholder="Expiry Date"
+                            value={
+                              cardDetails.expiry
+                            }
+                            onChange={(e)=>
+                              setCardDetails({
+                                ...cardDetails,
+                                expiry:e.target.value
+                              })
+                            }
+                          />
+
+
+
+                          <input
+                            style={styles.input}
+                            placeholder="CVV"
+                            value={
+                              cardDetails.cvv
+                            }
+                            onChange={(e)=>
+                              setCardDetails({
+                                ...cardDetails,
+                                cvv:e.target.value
+                              })
+                            }
+                          />
+
+
+                        </>
+
+                      )
+                    }
+
+
+
+
+
+                    <button
+                      style={styles.button}
+                      onClick={handleAddMoney}
+                    >
+
+                      Add Money
+
+                    </button>
+
+
+
+                  </>
+
+                )
+              }
+
 
         </div>
+
+
+
+
 
 
 
         <div
           style={{
-            ...cardStyle,
-            marginTop:"25px",
+            ...styles.card,
+            marginTop:"25px"
           }}
         >
 
-          <h2>
+
+          <h2
+            style={{
+              display:"flex",
+              alignItems:"center",
+              gap:"10px",
+              marginBottom:"20px"
+            }}
+          >
+
+            <CheckCircle size={22}/>
+
             Recent Top Ups
+
           </h2>
 
 
 
-          {recentTopUps.map((item,index)=>(
-
-            <div
-              key={index}
-              style={{
-                display:"flex",
-                justifyContent:"space-between",
-                padding:"15px 0",
-                borderBottom:"1px solid #2a2a2a",
-              }}
-            >
-
-              <div>
-
-                <span>
-                  {item.name}
-                </span>
 
 
-                <small
-                  style={{
-                    display:"block",
-                    color:"#888",
-                    marginTop:"5px",
-                  }}
-                >
-                  {item.date}
-                </small>
+          {
+            recentTopUps.length === 0
 
-              </div>
+            ?
 
+            (
 
-
-              <span
+              <p
                 style={{
-                  color:"#22c55e",
-                  fontWeight:"700",
+                  color:"#888"
                 }}
               >
-                {item.amount}
-              </span>
+                No top ups yet.
+              </p>
+
+            )
+
+            :
+
+            (
+
+              recentTopUps.map(
+                (item,index)=>(
+
+                  <div
+                    key={index}
+                    style={styles.transaction}
+                  >
 
 
-            </div>
+                    <div
+                      style={{
+                        display:"flex",
+                        alignItems:"center",
+                        gap:"14px"
+                      }}
+                    >
 
-          ))}
+
+                      <div
+                        style={styles.creditIcon}
+                      >
+
+                        <ArrowDownLeft
+                          size={18}
+                        />
+
+                      </div>
+
+
+
+
+                      <div>
+
+                        <strong>
+                          {
+                            item.name ||
+                            "Money Added"
+                          }
+                        </strong>
+
+
+                        <p
+                          style={{
+                            color:"#888",
+                            margin:"5px 0 0",
+                            fontSize:"13px"
+                          }}
+                        >
+                          {
+                            item.date ||
+                            "Unknown date"
+                          }
+                        </p>
+
+
+                      </div>
+
+
+
+                    </div>
+
+
+
+
+                    <span
+                      style={{
+                        color:"#22c55e",
+                        fontWeight:"700"
+                      }}
+                    >
+
+                      +
+
+                      ₦
+                      {
+                        Number(
+                          String(
+                            item.amount
+                          )
+                          .replace(/[^\d]/g,"")
+                        )
+                        .toLocaleString(
+                          "en-NG",
+                          {
+                            minimumFractionDigits:2
+                          }
+                        )
+                      }
+
+
+                    </span>
+
+
+
+                  </div>
+
+                )
+              )
+
+            )
+
+          }
+
 
 
         </div>
 
 
 
+
+
+
         <Link
           to="/dashboard"
-          onClick={() => window.scrollTo(0,0)}
+          onClick={() =>
+            window.scrollTo(0,0)
+          }
           style={{
-            textDecoration:"none",
+            textDecoration:"none"
           }}
         >
 
           <button
             style={{
-              ...buttonStyle,
-              marginTop:"30px",
+              ...styles.button,
+              marginTop:"30px"
             }}
           >
+
             ← Back to Dashboard
+
           </button>
+
 
         </Link>
 
 
+
+
       </div>
 
+
     </div>
+
   );
 
 }
 
 
 
-const cardStyle = {
+
+
+const styles = {
+
+
+page:{
+  backgroundColor:"#0d0d0d",
+  minHeight:"100vh",
+  color:"#fff"
+},
+
+
+
+navbar:{
+  padding:"20px 50px",
+  borderBottom:"1px solid #222",
+},
+
+
+
+logoContainer:{
+  display:"flex",
+  alignItems:"center",
+  gap:"10px",
+  textDecoration:"none"
+},
+
+
+
+logo:{
+  width:"40px",
+  height:"40px",
+  backgroundColor:"#22c55e",
+  borderRadius:"10px",
+  display:"flex",
+  alignItems:"center",
+  justifyContent:"center",
+  color:"#000",
+  fontWeight:"800"
+},
+
+
+
+brand:{
+  color:"#fff",
+  fontSize:"20px",
+  fontWeight:"700"
+},
+
+
+
+container:{
+  maxWidth:"700px",
+  margin:"45px auto",
+  padding:"0 20px"
+},
+
+
+
+heading:{
+  color:"#22c55e",
+  fontSize:"36px",
+  display:"flex",
+  alignItems:"center",
+  gap:"12px"
+},
+
+
+
+subtitle:{
+  color:"#999",
+  marginBottom:"35px"
+},
+
+
+
+card:{
   backgroundColor:"#1a1a1a",
   border:"1px solid #2a2a2a",
-  borderRadius:"15px",
-  padding:"25px",
-};
+  borderRadius:"16px",
+  padding:"25px"
+},
 
 
 
-const titleStyle = {
+sectionHeader:{
+  display:"flex",
+  alignItems:"center",
+  gap:"10px",
+  color:"#fff"
+},
+
+
+
+balance:{
   color:"#22c55e",
-};
+  fontSize:"38px",
+  marginTop:"18px",
+  marginBottom:0
+},
 
 
 
-const labelStyle = {
-  color:"#999",
-};
+text:{
+  color:"#999"
+},
 
 
 
-const textStyle = {
-  color:"#999",
-};
-
-
-
-const inputStyle = {
+input:{
   width:"100%",
   padding:"15px",
-  marginTop:"10px",
+  marginTop:"12px",
   marginBottom:"15px",
   backgroundColor:"#111",
-  border:"1px solid #333",
-  borderRadius:"8px",
   color:"#fff",
-  boxSizing:"border-box",
-};
+  border:"1px solid #333",
+  borderRadius:"10px",
+  boxSizing:"border-box"
+},
 
 
 
-const buttonStyle = {
+button:{
   width:"100%",
-  padding:"14px",
+  padding:"15px",
   backgroundColor:"#22c55e",
   color:"#000",
   border:"none",
-  borderRadius:"8px",
+  borderRadius:"10px",
   fontWeight:"700",
-  cursor:"pointer",
-};
+  cursor:"pointer"
+},
 
 
 
-const cardOption = {
+cardOption:{
   backgroundColor:"#111",
   border:"1px solid #333",
-  padding:"18px",
+  padding:"16px",
   borderRadius:"12px",
-  marginBottom:"15px",
-  cursor:"pointer",
   display:"flex",
   gap:"12px",
+  marginBottom:"15px",
+  cursor:"pointer"
+},
+
+
+
+transaction:{
+  display:"flex",
+  justifyContent:"space-between",
+  alignItems:"center",
+  padding:"16px 0",
+  borderBottom:"1px solid #2a2a2a"
+},
+
+
+
+creditIcon:{
+  width:"40px",
+  height:"40px",
+  borderRadius:"50%",
+  backgroundColor:"#123d23",
+  color:"#22c55e",
+  display:"flex",
+  justifyContent:"center",
+  alignItems:"center"
+}
+
+
 };
 
 
 
 export default AddMoney;
-
