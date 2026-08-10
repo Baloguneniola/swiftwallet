@@ -346,7 +346,7 @@ function AddMoney() {
                       />
 
                       <span>
-                        Saved Visa Card
+                        Saved Card
                       </span>
 
 
