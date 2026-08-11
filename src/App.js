@@ -31,6 +31,8 @@ import Profile from "./Profile";
 import EditProfile from "./EditProfile";
 import ChangePin from "./ChangePin";
 import Settings from "./Settings";
+import ManageAccountProtection from "./ManageAccountProtection";
+
 
 function App() {
   return (
@@ -283,6 +285,16 @@ function App() {
             </ProtectedRoute>
           }
         />
+        
+        <Route
+          path="/manage-account-protection"
+          element={
+            <ProtectedRoute>
+              <ManageAccountProtection />
+            </ProtectedRoute>
+          }
+        />
+
 
       </Routes>
 

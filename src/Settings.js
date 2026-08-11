@@ -153,10 +153,10 @@ function Settings() {
 
           <SettingItem
             icon={<Shield size={20}/>}
-            title="Security Settings"
-            description="Manage account protection"
+            title="Manage Account Protection"
+            description="Keep your account secure"
             onClick={() =>
-              alert("Security settings coming soon")
+              navigate("/manage-account-protection")
             }
           />
 
