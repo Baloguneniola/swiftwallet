@@ -1,6 +1,5 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -8,21 +7,24 @@ datasource db {
 }
 
 model User {
-  id               String           @id @default(cuid())
-  firstName        String
-  lastName         String
-  email            String           @unique
-  passwordHash     String
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
+  id                String           @id @default(cuid())
+  firstName         String
+  lastName          String
+  email             String           @unique
+  passwordHash      String
+  emailVerified     Boolean          @default(false)
+  verificationCode  String?
+  verificationExpires DateTime?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
 
-  account          Account?
-  transactions     Transaction[]
-  sentTransfers    Transfer[]       @relation("SenderTransfers")
-  receivedTransfers Transfer[]      @relation("RecipientTransfers")
-  billPayments     BillPayment[]
-  securitySettings SecuritySettings?
-  cards            Card[]
+  account           Account?
+  transactions      Transaction[]
+  sentTransfers     Transfer[]       @relation("SenderTransfers")
+  receivedTransfers Transfer[]       @relation("RecipientTransfers")
+  billPayments      BillPayment[]
+  securitySettings  SecuritySettings?
+  cards             Card[]
 }
 
 model Account {

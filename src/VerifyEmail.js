@@ -1,7 +1,172 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 function VerifyEmail() {
+  const navigate = useNavigate();
+  const inputRefs = useRef([]);
+
+  const [code, setCode] = useState([
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+  ]);
+
+  const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+
+  const handleChange = (value, index) => {
+    if (!/^\d?$/.test(value)) {
+      return;
+    }
+
+    const newCode = [...code];
+    newCode[index] = value;
+
+    setCode(newCode);
+    setError("");
+    setMessage("");
+
+    if (value && index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleKeyDown = (event, index) => {
+    if (
+      event.key === "Backspace" &&
+      !code[index] &&
+      index > 0
+    ) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleVerify = async () => {
+    const verificationCode = code.join("");
+
+    if (verificationCode.length !== 6) {
+      setError("Please enter the 6-digit verification code.");
+      return;
+    }
+
+    const email = localStorage.getItem("pendingUserEmail");
+
+    if (!email) {
+      setError(
+        "We couldn't find your signup information. Please start again."
+      );
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/auth/verify-email",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            code: verificationCode,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(
+          data.message || "Unable to verify your email."
+        );
+        return;
+      }
+
+      localStorage.removeItem("pendingUserEmail");
+
+      navigate("/complete-profile");
+    } catch (error) {
+      console.error("Email verification error:", error);
+
+      setError(
+        "Unable to connect to Swift Wallet. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    const email = localStorage.getItem("pendingUserEmail");
+
+    if (!email) {
+      setError(
+        "We couldn't find your signup information. Please start again."
+      );
+      return;
+    }
+
+    setResending(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/auth/resend-code",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(
+          data.message || "Unable to resend verification code."
+        );
+        return;
+      }
+
+      setCode([
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+      ]);
+
+      inputRefs.current[0]?.focus();
+
+      setMessage(
+        "A new verification code has been sent to your email."
+      );
+    } catch (error) {
+      console.error("Resend code error:", error);
+
+      setError(
+        "Unable to connect to Swift Wallet. Please try again."
+      );
+    } finally {
+      setResending(false);
+    }
+  };
+
   return (
     <div
       style={{
@@ -13,7 +178,6 @@ function VerifyEmail() {
         position: "relative",
       }}
     >
-      {/* Swift Wallet Logo */}
       <Link
         to="/"
         style={{
@@ -55,7 +219,6 @@ function VerifyEmail() {
         </span>
       </Link>
 
-      {/* Card */}
       <div
         style={{
           backgroundColor: "#1a1a1a",
@@ -77,7 +240,6 @@ function VerifyEmail() {
           Step 2 of 5
         </p>
 
-        {/* Progress Bar */}
         <div
           style={{
             width: "100%",
@@ -118,30 +280,73 @@ function VerifyEmail() {
           Enter the 6-digit verification code we sent to your email address.
         </p>
 
-        {/* Verification Boxes */}
         <div
           style={{
             display: "flex",
             justifyContent: "space-between",
-            gap: "10px",
-            marginBottom: "30px",
+            gap: "8px",
+            marginBottom: "20px",
           }}
         >
-          {[...Array(6)].map((_, index) => (
+          {code.map((digit, index) => (
             <input
               key={index}
+              ref={(element) => {
+                inputRefs.current[index] = element;
+              }}
               type="text"
+              inputMode="numeric"
               maxLength="1"
+              value={digit}
+              onChange={(e) =>
+                handleChange(e.target.value, index)
+              }
+              onKeyDown={(e) =>
+                handleKeyDown(e, index)
+              }
               style={codeInputStyle}
             />
           ))}
         </div>
 
-        <Link to="/complete-profile">
-          <button style={buttonStyle}>
-            Verify Email
-          </button>
-        </Link>
+        {error && (
+          <p
+            style={{
+              color: "#ef4444",
+              fontSize: "14px",
+              marginBottom: "20px",
+            }}
+          >
+            {error}
+          </p>
+        )}
+
+        {message && (
+          <p
+            style={{
+              color: "#22c55e",
+              fontSize: "14px",
+              marginBottom: "20px",
+            }}
+          >
+            {message}
+          </p>
+        )}
+
+        <button
+          onClick={handleVerify}
+          disabled={loading || resending}
+          style={{
+            ...buttonStyle,
+            opacity: loading || resending ? 0.7 : 1,
+            cursor:
+              loading || resending
+                ? "not-allowed"
+                : "pointer",
+          }}
+        >
+          {loading ? "Verifying..." : "Verify Email"}
+        </button>
 
         <p
           style={{
@@ -152,13 +357,17 @@ function VerifyEmail() {
         >
           Didn't receive a code?{" "}
           <span
+            onClick={resending ? undefined : handleResend}
             style={{
               color: "#22c55e",
-              cursor: "pointer",
+              cursor: resending
+                ? "not-allowed"
+                : "pointer",
               fontWeight: "600",
+              opacity: resending ? 0.7 : 1,
             }}
           >
-            Resend Code
+            {resending ? "Sending..." : "Resend Code"}
           </span>
         </p>
       </div>
@@ -167,7 +376,7 @@ function VerifyEmail() {
 }
 
 const codeInputStyle = {
-  width: "50px",
+  width: "45px",
   height: "55px",
   backgroundColor: "#111",
   border: "1px solid #333",
@@ -176,6 +385,7 @@ const codeInputStyle = {
   fontSize: "22px",
   textAlign: "center",
   outline: "none",
+  boxSizing: "border-box",
 };
 
 const buttonStyle = {

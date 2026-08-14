@@ -11,7 +11,9 @@ function Signup() {
     confirmPassword: "",
   });
 
-  const handleSignup = () => {
+  const [loading, setLoading] = useState(false);
+
+  const handleSignup = async () => {
     const {
       name,
       email,
@@ -29,33 +31,46 @@ function Signup() {
       return;
     }
 
-    const existingUsers =
-      JSON.parse(localStorage.getItem("swiftWalletUsers")) || [];
+    setLoading(true);
 
-    const userExists = existingUsers.some(
-      (user) => user.email === email
-    );
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/auth/signup",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name,
+            email,
+            password,
+          }),
+        }
+      );
 
-    if (userExists) {
-      alert("Account already exists");
-      return;
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.message || "Unable to create account");
+        return;
+      }
+
+      localStorage.setItem(
+        "pendingUserEmail",
+        data.user.email
+      );
+
+      navigate("/verify-email");
+    } catch (error) {
+      console.error("Signup error:", error);
+
+      alert(
+        "Unable to connect to Swift Wallet. Please try again."
+      );
+    } finally {
+      setLoading(false);
     }
-
-    localStorage.setItem(
-      "swiftWalletSignup",
-      JSON.stringify({
-        name,
-        email,
-        password,
-      })
-    );
-
-    localStorage.setItem(
-      "pendingUserEmail",
-      email
-    );
-
-    navigate("/verify-email");
   };
 
   return (
@@ -116,8 +131,7 @@ function Signup() {
           border: "1px solid #2a2a2a",
           borderRadius: "15px",
           padding: "40px",
-          boxShadow:
-            "0 0 20px rgba(34,197,94,0.15)",
+          boxShadow: "0 0 20px rgba(34,197,94,0.15)",
           textAlign: "center",
         }}
       >
@@ -194,9 +208,14 @@ function Signup() {
 
         <button
           onClick={handleSignup}
-          style={buttonStyle}
+          disabled={loading}
+          style={{
+            ...buttonStyle,
+            opacity: loading ? 0.7 : 1,
+            cursor: loading ? "not-allowed" : "pointer",
+          }}
         >
-          Continue
+          {loading ? "Creating Account..." : "Continue"}
         </button>
 
         <p
