@@ -90,8 +90,7 @@ function VerifyEmail() {
         );
         return;
       }
-
-      localStorage.removeItem("pendingUserEmail");
+      
 
       navigate("/complete-profile");
     } catch (error) {

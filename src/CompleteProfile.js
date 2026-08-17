@@ -1,7 +1,102 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 function CompleteProfile() {
+  const navigate = useNavigate();
+
+  const [profileData, setProfileData] = useState({
+    phoneNumber: "",
+    dateOfBirth: "",
+    residentialAddress: "",
+    country: "",
+    stateProvince: "",
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleChange = (field, value) => {
+    setProfileData((previous) => ({
+      ...previous,
+      [field]: value,
+    }));
+
+    setError("");
+  };
+
+  const handleContinue = async () => {
+    const {
+      phoneNumber,
+      dateOfBirth,
+      residentialAddress,
+      country,
+      stateProvince,
+    } = profileData;
+
+    if (
+      !phoneNumber ||
+      !dateOfBirth ||
+      !residentialAddress ||
+      !country ||
+      !stateProvince
+    ) {
+      setError("Please complete all fields.");
+      return;
+    }
+
+    const email = localStorage.getItem("pendingUserEmail");
+
+    if (!email) {
+      setError(
+        "We couldn't find your signup information. Please start again."
+      );
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/auth/complete-profile",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            phoneNumber,
+            dateOfBirth,
+            residentialAddress,
+            country,
+            stateProvince,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(
+          data.message ||
+            "Unable to save your profile. Please try again."
+        );
+        return;
+      }
+
+      navigate("/identity-verification");
+    } catch (error) {
+      console.error("Complete profile error:", error);
+
+      setError(
+        "Unable to connect to Swift Wallet. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div
       style={{
@@ -13,7 +108,6 @@ function CompleteProfile() {
         position: "relative",
       }}
     >
-      {/* Swift Wallet Logo */}
       <Link
         to="/"
         style={{
@@ -55,7 +149,6 @@ function CompleteProfile() {
         </span>
       </Link>
 
-      {/* Card */}
       <div
         style={{
           backgroundColor: "#1a1a1a",
@@ -77,7 +170,6 @@ function CompleteProfile() {
           Step 3 of 5
         </p>
 
-        {/* Progress Bar */}
         <div
           style={{
             width: "100%",
@@ -121,51 +213,89 @@ function CompleteProfile() {
           type="tel"
           inputMode="tel"
           placeholder="Phone Number"
+          value={profileData.phoneNumber}
+          onChange={(e) =>
+            handleChange("phoneNumber", e.target.value)
+          }
           style={inputStyle}
         />
 
         <p
-         style={{
+          style={{
             color: "#aaa",
             textAlign: "left",
             marginBottom: "8px",
             fontSize: "14px",
-        }}
+          }}
         >
-            Date of Birth
+          Date of Birth
         </p>
 
         <input
           type="date"
+          value={profileData.dateOfBirth}
+          onChange={(e) =>
+            handleChange("dateOfBirth", e.target.value)
+          }
           style={inputStyle}
         />
 
         <input
           type="text"
           placeholder="Residential Address"
+          value={profileData.residentialAddress}
+          onChange={(e) =>
+            handleChange(
+              "residentialAddress",
+              e.target.value
+            )
+          }
           style={inputStyle}
         />
 
         <input
           type="text"
           placeholder="Country"
+          value={profileData.country}
+          onChange={(e) =>
+            handleChange("country", e.target.value)
+          }
           style={inputStyle}
         />
 
         <input
           type="text"
           placeholder="State / Province"
+          value={profileData.stateProvince}
+          onChange={(e) =>
+            handleChange("stateProvince", e.target.value)
+          }
           style={inputStyle}
         />
 
-        <Link
-          to="/identity-verification"
-          style={{ textDecoration: "none" }}
+        {error && (
+          <p
+            style={{
+              color: "#ef4444",
+              fontSize: "14px",
+              marginBottom: "20px",
+            }}
+          >
+            {error}
+          </p>
+        )}
+
+        <button
+          onClick={handleContinue}
+          disabled={loading}
+          style={{
+            ...buttonStyle,
+            opacity: loading ? 0.7 : 1,
+            cursor: loading ? "not-allowed" : "pointer",
+          }}
         >
-          <button style={buttonStyle}>
-            Continue
-          </button>
-        </Link>
+          {loading ? "Saving Profile..." : "Continue"}
+        </button>
 
         <p
           style={{

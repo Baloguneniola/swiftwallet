@@ -26,6 +26,7 @@ const sendVerificationEmail = async (
               <div style="width: 40px; height: 40px; background-color: #22c55e; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; color: #000000;">
                 SW
               </div>
+
               <span style="font-size: 20px; font-weight: 700;">
                 Swift Wallet
               </span>
@@ -172,9 +173,11 @@ router.post("/verify-email", async (req, res) => {
       });
     }
 
+    const normalizedEmail = email.toLowerCase().trim();
+
     const user = await prisma.user.findUnique({
       where: {
-        email: email.toLowerCase().trim(),
+        email: normalizedEmail,
       },
     });
 
@@ -320,6 +323,180 @@ router.post("/resend-code", async (req, res) => {
     res.status(500).json({
       message:
         "Something went wrong while resending the verification code",
+    });
+  }
+});
+
+router.post("/complete-profile", async (req, res) => {
+  try {
+    const {
+      email,
+      phoneNumber,
+      dateOfBirth,
+      residentialAddress,
+      country,
+      stateProvince,
+    } = req.body;
+
+    if (
+      !email ||
+      !phoneNumber ||
+      !dateOfBirth ||
+      !residentialAddress ||
+      !country ||
+      !stateProvince
+    ) {
+      return res.status(400).json({
+        message: "Please complete all profile fields",
+      });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const user = await prisma.user.findUnique({
+      where: {
+        email: normalizedEmail,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    if (!user.emailVerified) {
+      return res.status(403).json({
+        message: "Please verify your email first",
+      });
+    }
+
+    const parsedDateOfBirth = new Date(dateOfBirth);
+
+    if (Number.isNaN(parsedDateOfBirth.getTime())) {
+      return res.status(400).json({
+        message: "Please enter a valid date of birth",
+      });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        phoneNumber: phoneNumber.trim(),
+        dateOfBirth: parsedDateOfBirth,
+        residentialAddress:
+          residentialAddress.trim(),
+        country: country.trim(),
+        stateProvince: stateProvince.trim(),
+      },
+    });
+
+    res.json({
+      message: "Profile completed successfully",
+      user: {
+        id: updatedUser.id,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        email: updatedUser.email,
+        phoneNumber: updatedUser.phoneNumber,
+        dateOfBirth: updatedUser.dateOfBirth,
+        residentialAddress:
+          updatedUser.residentialAddress,
+        country: updatedUser.country,
+        stateProvince: updatedUser.stateProvince,
+      },
+    });
+  } catch (error) {
+    console.error(
+      "Complete profile error:",
+      error
+    );
+
+    res.status(500).json({
+      message:
+        "Something went wrong while saving your profile",
+    });
+  }
+});
+
+router.post("/complete-profile", async (req, res) => {
+  try {
+    const {
+      email,
+      phoneNumber,
+      dateOfBirth,
+      residentialAddress,
+      country,
+      stateProvince,
+    } = req.body;
+
+    if (
+      !email ||
+      !phoneNumber ||
+      !dateOfBirth ||
+      !residentialAddress ||
+      !country ||
+      !stateProvince
+    ) {
+      return res.status(400).json({
+        message: "All profile fields are required",
+      });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const user = await prisma.user.findUnique({
+      where: {
+        email: normalizedEmail,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    if (!user.emailVerified) {
+      return res.status(403).json({
+        message: "Please verify your email before completing your profile",
+      });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        phoneNumber: phoneNumber.trim(),
+        dateOfBirth: new Date(dateOfBirth),
+        residentialAddress: residentialAddress.trim(),
+        country: country.trim(),
+        stateProvince: stateProvince.trim(),
+      },
+    });
+
+    res.json({
+      message: "Profile completed successfully",
+      user: {
+        id: updatedUser.id,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        email: updatedUser.email,
+        phoneNumber: updatedUser.phoneNumber,
+        dateOfBirth: updatedUser.dateOfBirth,
+        residentialAddress: updatedUser.residentialAddress,
+        country: updatedUser.country,
+        stateProvince: updatedUser.stateProvince,
+      },
+    });
+  } catch (error) {
+    console.error("Complete profile error:", error);
+
+    res.status(500).json({
+      message: "Something went wrong while saving your profile",
     });
   }
 });
