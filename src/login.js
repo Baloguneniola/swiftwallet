@@ -53,51 +53,74 @@ function Login() {
 
       const currentUser = {
         id: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        name:
-          `${user.firstName} ${user.lastName}`.trim(),
-        email: user.email,
-        emailVerified: user.emailVerified,
 
-        phoneNumber: user.phoneNumber || "",
-        dateOfBirth: user.dateOfBirth || "",
+        firstName:
+          user.firstName || "",
+
+        lastName:
+          user.lastName || "",
+
+        name:
+          `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+
+        email:
+          user.email || "",
+
+        emailVerified:
+          user.emailVerified || false,
+
+        phoneNumber:
+          user.phoneNumber || "",
+
+        dateOfBirth:
+          user.dateOfBirth || "",
+
         residentialAddress:
           user.residentialAddress || "",
-        country: user.country || "",
+
+        country:
+          user.country || "",
+
         stateProvince:
           user.stateProvince || "",
 
-        nationality: user.nationality || "",
+        nationality:
+          user.nationality || "",
+
         identityType:
           user.identityType || "",
+
         identityNumber:
           user.identityNumber || "",
+
         identityDocument:
           user.identityDocument || "",
 
         accountNumber:
-          user.accountNumber || "",
+          user.account?.accountNumber || "",
 
         balance:
-          Number(user.balance || 0),
+          Number(user.account?.balance || 0),
 
         cardNumber:
-          user.cardNumber || "",
+          user.card?.cardNumber || "",
 
         expiryDate:
-          user.expiryDate || "",
+          user.card?.expiryDate || "",
 
         cardFrozen:
-          user.cardFrozen || false,
+          user.card?.frozen || false,
 
         hasPin:
           user.hasPin || false,
 
         transactions:
-          user.transactions || [],
+          Array.isArray(user.transactions)
+            ? user.transactions
+            : [],
 
         payments: [],
+
         topUps: [],
       };
 
@@ -108,7 +131,7 @@ function Login() {
 
       localStorage.setItem(
         "swiftWalletUser",
-        user.firstName
+        user.firstName || "User"
       );
 
       navigate("/dashboard");
