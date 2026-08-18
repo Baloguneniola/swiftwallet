@@ -4,65 +4,129 @@ import { Link, useNavigate } from "react-router-dom";
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const navigate = useNavigate();
 
+  const handleLogin = async () => {
+    setError("");
 
-  const handleLogin = () => {
     if (email.trim() === "") {
-      alert("Please enter your email address.");
+      setError("Please enter your email address.");
       return;
     }
-
 
     if (password.trim() === "") {
-      alert("Please enter your password.");
+      setError("Please enter your password.");
       return;
     }
 
+    setLoading(true);
 
-    const users =
-      JSON.parse(
-        localStorage.getItem("swiftWalletUsers")
-      ) || [];
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/auth/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: email.trim(),
+            password,
+          }),
+        }
+      );
 
+      const data = await response.json();
 
-    const user = users.find(
-      (u) =>
-        u.email.toLowerCase() === email.toLowerCase() &&
-        u.password === password
-    );
+      if (!response.ok) {
+        setError(
+          data.message ||
+            "Invalid email or password."
+        );
+        return;
+      }
 
+      const user = data.user;
 
-    if (!user) {
-      alert("Invalid email or password.");
-      return;
+      const currentUser = {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        name:
+          `${user.firstName} ${user.lastName}`.trim(),
+        email: user.email,
+        emailVerified: user.emailVerified,
+
+        phoneNumber: user.phoneNumber || "",
+        dateOfBirth: user.dateOfBirth || "",
+        residentialAddress:
+          user.residentialAddress || "",
+        country: user.country || "",
+        stateProvince:
+          user.stateProvince || "",
+
+        nationality: user.nationality || "",
+        identityType:
+          user.identityType || "",
+        identityNumber:
+          user.identityNumber || "",
+        identityDocument:
+          user.identityDocument || "",
+
+        accountNumber:
+          user.accountNumber || "",
+
+        balance:
+          Number(user.balance || 0),
+
+        cardNumber:
+          user.cardNumber || "",
+
+        expiryDate:
+          user.expiryDate || "",
+
+        cardFrozen:
+          user.cardFrozen || false,
+
+        hasPin:
+          user.hasPin || false,
+
+        transactions:
+          user.transactions || [],
+
+        payments: [],
+        topUps: [],
+      };
+
+      localStorage.setItem(
+        "swiftWalletCurrentUser",
+        JSON.stringify(currentUser)
+      );
+
+      localStorage.setItem(
+        "swiftWalletUser",
+        user.firstName
+      );
+
+      navigate("/dashboard");
+
+      window.scrollTo(0, 0);
+    } catch (error) {
+      console.error(
+        "Login error:",
+        error
+      );
+
+      setError(
+        "Unable to connect to Swift Wallet. Please try again."
+      );
+    } finally {
+      setLoading(false);
     }
-
-
-    localStorage.removeItem(
-      "swiftWalletCurrentUser"
-    );
-
-
-    localStorage.setItem(
-      "swiftWalletCurrentUser",
-      JSON.stringify(user)
-    );
-
-
-    localStorage.setItem(
-      "swiftWalletUser",
-      user.name.split(" ")[0]
-    );
-
-
-    navigate("/dashboard");
-
-
-    window.scrollTo(0, 0);
   };
-
 
   return (
     <div
@@ -75,10 +139,11 @@ function Login() {
         position: "relative",
       }}
     >
-
       <Link
         to="/"
-        onClick={() => window.scrollTo(0, 0)}
+        onClick={() =>
+          window.scrollTo(0, 0)
+        }
         style={{
           position: "absolute",
           top: "35px",
@@ -90,7 +155,6 @@ function Login() {
           cursor: "pointer",
         }}
       >
-
         <div
           style={{
             width: "40px",
@@ -108,7 +172,6 @@ function Login() {
           SW
         </div>
 
-
         <span
           style={{
             color: "#fff",
@@ -118,10 +181,7 @@ function Login() {
         >
           Swift Wallet
         </span>
-
       </Link>
-
-
 
       <div
         style={{
@@ -135,7 +195,6 @@ function Login() {
             "0 0 20px rgba(34,197,94,0.15)",
         }}
       >
-
         <h1
           style={{
             color: "#22c55e",
@@ -145,7 +204,6 @@ function Login() {
         >
           Welcome back
         </h1>
-
 
         <p
           style={{
@@ -157,43 +215,62 @@ function Login() {
           Sign in to access your Swift Wallet.
         </p>
 
-
-
         <input
           type="email"
           placeholder="Email Address"
           style={inputStyle}
           value={email}
-          autoComplete="off"
+          autoComplete="email"
           onChange={(e) =>
             setEmail(e.target.value)
           }
         />
-
-
 
         <input
           type="password"
           placeholder="Password"
           style={inputStyle}
           value={password}
-          autoComplete="new-password"
+          autoComplete="current-password"
           onChange={(e) =>
             setPassword(e.target.value)
           }
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handleLogin();
+            }
+          }}
         />
 
-
+        {error && (
+          <p
+            style={{
+              color: "#ef4444",
+              fontSize: "14px",
+              marginBottom: "20px",
+              lineHeight: "1.5",
+            }}
+          >
+            {error}
+          </p>
+        )}
 
         <button
           type="button"
           onClick={handleLogin}
-          style={buttonStyle}
+          disabled={loading}
+          style={{
+            ...buttonStyle,
+            opacity: loading ? 0.7 : 1,
+            cursor: loading
+              ? "not-allowed"
+              : "pointer",
+          }}
         >
-          Log In
+          {loading
+            ? "Signing In..."
+            : "Log In"}
         </button>
-
-
 
         <p
           style={{
@@ -203,7 +280,6 @@ function Login() {
           }}
         >
           Don't have an account?{" "}
-
 
           <Link
             to="/signup"
@@ -215,16 +291,11 @@ function Login() {
           >
             Sign Up
           </Link>
-
         </p>
-
       </div>
-
     </div>
   );
 }
-
-
 
 const inputStyle = {
   width: "100%",
@@ -239,8 +310,6 @@ const inputStyle = {
   fontSize: "15px",
 };
 
-
-
 const buttonStyle = {
   width: "100%",
   padding: "14px",
@@ -252,7 +321,5 @@ const buttonStyle = {
   cursor: "pointer",
   fontSize: "15px",
 };
-
-
 
 export default Login;

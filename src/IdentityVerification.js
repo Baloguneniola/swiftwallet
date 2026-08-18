@@ -1,7 +1,113 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 function IdentityVerification() {
+  const navigate = useNavigate();
+
+  const [verificationData, setVerificationData] = useState({
+    nationality: "",
+    identityType: "",
+    identityNumber: "",
+    identityDocument: "",
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleChange = (field, value) => {
+    setVerificationData((previous) => ({
+      ...previous,
+      [field]: value,
+    }));
+
+    setError("");
+  };
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+
+    if (!file) {
+      return;
+    }
+
+    setVerificationData((previous) => ({
+      ...previous,
+      identityDocument: file.name,
+    }));
+
+    setError("");
+  };
+
+  const handleContinue = async () => {
+    const {
+      nationality,
+      identityType,
+      identityNumber,
+      identityDocument,
+    } = verificationData;
+
+    if (
+      !nationality ||
+      !identityType ||
+      !identityNumber ||
+      !identityDocument
+    ) {
+      setError("Please complete all identity verification fields.");
+      return;
+    }
+
+    const email = localStorage.getItem("pendingUserEmail");
+
+    if (!email) {
+      setError(
+        "We couldn't find your signup information. Please start again."
+      );
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/auth/identity-verification",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            nationality,
+            identityType,
+            identityNumber,
+            identityDocument,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(
+          data.message ||
+          "Unable to save your identity verification information."
+        );
+        return;
+      }
+
+      navigate("/create-pin");
+    } catch (error) {
+      console.error("Identity verification error:", error);
+
+      setError(
+        "Unable to connect to Swift Wallet. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div
       style={{
@@ -11,9 +117,10 @@ function IdentityVerification() {
         justifyContent: "center",
         alignItems: "center",
         position: "relative",
+        padding: "40px 20px",
+        boxSizing: "border-box",
       }}
     >
-      {/* Swift Wallet Logo */}
       <Link
         to="/"
         style={{
@@ -55,7 +162,6 @@ function IdentityVerification() {
         </span>
       </Link>
 
-      {/* Card */}
       <div
         style={{
           backgroundColor: "#1a1a1a",
@@ -77,7 +183,6 @@ function IdentityVerification() {
           Step 4 of 5
         </p>
 
-        {/* Progress Bar */}
         <div
           style={{
             width: "100%",
@@ -121,51 +226,93 @@ function IdentityVerification() {
         <input
           type="text"
           placeholder="Nationality"
+          value={verificationData.nationality}
+          onChange={(e) =>
+            handleChange("nationality", e.target.value)
+          }
           style={inputStyle}
         />
 
         <select
-          style={inputStyle}
-          defaultValue=""
+          value={verificationData.identityType}
+          onChange={(e) =>
+            handleChange("identityType", e.target.value)
+          }
+          style={selectStyle}
         >
           <option value="" disabled>
             Select ID Type
           </option>
-          <option>National ID</option>
-          <option>Passport</option>
-          <option>Driver's Licence</option>
+          <option value="National ID">National ID</option>
+          <option value="Passport">Passport</option>
+          <option value="Driver's Licence">Driver's Licence</option>
         </select>
 
         <input
           type="text"
           placeholder="ID Number"
+          value={verificationData.identityNumber}
+          onChange={(e) =>
+            handleChange("identityNumber", e.target.value)
+          }
           style={inputStyle}
         />
 
-        {/* Hidden File Input */}
         <input
           type="file"
           id="upload-id"
           accept="image/*,.pdf"
+          onChange={handleFileChange}
           style={{ display: "none" }}
         />
 
-        {/* Upload Button */}
         <label
           htmlFor="upload-id"
           style={uploadButton}
         >
-          Upload Government ID
+          {verificationData.identityDocument
+            ? verificationData.identityDocument
+            : "Upload Government ID"}
         </label>
 
-        <Link
-          to="/create-pin"
-          style={{ textDecoration: "none" }}
+        {verificationData.identityDocument && (
+          <p
+            style={{
+              color: "#22c55e",
+              fontSize: "13px",
+              marginTop: "-8px",
+              marginBottom: "18px",
+            }}
+          >
+            Document selected successfully.
+          </p>
+        )}
+
+        {error && (
+          <p
+            style={{
+              color: "#ef4444",
+              fontSize: "14px",
+              marginBottom: "20px",
+            }}
+          >
+            {error}
+          </p>
+        )}
+
+        <button
+          onClick={handleContinue}
+          disabled={loading}
+          style={{
+            ...buttonStyle,
+            opacity: loading ? 0.7 : 1,
+            cursor: loading
+              ? "not-allowed"
+              : "pointer",
+          }}
         >
-          <button style={buttonStyle}>
-            Continue
-          </button>
-        </Link>
+          {loading ? "Saving..." : "Continue"}
+        </button>
 
         <p
           style={{
@@ -194,6 +341,20 @@ const inputStyle = {
   fontSize: "15px",
 };
 
+const selectStyle = {
+  width: "100%",
+  padding: "14px",
+  marginBottom: "18px",
+  backgroundColor: "#111",
+  border: "1px solid #333",
+  color: "#fff",
+  borderRadius: "8px",
+  outline: "none",
+  boxSizing: "border-box",
+  fontSize: "15px",
+  cursor: "pointer",
+};
+
 const uploadButton = {
   display: "block",
   width: "100%",
@@ -207,6 +368,9 @@ const uploadButton = {
   cursor: "pointer",
   fontSize: "15px",
   boxSizing: "border-box",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
 };
 
 const buttonStyle = {

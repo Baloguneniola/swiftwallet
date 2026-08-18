@@ -44,7 +44,9 @@ function CompleteProfile() {
       return;
     }
 
-    const email = localStorage.getItem("pendingUserEmail");
+    const email = localStorage.getItem(
+      "pendingUserEmail"
+    );
 
     if (!email) {
       setError(
@@ -75,7 +77,13 @@ function CompleteProfile() {
         }
       );
 
-      const data = await response.json();
+      let data = {};
+
+      try {
+        data = await response.json();
+      } catch {
+        data = {};
+      }
 
       if (!response.ok) {
         setError(
@@ -86,11 +94,15 @@ function CompleteProfile() {
       }
 
       navigate("/identity-verification");
+      window.scrollTo(0, 0);
     } catch (error) {
-      console.error("Complete profile error:", error);
+      console.error(
+        "Complete profile error:",
+        error
+      );
 
       setError(
-        "Unable to connect to Swift Wallet. Please try again."
+        "Unable to connect to Swift Wallet. Please make sure the Swift Wallet server is running."
       );
     } finally {
       setLoading(false);
@@ -157,7 +169,8 @@ function CompleteProfile() {
           width: "450px",
           textAlign: "center",
           border: "1px solid #2a2a2a",
-          boxShadow: "0 0 20px rgba(34,197,94,0.15)",
+          boxShadow:
+            "0 0 20px rgba(34,197,94,0.15)",
         }}
       >
         <p
@@ -186,7 +199,7 @@ function CompleteProfile() {
               height: "100%",
               backgroundColor: "#22c55e",
             }}
-          ></div>
+          />
         </div>
 
         <h1
@@ -206,7 +219,8 @@ function CompleteProfile() {
             fontSize: "15px",
           }}
         >
-          Tell us a little more about yourself to continue.
+          Tell us a little more about yourself to
+          continue.
         </p>
 
         <input
@@ -215,7 +229,10 @@ function CompleteProfile() {
           placeholder="Phone Number"
           value={profileData.phoneNumber}
           onChange={(e) =>
-            handleChange("phoneNumber", e.target.value)
+            handleChange(
+              "phoneNumber",
+              e.target.value
+            )
           }
           style={inputStyle}
         />
@@ -235,7 +252,10 @@ function CompleteProfile() {
           type="date"
           value={profileData.dateOfBirth}
           onChange={(e) =>
-            handleChange("dateOfBirth", e.target.value)
+            handleChange(
+              "dateOfBirth",
+              e.target.value
+            )
           }
           style={inputStyle}
         />
@@ -258,7 +278,10 @@ function CompleteProfile() {
           placeholder="Country"
           value={profileData.country}
           onChange={(e) =>
-            handleChange("country", e.target.value)
+            handleChange(
+              "country",
+              e.target.value
+            )
           }
           style={inputStyle}
         />
@@ -268,7 +291,10 @@ function CompleteProfile() {
           placeholder="State / Province"
           value={profileData.stateProvince}
           onChange={(e) =>
-            handleChange("stateProvince", e.target.value)
+            handleChange(
+              "stateProvince",
+              e.target.value
+            )
           }
           style={inputStyle}
         />
@@ -279,6 +305,7 @@ function CompleteProfile() {
               color: "#ef4444",
               fontSize: "14px",
               marginBottom: "20px",
+              lineHeight: "1.5",
             }}
           >
             {error}
@@ -291,10 +318,14 @@ function CompleteProfile() {
           style={{
             ...buttonStyle,
             opacity: loading ? 0.7 : 1,
-            cursor: loading ? "not-allowed" : "pointer",
+            cursor: loading
+              ? "not-allowed"
+              : "pointer",
           }}
         >
-          {loading ? "Saving Profile..." : "Continue"}
+          {loading
+            ? "Saving Profile..."
+            : "Continue"}
         </button>
 
         <p
@@ -304,7 +335,8 @@ function CompleteProfile() {
             fontSize: "14px",
           }}
         >
-          Your information is encrypted and securely stored.
+          Your information is encrypted and securely
+          stored.
         </p>
       </div>
     </div>
