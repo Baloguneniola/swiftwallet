@@ -1,5 +1,5 @@
 const express = require("express");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const { Resend } = require("resend");
 const prisma = require("../lib/prisma");
 
@@ -805,8 +805,7 @@ router.post(
 
         account: {
           accountNumber:
-            result.account
-              .accountNumber,
+            result.account.accountNumber,
           balance:
             result.account.balance.toString(),
         },
@@ -952,29 +951,29 @@ router.post(
           identityDocument:
             user.identityDocument,
 
-          accountNumber:
-            user.account
-              ?.accountNumber ||
-            null,
+          account: user.account
+            ? {
+                id:
+                  user.account.id,
+                accountNumber:
+                  user.account.accountNumber,
+                balance:
+                  user.account.balance.toString(),
+              }
+            : null,
 
-          balance:
-            user.account
-              ? Number(
-                  user.account.balance
-                )
-              : 0,
-
-          cardNumber:
-            card?.cardNumber ||
-            null,
-
-          expiryDate:
-            card?.expiryDate ||
-            null,
-
-          cardFrozen:
-            card?.frozen ||
-            false,
+          card: card
+            ? {
+                id:
+                  card.id,
+                cardNumber:
+                  card.cardNumber,
+                expiryDate:
+                  card.expiryDate,
+                frozen:
+                  card.frozen,
+              }
+            : null,
 
           hasPin:
             !!user.securitySettings
