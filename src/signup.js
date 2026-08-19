@@ -156,9 +156,11 @@ function Signup() {
 
         <input
           type="text"
+          name="swiftwallet-signup-name"
           placeholder="Full Name"
           style={inputStyle}
           value={signupData.name}
+          autoComplete="off"
           onChange={(e) =>
             setSignupData({
               ...signupData,
@@ -169,9 +171,11 @@ function Signup() {
 
         <input
           type="email"
+          name="swiftwallet-signup-email"
           placeholder="Email Address"
           style={inputStyle}
           value={signupData.email}
+          autoComplete="off"
           onChange={(e) =>
             setSignupData({
               ...signupData,
@@ -182,9 +186,11 @@ function Signup() {
 
         <input
           type="password"
+          name="swiftwallet-signup-password"
           placeholder="Password"
           style={inputStyle}
           value={signupData.password}
+          autoComplete="new-password"
           onChange={(e) =>
             setSignupData({
               ...signupData,
@@ -195,9 +201,11 @@ function Signup() {
 
         <input
           type="password"
+          name="swiftwallet-signup-confirm-password"
           placeholder="Confirm Password"
           style={inputStyle}
           value={signupData.confirmPassword}
+          autoComplete="new-password"
           onChange={(e) =>
             setSignupData({
               ...signupData,
@@ -212,10 +220,14 @@ function Signup() {
           style={{
             ...buttonStyle,
             opacity: loading ? 0.7 : 1,
-            cursor: loading ? "not-allowed" : "pointer",
+            cursor: loading
+              ? "not-allowed"
+              : "pointer",
           }}
         >
-          {loading ? "Creating Account..." : "Continue"}
+          {loading
+            ? "Creating Account..."
+            : "Continue"}
         </button>
 
         <p

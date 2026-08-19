@@ -240,10 +240,11 @@ function Login() {
 
         <input
           type="email"
+          name="swiftwallet-login-email"
           placeholder="Email Address"
           style={inputStyle}
           value={email}
-          autoComplete="email"
+          autoComplete="off"
           onChange={(e) =>
             setEmail(e.target.value)
           }
@@ -251,10 +252,11 @@ function Login() {
 
         <input
           type="password"
+          name="swiftwallet-login-password"
           placeholder="Password"
           style={inputStyle}
           value={password}
-          autoComplete="current-password"
+          autoComplete="new-password"
           onChange={(e) =>
             setPassword(e.target.value)
           }
