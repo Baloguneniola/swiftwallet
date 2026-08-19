@@ -1,237 +1,247 @@
-import React, { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import React, {
+  useState,
+} from "react";
+
+import {
+  Link,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
+
 
 function EnterPin() {
-  const [pin, setPin] = useState("");
+  const [pin, setPin] =
+    useState("");
 
-  const navigate = useNavigate();
-  const location = useLocation();
+  const [loading, setLoading] =
+    useState(false);
 
-  const transferData = location.state;
+  const navigate =
+    useNavigate();
 
-  const handleContinue = () => {
-    const currentUser =
-      JSON.parse(
-        localStorage.getItem("swiftWalletCurrentUser")
-      );
+  const location =
+    useLocation();
 
-    if (!currentUser) {
-      alert("User session not found.");
-      return;
-    }
-
-    if (!transferData) {
-      alert("Transfer information missing.");
-      return;
-    }
-
-    if (pin.length !== 4) {
-      alert("Please enter your 4-digit PIN.");
-      return;
-    }
-
-    if (pin !== currentUser.pin) {
-      alert("Incorrect PIN");
-      return;
-    }
-
-    const transferAmount =
-      Number(transferData.amount);
-
-    if (transferAmount <= 0) {
-      alert("Invalid transfer amount.");
-      return;
-    }
-
-    if (
-      transferAmount >
-      Number(currentUser.balance)
-    ) {
-      alert("Insufficient balance.");
-      return;
-    }
-
-    const users =
-      JSON.parse(
-        localStorage.getItem("swiftWalletUsers")
-      ) || [];
+  const transferData =
+    location.state;
 
 
-    const receiver =
-      users.find(
-        (user) =>
-          user.accountNumber ===
-          transferData.accountNumber
-      );
+  const handleContinue =
+    async () => {
+
+      /*
+        GET CURRENT USER
+      */
+      const currentUser =
+        JSON.parse(
+          localStorage.getItem(
+            "swiftWalletCurrentUser"
+          )
+        );
 
 
-    if (!receiver) {
-      alert("Recipient account not found.");
-      return;
-    }
+      if (!currentUser) {
+        alert(
+          "User session not found."
+        );
 
-
-    if (
-      receiver.email === currentUser.email
-    ) {
-      alert(
-        "You cannot transfer money to yourself."
-      );
-      return;
-    }
-
-
-    const transactionId =
-      "TXN" +
-      Math.floor(
-        Math.random() * 1000000
-      );
-
-
-    const senderTransaction = {
-      name:
-        "Transfer to " +
-        receiver.name,
-
-      date:
-        new Date().toLocaleDateString(),
-
-      amount:
-        transferAmount,
-
-      type:
-        "debit",
-
-      bank:
-        transferData.bank,
-
-      accountNumber:
-        transferData.accountNumber,
-
-      description:
-        transferData.description ||
-        "Transfer",
-
-      transactionId,
-    };
-
-
-    const receiverTransaction = {
-      name:
-        "Received from " +
-        currentUser.name,
-
-      date:
-        new Date().toLocaleDateString(),
-
-      amount:
-        transferAmount,
-
-      type:
-        "credit",
-
-      bank:
-        transferData.bank,
-
-      accountNumber:
-        currentUser.accountNumber,
-
-      description:
-        transferData.description ||
-        "Transfer received",
-
-      transactionId,
-    };
-
-
-    const updatedSender = {
-      ...currentUser,
-
-      balance:
-        Number(currentUser.balance) -
-        transferAmount,
-
-      transactions: [
-        ...(currentUser.transactions || []),
-        senderTransaction,
-      ],
-    };
-
-
-    const updatedReceiver = {
-      ...receiver,
-
-      balance:
-        Number(receiver.balance || 0) +
-        transferAmount,
-
-      transactions: [
-        ...(receiver.transactions || []),
-        receiverTransaction,
-      ],
-    };
-
-
-    const updatedUsers =
-      users.map((user) => {
-
-        if (
-          user.email === currentUser.email
-        ) {
-          return updatedSender;
-        }
-
-
-        if (
-          user.email === receiver.email
-        ) {
-          return updatedReceiver;
-        }
-
-
-        return user;
-
-      });
-
-
-    localStorage.setItem(
-      "swiftWalletUsers",
-      JSON.stringify(updatedUsers)
-    );
-
-
-    localStorage.setItem(
-      "swiftWalletCurrentUser",
-      JSON.stringify(updatedSender)
-    );
-
-
-    navigate(
-      "/transfer-success",
-      {
-        state: {
-          transferData,
-
-          transaction:
-            senderTransaction,
-
-          newBalance:
-            updatedSender.balance,
-        },
+        return;
       }
-    );
-  };
+
+
+      if (!transferData) {
+        alert(
+          "Transfer information missing."
+        );
+
+        return;
+      }
+
+
+      if (pin.length !== 4) {
+        alert(
+          "Please enter your 4-digit PIN."
+        );
+
+        return;
+      }
+
+
+      setLoading(true);
+
+
+      try {
+
+        /*
+          VERIFY PIN WITH BACKEND
+        */
+        const pinResponse =
+          await fetch(
+            "http://localhost:5000/api/auth/verify-pin",
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+
+              body: JSON.stringify({
+                userId:
+                  currentUser.id,
+
+                pin,
+              }),
+            }
+          );
+
+
+        const pinData =
+          await pinResponse.json();
+
+
+        if (!pinResponse.ok) {
+          alert(
+            pinData.message ||
+              "Incorrect PIN."
+          );
+
+          setLoading(false);
+
+          return;
+        }
+
+
+        /*
+          MAKE THE TRANSFER
+        */
+        const transferResponse =
+          await fetch(
+            "http://localhost:5000/api/transfers",
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+
+              body: JSON.stringify({
+                senderId:
+                  currentUser.id,
+
+                recipientAccountNumber:
+                  transferData.accountNumber,
+
+                amount:
+                  transferData.amount,
+
+                description:
+                  transferData.description ||
+                  "Transfer",
+              }),
+            }
+          );
+
+
+        const transferResult =
+          await transferResponse.json();
+
+
+        if (!transferResponse.ok) {
+          alert(
+            transferResult.message ||
+              "Unable to complete transfer."
+          );
+
+          setLoading(false);
+
+          return;
+        }
+
+
+        /*
+          UPDATE THE LOCAL SESSION
+          WITH THE NEW BALANCE
+        */
+        const updatedUser = {
+          ...currentUser,
+
+          account: {
+            ...(currentUser.account ||
+              {}),
+
+            balance:
+              transferResult.newBalance.toString(),
+          },
+        };
+
+
+        localStorage.setItem(
+          "swiftWalletCurrentUser",
+          JSON.stringify(
+            updatedUser
+          )
+        );
+
+
+        /*
+          GO TO SUCCESS PAGE
+        */
+        navigate(
+          "/transfer-success",
+          {
+            state: {
+              transferData,
+
+              transaction:
+                transferResult.transaction,
+
+              newBalance:
+                transferResult.newBalance,
+            },
+          }
+        );
+
+      } catch (error) {
+
+        console.error(
+          "Transfer error:",
+          error
+        );
+
+        alert(
+          "Unable to connect to the Swift Wallet server."
+        );
+
+      } finally {
+
+        setLoading(false);
+
+      }
+    };
 
 
   return (
     <div
       style={{
-        backgroundColor: "#0d0d0d",
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        position: "relative",
+        backgroundColor:
+          "#0d0d0d",
+
+        minHeight:
+          "100vh",
+
+        display:
+          "flex",
+
+        justifyContent:
+          "center",
+
+        alignItems:
+          "center",
+
+        position:
+          "relative",
       }}
     >
 
@@ -239,27 +249,57 @@ function EnterPin() {
         to="/confirm-transfer"
         state={transferData}
         style={{
-          position: "absolute",
-          top: "35px",
-          left: "50px",
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-          textDecoration: "none",
+          position:
+            "absolute",
+
+          top:
+            "35px",
+
+          left:
+            "50px",
+
+          display:
+            "flex",
+
+          alignItems:
+            "center",
+
+          gap:
+            "10px",
+
+          textDecoration:
+            "none",
         }}
       >
 
         <div
           style={{
-            width: "40px",
-            height: "40px",
-            backgroundColor: "#22c55e",
-            borderRadius: "10px",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            fontWeight: "bold",
-            color: "#000",
+            width:
+              "40px",
+
+            height:
+              "40px",
+
+            backgroundColor:
+              "#22c55e",
+
+            borderRadius:
+              "10px",
+
+            display:
+              "flex",
+
+            justifyContent:
+              "center",
+
+            alignItems:
+              "center",
+
+            fontWeight:
+              "bold",
+
+            color:
+              "#000",
           }}
         >
           SW
@@ -268,9 +308,14 @@ function EnterPin() {
 
         <span
           style={{
-            color: "#fff",
-            fontSize: "20px",
-            fontWeight: "700",
+            color:
+              "#fff",
+
+            fontSize:
+              "20px",
+
+            fontWeight:
+              "700",
           }}
         >
           Swift Wallet
@@ -281,18 +326,30 @@ function EnterPin() {
 
       <div
         style={{
-          width: "420px",
-          backgroundColor: "#1a1a1a",
-          padding: "40px",
-          borderRadius: "15px",
-          border: "1px solid #2a2a2a",
-          textAlign: "center",
+          width:
+            "420px",
+
+          backgroundColor:
+            "#1a1a1a",
+
+          padding:
+            "40px",
+
+          borderRadius:
+            "15px",
+
+          border:
+            "1px solid #2a2a2a",
+
+          textAlign:
+            "center",
         }}
       >
 
         <h1
           style={{
-            color: "#22c55e",
+            color:
+              "#22c55e",
           }}
         >
           Enter Transaction PIN
@@ -301,7 +358,8 @@ function EnterPin() {
 
         <p
           style={{
-            color: "#aaa",
+            color:
+              "#aaa",
           }}
         >
           Enter your 4-digit PIN to complete transfer.
@@ -310,24 +368,56 @@ function EnterPin() {
 
         <input
           type="password"
+
           inputMode="numeric"
+
           maxLength="4"
+
           placeholder="Enter PIN"
+
           value={pin}
-          onChange={(e) =>
-            setPin(e.target.value)
-          }
+
+          onChange={(e) => {
+
+            const value =
+              e.target.value.replace(
+                /\D/g,
+                ""
+              );
+
+            setPin(value);
+
+          }}
+
           style={inputStyle}
+
+          disabled={loading}
         />
 
 
         <button
-          onClick={handleContinue}
-          style={buttonStyle}
-        >
-          Confirm Transfer
-        </button>
+          onClick={
+            handleContinue
+          }
 
+          style={{
+            ...buttonStyle,
+
+            opacity:
+              loading ? 0.7 : 1,
+
+            cursor:
+              loading
+                ? "not-allowed"
+                : "pointer",
+          }}
+
+          disabled={loading}
+        >
+          {loading
+            ? "Processing..."
+            : "Confirm Transfer"}
+        </button>
 
       </div>
 
@@ -337,27 +427,65 @@ function EnterPin() {
 
 
 const inputStyle = {
-  width: "100%",
-  padding: "14px",
-  marginTop: "20px",
-  marginBottom: "20px",
-  backgroundColor: "#111",
-  border: "1px solid #333",
-  borderRadius: "8px",
-  color: "#fff",
-  boxSizing: "border-box",
+  width:
+    "100%",
+
+  padding:
+    "14px",
+
+  marginTop:
+    "20px",
+
+  marginBottom:
+    "20px",
+
+  backgroundColor:
+    "#111",
+
+  border:
+    "1px solid #333",
+
+  borderRadius:
+    "8px",
+
+  color:
+    "#fff",
+
+  boxSizing:
+    "border-box",
+
+  fontSize:
+    "16px",
+
+  outline:
+    "none",
 };
 
 
 const buttonStyle = {
-  width: "100%",
-  padding: "14px",
-  backgroundColor: "#22c55e",
-  color: "#000",
-  border: "none",
-  borderRadius: "8px",
-  fontWeight: "700",
-  cursor: "pointer",
+  width:
+    "100%",
+
+  padding:
+    "14px",
+
+  backgroundColor:
+    "#22c55e",
+
+  color:
+    "#000",
+
+  border:
+    "none",
+
+  borderRadius:
+    "8px",
+
+  fontWeight:
+    "700",
+
+  cursor:
+    "pointer",
 };
 
 

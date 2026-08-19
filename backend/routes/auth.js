@@ -885,5 +885,85 @@ router.post("/login", async (req, res) => {
   }
 });
 
+router.post("/verify-pin", async (req, res) => {
+  try {
+    const {
+      userId,
+      pin,
+    } = req.body;
+
+    if (!userId || !pin) {
+      return res.status(400).json({
+        message:
+          "User ID and PIN are required",
+      });
+    }
+
+    if (!/^\d{4}$/.test(pin)) {
+      return res.status(400).json({
+        message:
+          "PIN must be exactly 4 digits",
+      });
+    }
+
+    const user =
+      await prisma.user.findUnique({
+        where: {
+          id: userId,
+        },
+
+        include: {
+          securitySettings: true,
+        },
+      });
+
+    if (!user) {
+      return res.status(404).json({
+        message:
+          "User not found",
+      });
+    }
+
+    if (
+      !user.securitySettings ||
+      !user.securitySettings.pinHash
+    ) {
+      return res.status(400).json({
+        message:
+          "No transaction PIN has been created for this account",
+      });
+    }
+
+    const pinMatches =
+      await bcrypt.compare(
+        pin,
+        user.securitySettings.pinHash
+      );
+
+    if (!pinMatches) {
+      return res.status(401).json({
+        message:
+          "Incorrect PIN",
+      });
+    }
+
+    res.json({
+      message:
+        "PIN verified successfully",
+    });
+
+  } catch (error) {
+    console.error(
+      "PIN verification error:",
+      error
+    );
+
+    res.status(500).json({
+      message:
+        "Something went wrong while verifying your PIN",
+    });
+  }
+});
+
 module.exports = router;
 

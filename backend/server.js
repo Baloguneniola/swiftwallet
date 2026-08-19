@@ -4,11 +4,13 @@ const express = require("express");
 const cors = require("cors");
 const prisma = require("./lib/prisma");
 const authRoutes = require("./routes/auth");
+const transferRoutes = require("./routes/transfers");
 
 const app = express();
 const PORT = 5000;
 
 app.use(cors());
+
 app.use(express.json());
 
 app.get("/", (req, res) => {
@@ -26,7 +28,10 @@ app.get("/api/health", async (req, res) => {
       database: "connected",
     });
   } catch (error) {
-    console.error("Database connection failed:", error);
+    console.error(
+      "Database connection failed:",
+      error
+    );
 
     res.status(500).json({
       status: "error",
@@ -37,6 +42,10 @@ app.get("/api/health", async (req, res) => {
 
 app.use("/api/auth", authRoutes);
 
+app.use("/api/transfers", transferRoutes);
+
 app.listen(PORT, () => {
-  console.log(`SwiftWallet backend running on http://localhost:${PORT}`);
+  console.log(
+    `SwiftWallet backend running on http://localhost:${PORT}`
+  );
 });

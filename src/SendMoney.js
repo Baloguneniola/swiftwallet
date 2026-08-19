@@ -4,39 +4,134 @@ import { Link, useNavigate } from "react-router-dom";
 function SendMoney() {
   const navigate = useNavigate();
 
-  const [recipientName, setRecipientName] = useState("");
+  const [recipientName, setRecipientName] =
+    useState("");
 
-  const [transferData, setTransferData] = useState({
-    recipient: "",
-    bank: "",
-    accountNumber: "",
-    amount: "",
-    description: "",
-  });
+  const [lookingUp, setLookingUp] =
+    useState(false);
+
+  const [accountError, setAccountError] =
+    useState("");
+
+  const [transferData, setTransferData] =
+    useState({
+      recipient: "",
+      bank: "Swift Wallet",
+      accountNumber: "",
+      amount: "",
+      description: "",
+    });
+
+  const lookupAccount = async (
+    accountNumber
+  ) => {
+    if (accountNumber.length < 10) {
+      setRecipientName("");
+      setAccountError("");
+      return;
+    }
+
+    setLookingUp(true);
+    setAccountError("");
+    setRecipientName("");
+
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/transfers/lookup/${accountNumber}`
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setRecipientName("");
+
+        setTransferData((prev) => ({
+          ...prev,
+          recipient: "",
+        }));
+
+        setAccountError(
+          data.message ||
+          "Account not found."
+        );
+
+        return;
+      }
+
+      setRecipientName(
+        data.user.name
+      );
+
+      setTransferData((prev) => ({
+        ...prev,
+        recipient: data.user.name,
+        bank: data.bank || "Swift Wallet",
+      }));
+    } catch (error) {
+      console.error(
+        "Account lookup error:",
+        error
+      );
+
+      setAccountError(
+        "Unable to verify this account."
+      );
+    } finally {
+      setLookingUp(false);
+    }
+  };
 
   const handleContinue = () => {
     if (
       !recipientName ||
-      !transferData.bank ||
       !transferData.accountNumber ||
       !transferData.amount
     ) {
-      alert("Please complete all required fields.");
+      alert(
+        "Please enter a valid recipient account and amount."
+      );
+
       return;
     }
 
-    if (transferData.accountNumber.length < 10) {
-      alert("Please enter a valid account number.");
+    if (
+      transferData.accountNumber.length < 10
+    ) {
+      alert(
+        "Please enter a valid account number."
+      );
+
       return;
     }
 
-    navigate("/confirm-transfer", {
-      state: {
-        ...transferData,
-        recipient: recipientName,
-        amount: Number(transferData.amount),
-      },
-    });
+    const amount = Number(
+      transferData.amount
+    );
+
+    if (
+      !amount ||
+      amount <= 0
+    ) {
+      alert(
+        "Please enter a valid transfer amount."
+      );
+
+      return;
+    }
+
+    navigate(
+      "/confirm-transfer",
+      {
+        state: {
+          ...transferData,
+          recipient: recipientName,
+          bank: "Swift Wallet",
+          amount,
+        },
+      }
+    );
+
+    window.scrollTo(0, 0);
   };
 
   return (
@@ -52,7 +147,9 @@ function SendMoney() {
     >
       <Link
         to="/dashboard"
-        onClick={() => window.scrollTo(0, 0)}
+        onClick={() =>
+          window.scrollTo(0, 0)
+        }
         style={{
           position: "absolute",
           top: "35px",
@@ -97,7 +194,8 @@ function SendMoney() {
           padding: "40px",
           borderRadius: "15px",
           border: "1px solid #2a2a2a",
-          boxShadow: "0 0 20px rgba(34,197,34,0.15)",
+          boxShadow:
+            "0 0 20px rgba(34,197,34,0.15)",
         }}
       >
         <h1
@@ -117,21 +215,8 @@ function SendMoney() {
             marginBottom: "30px",
           }}
         >
-          Transfer money quickly and securely.
+          Transfer money to another Swift Wallet account.
         </p>
-
-        <input
-          type="text"
-          placeholder="Recipient Name"
-          style={inputStyle}
-          value={transferData.recipient}
-          onChange={(e) =>
-            setTransferData({
-              ...transferData,
-              recipient: e.target.value,
-            })
-          }
-        />
 
         <div
           style={{
@@ -140,39 +225,31 @@ function SendMoney() {
           }}
         >
           <select
+            value="Swift Wallet"
+            disabled
             style={{
               ...inputStyle,
               appearance: "none",
               paddingRight: "40px",
               marginBottom: "0",
+              opacity: 1,
+              cursor: "default",
             }}
-            value={transferData.bank}
-            onChange={(e) =>
-              setTransferData({
-                ...transferData,
-                bank: e.target.value,
-              })
-            }
           >
-            <option value="">Select Bank</option>
-            <option>Ecobank</option>
-            <option>Access Bank</option>
-            <option>GTBank</option>
-            <option>First Bank</option>
-            <option>UBA</option>
-            <option>Zenith Bank</option>
-            <option>Kuda</option>
-            <option>Opay</option>
+            <option>
+              Swift Wallet
+            </option>
           </select>
 
           <span
             style={{
               position: "absolute",
-              right: "10px",
-              top: "55%",
-              transform: "translateY(-50%)",
+              right: "15px",
+              top: "50%",
+              transform:
+                "translateY(-50%)",
               pointerEvents: "none",
-              color: "#fff",
+              color: "#888",
               fontSize: "12px",
             }}
           >
@@ -182,49 +259,58 @@ function SendMoney() {
 
         <input
           type="text"
-          placeholder="Account Number"
+          inputMode="numeric"
+          maxLength="10"
+          placeholder="Recipient Account Number"
           style={inputStyle}
-          value={transferData.accountNumber}
+          value={
+            transferData.accountNumber
+          }
           onChange={(e) => {
-            const accountNumber = e.target.value;
+            const accountNumber =
+              e.target.value.replace(
+                /\D/g,
+                ""
+              );
 
-            setTransferData({
-              ...transferData,
+            setTransferData((prev) => ({
+              ...prev,
               accountNumber,
-            });
+              recipient: "",
+            }));
 
-            const users =
-              JSON.parse(
-                localStorage.getItem("swiftWalletUsers")
-              ) || [];
+            setRecipientName("");
+            setAccountError("");
 
-            const user = users.find(
-              (u) => u.accountNumber === accountNumber
-            );
-
-            if (user) {
-              setRecipientName(user.name);
-
-              setTransferData((prev) => ({
-                ...prev,
-                recipient: user.name,
-              }));
-            } else {
-              setRecipientName("");
-
-              setTransferData((prev) => ({
-                ...prev,
-                recipient: "",
-              }));
+            if (
+              accountNumber.length === 10
+            ) {
+              lookupAccount(
+                accountNumber
+              );
             }
           }}
         />
+
+        {lookingUp && (
+          <div
+            style={{
+              color: "#aaa",
+              marginTop: "-8px",
+              marginBottom: "18px",
+              fontSize: "14px",
+            }}
+          >
+            Looking up account...
+          </div>
+        )}
 
         {recipientName && (
           <div
             style={{
               backgroundColor: "#111",
-              border: "1px solid #22c55e",
+              border:
+                "1px solid #22c55e",
               borderRadius: "8px",
               padding: "12px",
               marginBottom: "18px",
@@ -232,7 +318,26 @@ function SendMoney() {
               fontWeight: "600",
             }}
           >
-            Account Name: {recipientName}
+            Account Name:{" "}
+            {recipientName}
+          </div>
+        )}
+
+        {accountError && (
+          <div
+            style={{
+              backgroundColor:
+                "rgba(239,68,68,0.1)",
+              border:
+                "1px solid #ef4444",
+              borderRadius: "8px",
+              padding: "12px",
+              marginBottom: "18px",
+              color: "#ef4444",
+              fontSize: "14px",
+            }}
+          >
+            {accountError}
           </div>
         )}
 
@@ -243,18 +348,27 @@ function SendMoney() {
           value={
             transferData.amount
               ? Number(
-                transferData.amount
-              ).toLocaleString("en-NG")
+                  transferData.amount
+                ).toLocaleString(
+                  "en-NG"
+                )
               : ""
           }
           onChange={(e) => {
-            const value = e.target.value.replace(/,/g, "");
+            const value =
+              e.target.value.replace(
+                /,/g,
+                ""
+              );
 
-            if (!isNaN(value)) {
-              setTransferData({
-                ...transferData,
+            if (
+              value === "" ||
+              /^\d*$/.test(value)
+            ) {
+              setTransferData((prev) => ({
+                ...prev,
                 amount: value,
-              });
+              }));
             }
           }}
         />
@@ -262,12 +376,15 @@ function SendMoney() {
         <textarea
           placeholder="Description (Optional)"
           style={textAreaStyle}
-          value={transferData.description}
+          value={
+            transferData.description
+          }
           onChange={(e) =>
-            setTransferData({
-              ...transferData,
-              description: e.target.value,
-            })
+            setTransferData((prev) => ({
+              ...prev,
+              description:
+                e.target.value,
+            }))
           }
         />
 
@@ -280,7 +397,9 @@ function SendMoney() {
 
         <Link
           to="/dashboard"
-          onClick={() => window.scrollTo(0, 0)}
+          onClick={() =>
+            window.scrollTo(0, 0)
+          }
           style={{
             textDecoration: "none",
           }}
