@@ -8,8 +8,7 @@ const router = express.Router();
   JWT AUTHENTICATION MIDDLEWARE
 */
 const authenticateToken = (req, res, next) => {
-  const authHeader =
-    req.headers.authorization;
+  const authHeader = req.headers.authorization;
 
   const token =
     authHeader &&
@@ -19,17 +18,15 @@ const authenticateToken = (req, res, next) => {
 
   if (!token) {
     return res.status(401).json({
-      message:
-        "Access denied. No token provided.",
+      message: "Access denied. No token provided.",
     });
   }
 
   try {
-    const decoded =
-      jwt.verify(
-        token,
-        process.env.JWT_SECRET
-      );
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET
+    );
 
     req.user = decoded;
 
@@ -50,9 +47,7 @@ router.get(
   authenticateToken,
   async (req, res) => {
     try {
-      const {
-        accountNumber,
-      } = req.params;
+      const { accountNumber } = req.params;
 
       const account =
         await prisma.account.findUnique({
@@ -74,21 +69,17 @@ router.get(
 
       if (!account) {
         return res.status(404).json({
-          message:
-            "Account not found.",
+          message: "Account not found.",
         });
       }
 
       res.json({
-        accountNumber:
-          account.accountNumber,
+        accountNumber: account.accountNumber,
 
-        bank:
-          "Swift Wallet",
+        bank: "Swift Wallet",
 
         user: {
-          id:
-            account.user.id,
+          id: account.user.id,
 
           name:
             `${account.user.firstName} ${account.user.lastName}`.trim(),
@@ -118,11 +109,7 @@ router.get(
   authenticateToken,
   async (req, res) => {
     try {
-      /*
-        GET USER FROM JWT
-      */
-      const userId =
-        req.user.userId;
+      const userId = req.user.userId;
 
       const transactions =
         await prisma.transaction.findMany({
@@ -131,8 +118,7 @@ router.get(
           },
 
           orderBy: {
-            createdAt:
-              "desc",
+            createdAt: "desc",
           },
         });
 
@@ -140,24 +126,26 @@ router.get(
         transactions:
           transactions.map(
             (transaction) => ({
-              id:
-                transaction.id,
+              id: transaction.id,
 
-              type:
-                transaction.type,
+              type: transaction.type,
 
               amount:
                 transaction.amount.toString(),
 
               description:
-                transaction.description ||
-                "",
+                transaction.description || "",
 
               status:
                 transaction.status,
 
+              /*
+                IMPORTANT:
+                Return the transaction date
+                as an ISO string.
+              */
               createdAt:
-                transaction.createdAt,
+                transaction.createdAt.toISOString(),
             })
           ),
       });
@@ -221,14 +209,14 @@ router.post(
       const result =
         await prisma.$transaction(
           async (tx) => {
+
             /*
               FIND SENDER ACCOUNT
             */
             const senderAccount =
               await tx.account.findUnique({
                 where: {
-                  userId:
-                    senderId,
+                  userId: senderId,
                 },
 
                 include: {
@@ -295,8 +283,7 @@ router.post(
             const updatedSenderAccount =
               await tx.account.update({
                 where: {
-                  id:
-                    senderAccount.id,
+                  id: senderAccount.id,
                 },
 
                 data: {
@@ -314,8 +301,7 @@ router.post(
             const updatedRecipientAccount =
               await tx.account.update({
                 where: {
-                  id:
-                    recipientAccount.id,
+                  id: recipientAccount.id,
                 },
 
                 data: {
@@ -327,33 +313,37 @@ router.post(
               });
 
             /*
-              CREATE SENDER
-              TRANSACTION
+              USE ONE DATE FOR THE
+              ENTIRE TRANSFER
+            */
+            const transferDate =
+              new Date();
+
+            /*
+              CREATE SENDER TRANSACTION
             */
             const senderTransaction =
               await tx.transaction.create({
                 data: {
-                  userId:
-                    senderId,
+                  userId: senderId,
 
-                  type:
-                    "debit",
+                  type: "debit",
 
-                  amount:
-                    transferAmount,
+                  amount: transferAmount,
 
                   description:
                     description ||
                     `Transfer to ${recipientAccount.user.firstName} ${recipientAccount.user.lastName}`,
 
-                  status:
-                    "completed",
+                  status: "completed",
+
+                  createdAt:
+                    transferDate,
                 },
               });
 
             /*
-              CREATE RECIPIENT
-              TRANSACTION
+              CREATE RECIPIENT TRANSACTION
             */
             const recipientTransaction =
               await tx.transaction.create({
@@ -361,18 +351,18 @@ router.post(
                   userId:
                     recipientAccount.userId,
 
-                  type:
-                    "credit",
+                  type: "credit",
 
-                  amount:
-                    transferAmount,
+                  amount: transferAmount,
 
                   description:
                     description ||
                     `Transfer from ${senderAccount.user.firstName} ${senderAccount.user.lastName}`,
 
-                  status:
-                    "completed",
+                  status: "completed",
+
+                  createdAt:
+                    transferDate,
                 },
               });
 
@@ -392,6 +382,9 @@ router.post(
 
                   status:
                     "completed",
+
+                  createdAt:
+                    transferDate,
                 },
               });
 
@@ -429,8 +422,25 @@ router.post(
         message:
           "Transfer completed successfully.",
 
-        transfer:
-          result.transfer,
+        transfer: {
+          id:
+            result.transfer.id,
+
+          senderId:
+            result.transfer.senderId,
+
+          recipientId:
+            result.transfer.recipientId,
+
+          amount:
+            result.transfer.amount.toString(),
+
+          status:
+            result.transfer.status,
+
+          createdAt:
+            result.transfer.createdAt.toISOString(),
+        },
 
         transaction: {
           id:
@@ -449,7 +459,7 @@ router.post(
             result.senderTransaction.status,
 
           createdAt:
-            result.senderTransaction.createdAt,
+            result.senderTransaction.createdAt.toISOString(),
         },
 
         recipient:
