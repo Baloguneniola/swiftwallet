@@ -29,9 +29,11 @@ function Login() {
         "http://localhost:5000/api/auth/login",
         {
           method: "POST",
+
           headers: {
             "Content-Type": "application/json",
           },
+
           body: JSON.stringify({
             email: email.trim(),
             password,
@@ -46,11 +48,30 @@ function Login() {
           data.message ||
             "Invalid email or password."
         );
+
         return;
       }
 
+      /*
+        GET USER + JWT TOKEN
+      */
       const user = data.user;
+      const token = data.token;
 
+      /*
+        MAKE SURE TOKEN WAS RETURNED
+      */
+      if (!token) {
+        setError(
+          "Login succeeded, but authentication token was not received."
+        );
+
+        return;
+      }
+
+      /*
+        BUILD CURRENT USER OBJECT
+      */
       const currentUser = {
         id: user.id,
 
@@ -61,7 +82,9 @@ function Login() {
           user.lastName || "",
 
         name:
-          `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+          `${user.firstName || ""} ${
+            user.lastName || ""
+          }`.trim(),
 
         email:
           user.email || "",
@@ -100,7 +123,9 @@ function Login() {
           user.account?.accountNumber || "",
 
         balance:
-          Number(user.account?.balance || 0),
+          Number(
+            user.account?.balance || 0
+          ),
 
         cardNumber:
           user.card?.cardNumber || "",
@@ -115,7 +140,9 @@ function Login() {
           user.hasPin || false,
 
         transactions:
-          Array.isArray(user.transactions)
+          Array.isArray(
+            user.transactions
+          )
             ? user.transactions
             : [],
 
@@ -124,16 +151,34 @@ function Login() {
         topUps: [],
       };
 
+      /*
+        SAVE JWT TOKEN
+      */
+      localStorage.setItem(
+        "swiftWalletToken",
+        token
+      );
+
+      /*
+        SAVE CURRENT USER
+      */
       localStorage.setItem(
         "swiftWalletCurrentUser",
         JSON.stringify(currentUser)
       );
 
+      /*
+        SAVE FIRST NAME
+        USED BY DASHBOARD GREETING
+      */
       localStorage.setItem(
         "swiftWalletUser",
         user.firstName || "User"
       );
 
+      /*
+        GO TO DASHBOARD
+      */
       navigate("/dashboard");
 
       window.scrollTo(0, 0);

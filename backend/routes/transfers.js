@@ -1,22 +1,65 @@
 const express = require("express");
+const jwt = require("jsonwebtoken");
 const prisma = require("../lib/prisma");
 
 const router = express.Router();
+
+/*
+  JWT AUTHENTICATION MIDDLEWARE
+*/
+const authenticateToken = (req, res, next) => {
+  const authHeader =
+    req.headers.authorization;
+
+  const token =
+    authHeader &&
+    authHeader.startsWith("Bearer ")
+      ? authHeader.split(" ")[1]
+      : null;
+
+  if (!token) {
+    return res.status(401).json({
+      message:
+        "Access denied. No token provided.",
+    });
+  }
+
+  try {
+    const decoded =
+      jwt.verify(
+        token,
+        process.env.JWT_SECRET
+      );
+
+    req.user = decoded;
+
+    next();
+  } catch (error) {
+    return res.status(403).json({
+      message:
+        "Invalid or expired authentication token.",
+    });
+  }
+};
 
 /*
   LOOK UP AN ACCOUNT
 */
 router.get(
   "/lookup/:accountNumber",
+  authenticateToken,
   async (req, res) => {
     try {
-      const { accountNumber } = req.params;
+      const {
+        accountNumber,
+      } = req.params;
 
       const account =
         await prisma.account.findUnique({
           where: {
             accountNumber,
           },
+
           include: {
             user: {
               select: {
@@ -31,7 +74,8 @@ router.get(
 
       if (!account) {
         return res.status(404).json({
-          message: "Account not found.",
+          message:
+            "Account not found.",
         });
       }
 
@@ -39,10 +83,12 @@ router.get(
         accountNumber:
           account.accountNumber,
 
-        bank: "Swift Wallet",
+        bank:
+          "Swift Wallet",
 
         user: {
-          id: account.user.id,
+          id:
+            account.user.id,
 
           name:
             `${account.user.firstName} ${account.user.lastName}`.trim(),
@@ -64,13 +110,19 @@ router.get(
 
 
 /*
-  GET TRANSACTION HISTORY
+  GET LOGGED-IN USER'S
+  TRANSACTION HISTORY
 */
 router.get(
-  "/:userId",
+  "/",
+  authenticateToken,
   async (req, res) => {
     try {
-      const { userId } = req.params;
+      /*
+        GET USER FROM JWT
+      */
+      const userId =
+        req.user.userId;
 
       const transactions =
         await prisma.transaction.findMany({
@@ -79,7 +131,8 @@ router.get(
           },
 
           orderBy: {
-            createdAt: "desc",
+            createdAt:
+              "desc",
           },
         });
 
@@ -87,7 +140,8 @@ router.get(
         transactions:
           transactions.map(
             (transaction) => ({
-              id: transaction.id,
+              id:
+                transaction.id,
 
               type:
                 transaction.type,
@@ -96,7 +150,8 @@ router.get(
                 transaction.amount.toString(),
 
               description:
-                transaction.description || "",
+                transaction.description ||
+                "",
 
               status:
                 transaction.status,
@@ -126,10 +181,17 @@ router.get(
 */
 router.post(
   "/",
+  authenticateToken,
   async (req, res) => {
     try {
+      /*
+        GET REAL SENDER
+        FROM JWT
+      */
+      const senderId =
+        req.user.userId;
+
       const {
-        senderId,
         recipientAccountNumber,
         amount,
         description,
@@ -139,10 +201,9 @@ router.post(
         Number(amount);
 
       /*
-        BASIC VALIDATION
+        VALIDATE TRANSFER
       */
       if (
-        !senderId ||
         !recipientAccountNumber ||
         !transferAmount ||
         transferAmount <= 0
@@ -153,22 +214,21 @@ router.post(
         });
       }
 
-
       /*
-        PERFORM EVERYTHING
-        INSIDE ONE DATABASE TRANSACTION
+        PERFORM TRANSFER
+        INSIDE DATABASE TRANSACTION
       */
       const result =
         await prisma.$transaction(
           async (tx) => {
-
             /*
-              FIND SENDER
+              FIND SENDER ACCOUNT
             */
             const senderAccount =
               await tx.account.findUnique({
                 where: {
-                  userId: senderId,
+                  userId:
+                    senderId,
                 },
 
                 include: {
@@ -176,16 +236,14 @@ router.post(
                 },
               });
 
-
             if (!senderAccount) {
               throw new Error(
                 "Sender account not found."
               );
             }
 
-
             /*
-              FIND RECIPIENT
+              FIND RECIPIENT ACCOUNT
             */
             const recipientAccount =
               await tx.account.findUnique({
@@ -199,13 +257,11 @@ router.post(
                 },
               });
 
-
             if (!recipientAccount) {
               throw new Error(
                 "Recipient account not found."
               );
             }
-
 
             /*
               PREVENT SELF TRANSFER
@@ -218,7 +274,6 @@ router.post(
                 "You cannot transfer money to yourself."
               );
             }
-
 
             /*
               CHECK BALANCE
@@ -233,14 +288,15 @@ router.post(
               );
             }
 
-
             /*
-              REMOVE MONEY FROM SENDER
+              REMOVE MONEY
+              FROM SENDER
             */
             const updatedSenderAccount =
               await tx.account.update({
                 where: {
-                  id: senderAccount.id,
+                  id:
+                    senderAccount.id,
                 },
 
                 data: {
@@ -251,9 +307,9 @@ router.post(
                 },
               });
 
-
             /*
-              ADD MONEY TO RECIPIENT
+              ADD MONEY
+              TO RECIPIENT
             */
             const updatedRecipientAccount =
               await tx.account.update({
@@ -270,9 +326,9 @@ router.post(
                 },
               });
 
-
             /*
-              CREATE SENDER TRANSACTION
+              CREATE SENDER
+              TRANSACTION
             */
             const senderTransaction =
               await tx.transaction.create({
@@ -295,9 +351,9 @@ router.post(
                 },
               });
 
-
             /*
-              CREATE RECIPIENT TRANSACTION
+              CREATE RECIPIENT
+              TRANSACTION
             */
             const recipientTransaction =
               await tx.transaction.create({
@@ -320,7 +376,6 @@ router.post(
                 },
               });
 
-
             /*
               CREATE TRANSFER RECORD
             */
@@ -339,7 +394,6 @@ router.post(
                     "completed",
                 },
               });
-
 
             return {
               senderAccount:
@@ -368,9 +422,8 @@ router.post(
           }
         );
 
-
       /*
-        SEND RESPONSE
+        SEND SUCCESS RESPONSE
       */
       res.json({
         message:
@@ -407,7 +460,6 @@ router.post(
             result.senderAccount.balance
           ),
       });
-
     } catch (error) {
       console.error(
         "Transfer error:",
@@ -422,6 +474,5 @@ router.post(
     }
   }
 );
-
 
 module.exports = router;

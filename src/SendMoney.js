@@ -22,6 +22,9 @@ function SendMoney() {
       description: "",
     });
 
+  /*
+    LOOK UP RECIPIENT ACCOUNT
+  */
   const lookupAccount = async (
     accountNumber
   ) => {
@@ -36,12 +39,71 @@ function SendMoney() {
     setRecipientName("");
 
     try {
+      /*
+        GET JWT TOKEN
+      */
+      const token =
+        localStorage.getItem(
+          "swiftWalletToken"
+        );
+
+      /*
+        MAKE SURE USER IS LOGGED IN
+      */
+      if (!token) {
+        setAccountError(
+          "Your session has expired. Please log in again."
+        );
+
+        return;
+      }
+
+      /*
+        LOOK UP ACCOUNT WITH JWT
+      */
       const response = await fetch(
-        `http://localhost:5000/api/transfers/lookup/${accountNumber}`
+        `http://localhost:5000/api/transfers/lookup/${accountNumber}`,
+        {
+          headers: {
+            Authorization:
+              `Bearer ${token}`,
+          },
+        }
       );
 
-      const data = await response.json();
+      const data =
+        await response.json();
 
+      /*
+        HANDLE EXPIRED / INVALID TOKEN
+      */
+      if (
+        response.status === 401 ||
+        response.status === 403
+      ) {
+        localStorage.removeItem(
+          "swiftWalletToken"
+        );
+
+        localStorage.removeItem(
+          "swiftWalletCurrentUser"
+        );
+
+        localStorage.removeItem(
+          "swiftWalletUser"
+        );
+
+        setAccountError(
+          data.message ||
+          "Your session has expired. Please log in again."
+        );
+
+        return;
+      }
+
+      /*
+        HANDLE ACCOUNT NOT FOUND
+      */
       if (!response.ok) {
         setRecipientName("");
 
@@ -58,14 +120,21 @@ function SendMoney() {
         return;
       }
 
+      /*
+        ACCOUNT FOUND
+      */
       setRecipientName(
         data.user.name
       );
 
       setTransferData((prev) => ({
         ...prev,
-        recipient: data.user.name,
-        bank: data.bank || "Swift Wallet",
+        recipient:
+          data.user.name,
+
+        bank:
+          data.bank ||
+          "Swift Wallet",
       }));
     } catch (error) {
       console.error(
@@ -81,6 +150,9 @@ function SendMoney() {
     }
   };
 
+  /*
+    CONTINUE TO CONFIRM TRANSFER
+  */
   const handleContinue = () => {
     if (
       !recipientName ||
@@ -95,7 +167,7 @@ function SendMoney() {
     }
 
     if (
-      transferData.accountNumber.length < 10
+      transferData.accountNumber.length !== 10
     ) {
       alert(
         "Please enter a valid account number."
@@ -119,13 +191,22 @@ function SendMoney() {
       return;
     }
 
+    /*
+      PASS TRANSFER DATA TO
+      CONFIRM TRANSFER PAGE
+    */
     navigate(
       "/confirm-transfer",
       {
         state: {
           ...transferData,
-          recipient: recipientName,
-          bank: "Swift Wallet",
+
+          recipient:
+            recipientName,
+
+          bank:
+            "Swift Wallet",
+
           amount,
         },
       }
