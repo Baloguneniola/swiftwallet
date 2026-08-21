@@ -52,11 +52,23 @@ function TransactionHistory() {
 
         try {
 
+          /*
+            GET CURRENT USER
+          */
           const currentUser =
             JSON.parse(
               localStorage.getItem(
                 "swiftWalletCurrentUser"
               )
+            );
+
+
+          /*
+            GET JWT TOKEN
+          */
+          const token =
+            localStorage.getItem(
+              "swiftWalletToken"
             );
 
 
@@ -72,14 +84,76 @@ function TransactionHistory() {
           }
 
 
+          if (!token) {
+
+            setError(
+              "Authentication session not found. Please log in again."
+            );
+
+            setLoading(false);
+
+            return;
+          }
+
+
+          /*
+            GET TRANSACTION HISTORY
+
+            IMPORTANT:
+            The backend gets the user ID
+            from the JWT.
+
+            DO NOT PUT currentUser.id
+            IN THE URL.
+          */
           const response =
             await fetch(
-              `http://localhost:5000/api/transfers/${currentUser.id}`
+              "http://localhost:5000/api/transfers/",
+              {
+                method: "GET",
+
+                headers: {
+                  "Content-Type":
+                    "application/json",
+
+                  Authorization:
+                    `Bearer ${token}`,
+                },
+              }
             );
 
 
-          const data =
-            await response.json();
+          /*
+            GET RESPONSE AS TEXT FIRST
+
+            This prevents the confusing:
+            Unexpected token '<'
+            error when the server returns HTML.
+          */
+          const responseText =
+            await response.text();
+
+
+          let data;
+
+          try {
+
+            data =
+              JSON.parse(
+                responseText
+              );
+
+          } catch (jsonError) {
+
+            console.error(
+              "Server returned non-JSON response:",
+              responseText
+            );
+
+            throw new Error(
+              "Unable to read transaction history from the server."
+            );
+          }
 
 
           if (!response.ok) {
@@ -501,8 +575,7 @@ function TransactionHistory() {
                 styles.searchInput
               }
 
-              placeholder=
-                "Search transactions"
+              placeholder="Search transactions"
 
               value={search}
 
