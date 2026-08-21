@@ -1282,5 +1282,193 @@ router.post(
   }
 );
 
+/*
+  GET CURRENT LOGGED-IN USER
+  PROTECTED BY JWT
+*/
+router.get(
+  "/me",
+  async (req, res) => {
+    try {
+      const authHeader =
+        req.headers.authorization;
+
+      const token =
+        authHeader &&
+        authHeader.startsWith("Bearer ")
+          ? authHeader.split(" ")[1]
+          : null;
+
+      if (!token) {
+        return res.status(401).json({
+          message:
+            "Access denied. No token provided.",
+        });
+      }
+
+      let decoded;
+
+      try {
+        decoded =
+          jwt.verify(
+            token,
+            process.env.JWT_SECRET
+          );
+      } catch (error) {
+        return res.status(403).json({
+          message:
+            "Invalid or expired authentication token.",
+        });
+      }
+
+      const user =
+        await prisma.user.findUnique({
+          where: {
+            id: decoded.userId,
+          },
+
+          include: {
+            account: true,
+
+            cards: true,
+
+            transactions: {
+              orderBy: {
+                createdAt: "desc",
+              },
+              take: 5,
+            },
+
+            securitySettings: true,
+          },
+        });
+
+      if (!user) {
+        return res.status(404).json({
+          message:
+            "User not found.",
+        });
+      }
+
+      const card =
+        user.cards?.[0] || null;
+
+      res.json({
+        user: {
+          id:
+            user.id,
+
+          firstName:
+            user.firstName,
+
+          lastName:
+            user.lastName,
+
+          email:
+            user.email,
+
+          emailVerified:
+            user.emailVerified,
+
+          phoneNumber:
+            user.phoneNumber,
+
+          dateOfBirth:
+            user.dateOfBirth,
+
+          residentialAddress:
+            user.residentialAddress,
+
+          country:
+            user.country,
+
+          stateProvince:
+            user.stateProvince,
+
+          nationality:
+            user.nationality,
+
+          identityType:
+            user.identityType,
+
+          identityNumber:
+            user.identityNumber,
+
+          identityDocument:
+            user.identityDocument,
+
+          account:
+            user.account
+              ? {
+                  id:
+                    user.account.id,
+
+                  accountNumber:
+                    user.account.accountNumber,
+
+                  balance:
+                    user.account.balance.toString(),
+                }
+              : null,
+
+          card:
+            card
+              ? {
+                  id:
+                    card.id,
+
+                  cardNumber:
+                    card.cardNumber,
+
+                  expiryDate:
+                    card.expiryDate,
+
+                  frozen:
+                    card.frozen,
+                }
+              : null,
+
+          hasPin:
+            !!user.securitySettings
+              ?.pinHash,
+
+          transactions:
+            user.transactions.map(
+              (transaction) => ({
+                id:
+                  transaction.id,
+
+                type:
+                  transaction.type,
+
+                amount:
+                  transaction.amount.toString(),
+
+                description:
+                  transaction.description ||
+                  "",
+
+                status:
+                  transaction.status,
+
+                createdAt:
+                  transaction.createdAt,
+              })
+            ),
+        },
+      });
+    } catch (error) {
+      console.error(
+        "Get current user error:",
+        error
+      );
+
+      res.status(500).json({
+        message:
+          "Unable to retrieve account information.",
+      });
+    }
+  }
+);
 
 module.exports = router;

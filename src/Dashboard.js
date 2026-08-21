@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Eye,
@@ -14,36 +14,100 @@ import {
   Snowflake,
   CreditCard,
   ArrowUpRight,
-  ArrowDownLeft
+  ArrowDownLeft,
 } from "lucide-react";
 
 function Dashboard() {
   const navigate = useNavigate();
 
-  const [showBalance, setShowBalance] =
-    React.useState(true);
+  const [showBalance, setShowBalance] = useState(true);
+  const [showCardNumber, setShowCardNumber] = useState(false);
+  const [cardFrozen, setCardFrozen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [cardCopied, setCardCopied] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  const [showCardNumber, setShowCardNumber] =
-    React.useState(false);
+  const [transactions, setTransactions] = useState([]);
+  const [loadingTransactions, setLoadingTransactions] = useState(true);
 
-  const [cardFrozen, setCardFrozen] =
-    React.useState(false);
-
-  const [copied, setCopied] =
-    React.useState(false);
-
-  const [cardCopied, setCardCopied] =
-    React.useState(false);
-
-  const [menuOpen, setMenuOpen] =
-    React.useState(false);
-
-  const currentUser =
-    JSON.parse(
-      localStorage.getItem(
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const savedUser = localStorage.getItem(
         "swiftWalletCurrentUser"
-      )
-    ) || {};
+      );
+
+      return savedUser
+        ? JSON.parse(savedUser)
+        : {};
+    } catch (error) {
+      console.error("Unable to load current user:", error);
+      return {};
+    }
+  });
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const token = localStorage.getItem(
+          "swiftWalletToken"
+        );
+
+        if (!token) {
+          setLoadingTransactions(false);
+          return;
+        }
+
+        const response = await fetch(
+          "http://localhost:5000/api/transfers",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.message ||
+              "Unable to load transactions."
+          );
+        }
+
+        const backendTransactions =
+          Array.isArray(data.transactions)
+            ? data.transactions
+            : [];
+
+        setTransactions(backendTransactions);
+
+        setCurrentUser((previousUser) => {
+          const updatedUser = {
+            ...previousUser,
+            transactions: backendTransactions,
+          };
+
+          localStorage.setItem(
+            "swiftWalletCurrentUser",
+            JSON.stringify(updatedUser)
+          );
+
+          return updatedUser;
+        });
+      } catch (error) {
+        console.error(
+          "Dashboard transaction error:",
+          error
+        );
+      } finally {
+        setLoadingTransactions(false);
+      }
+    };
+
+    fetchTransactions();
+  }, []);
 
   const userName =
     currentUser.firstName ||
@@ -54,30 +118,20 @@ function Dashboard() {
     "User";
 
   const balance =
-    Number(
-      currentUser.balance
-    ) || 0;
+    Number(currentUser.balance) || 0;
 
   const accountNumber =
-    currentUser.accountNumber ||
-    "N/A";
+    currentUser.accountNumber || "N/A";
 
   const cardNumber =
     currentUser.cardNumber ||
     "4532 8890 4456 7890";
 
   const expiryDate =
-    currentUser.expiryDate ||
-    "12/29";
+    currentUser.expiryDate || "12/29";
 
-  const transactions =
-    Array.isArray(
-      currentUser.transactions
-    )
-      ? currentUser.transactions
-          .slice(-5)
-          .reverse()
-      : [];
+  const latestTransactions =
+    transactions.slice(0, 5);
 
   const formatAmount = (amount) => {
     if (
@@ -87,14 +141,11 @@ function Dashboard() {
       return amount;
     }
 
-    if (
-      typeof amount === "string"
-    ) {
-      const cleaned =
-        amount.replace(
-          /[^\d.-]/g,
-          ""
-        );
+    if (typeof amount === "string") {
+      const cleaned = amount.replace(
+        /[^\d.-]/g,
+        ""
+      );
 
       return Number(cleaned) || 0;
     }
@@ -102,10 +153,29 @@ function Dashboard() {
     return 0;
   };
 
-  const copyAccountNumber = () => {
-    navigator.clipboard.writeText(
-      accountNumber
+  const formatDate = (date) => {
+    if (!date) {
+      return "Unknown date";
+    }
+
+    const parsedDate = new Date(date);
+
+    if (isNaN(parsedDate.getTime())) {
+      return "Unknown date";
+    }
+
+    return parsedDate.toLocaleDateString(
+      "en-GB",
+      {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }
     );
+  };
+
+  const copyAccountNumber = () => {
+    navigator.clipboard.writeText(accountNumber);
 
     setCopied(true);
 
@@ -115,9 +185,7 @@ function Dashboard() {
   };
 
   const copyCardNumber = () => {
-    navigator.clipboard.writeText(
-      cardNumber
-    );
+    navigator.clipboard.writeText(cardNumber);
 
     setCardCopied(true);
 
@@ -139,30 +207,26 @@ function Dashboard() {
       "swiftWalletSignup"
     );
 
+    localStorage.removeItem(
+      "swiftWalletToken"
+    );
+
     navigate("/login");
 
-    window.scrollTo(
-      0,
-      0
-    );
+    window.scrollTo(0, 0);
   };
 
-  const openTransaction = (
-    transaction
-  ) => {
+  const openTransaction = (transaction) => {
     navigate(
       "/transaction-details",
       {
         state: {
-          transaction
-        }
+          transaction,
+        },
       }
     );
 
-    window.scrollTo(
-      0,
-      0
-    );
+    window.scrollTo(0, 0);
   };
 
   return (
@@ -171,10 +235,7 @@ function Dashboard() {
         <Link
           to="/dashboard"
           onClick={() =>
-            window.scrollTo(
-              0,
-              0
-            )
+            window.scrollTo(0, 0)
           }
           style={styles.logoContainer}
         >
@@ -189,42 +250,32 @@ function Dashboard() {
 
         <div
           style={{
-            position: "relative"
+            position: "relative",
           }}
         >
           <button
             onClick={() =>
-              setMenuOpen(
-                !menuOpen
-              )
+              setMenuOpen(!menuOpen)
             }
             style={styles.accountButton}
           >
             <User size={18} />
-
             Account
           </button>
 
           {menuOpen && (
-            <div
-              style={styles.dropdown}
-            >
+            <div style={styles.dropdown}>
               <MenuLink
                 to="/settings"
-                icon={
-                  <Settings size={17} />
-                }
+                icon={<Settings size={17} />}
                 text="Settings"
               />
 
               <button
                 onClick={logout}
-                style={
-                  styles.logoutButton
-                }
+                style={styles.logoutButton}
               >
                 <LogOut size={17} />
-
                 Logout
               </button>
             </div>
@@ -254,9 +305,7 @@ function Dashboard() {
                     !showBalance
                   )
                 }
-                style={
-                  styles.iconButton
-                }
+                style={styles.iconButton}
               >
                 {showBalance ? (
                   <Eye size={20} />
@@ -272,27 +321,19 @@ function Dashboard() {
                     "en-NG",
                     {
                       minimumFractionDigits: 2,
-                      maximumFractionDigits: 2
+                      maximumFractionDigits: 2,
                     }
                   )}`
                 : "₦••••••"}
             </h2>
 
-            <p
-              style={
-                styles.balanceLabel
-              }
-            >
+            <p style={styles.balanceLabel}>
               Swift Wallet Account
             </p>
           </div>
 
           <div style={styles.walletCard}>
-            <div
-              style={
-                styles.walletHeader
-              }
-            >
+            <div style={styles.walletHeader}>
               <div>
                 <h2>
                   Swift Wallet
@@ -306,21 +347,13 @@ function Dashboard() {
               <CreditCard size={34} />
             </div>
 
-            <h3
-              style={
-                styles.cardNumber
-              }
-            >
+            <h3 style={styles.cardNumber}>
               {showCardNumber
                 ? cardNumber
                 : "•••• •••• •••• 7890"}
             </h3>
 
-            <div
-              style={
-                styles.cardDetails
-              }
-            >
+            <div style={styles.cardDetails}>
               <div>
                 <small>
                   Card Holder
@@ -354,15 +387,9 @@ function Dashboard() {
               </div>
             </div>
 
-            <div
-              style={
-                styles.cardActions
-              }
-            >
+            <div style={styles.cardActions}>
               <button
-                style={
-                  styles.darkButton
-                }
+                style={styles.darkButton}
                 onClick={() =>
                   setShowCardNumber(
                     !showCardNumber
@@ -375,12 +402,8 @@ function Dashboard() {
               </button>
 
               <button
-                style={
-                  styles.darkButton
-                }
-                onClick={
-                  copyCardNumber
-                }
+                style={styles.darkButton}
+                onClick={copyCardNumber}
               >
                 <Copy size={15} />
 
@@ -390,9 +413,7 @@ function Dashboard() {
               </button>
 
               <button
-                style={
-                  styles.darkButton
-                }
+                style={styles.darkButton}
                 onClick={() =>
                   setCardFrozen(
                     !cardFrozen
@@ -411,11 +432,7 @@ function Dashboard() {
 
         <div style={styles.accountBar}>
           <div>
-            <span
-              style={
-                styles.accountTitle
-              }
-            >
+            <span style={styles.accountTitle}>
               Account Number
             </span>
 
@@ -425,12 +442,8 @@ function Dashboard() {
           </div>
 
           <button
-            onClick={
-              copyAccountNumber
-            }
-            style={
-              styles.copyButton
-            }
+            onClick={copyAccountNumber}
+            style={styles.copyButton}
           >
             <Copy size={16} />
 
@@ -440,53 +453,37 @@ function Dashboard() {
           </button>
         </div>
 
-        <h2
-          style={
-            styles.sectionTitle
-          }
-        >
+        <h2 style={styles.sectionTitle}>
           Quick Actions
         </h2>
 
         <div style={styles.actionGrid}>
           <ActionCard
             to="/send-money"
-            icon={
-              <Send size={22} />
-            }
+            icon={<Send size={22} />}
             title="Send Money"
           />
 
           <ActionCard
             to="/add-money"
-            icon={
-              <Plus size={22} />
-            }
+            icon={<Plus size={22} />}
             title="Add Money"
           />
 
           <ActionCard
             to="/pay-bills"
-            icon={
-              <Receipt size={22} />
-            }
+            icon={<Receipt size={22} />}
             title="Pay Bills"
           />
 
           <ActionCard
             to="/transaction-history"
-            icon={
-              <History size={22} />
-            }
+            icon={<History size={22} />}
             title="Transaction History"
           />
         </div>
 
-        <div
-          style={
-            styles.transactionHeader
-          }
-        >
+        <div style={styles.transactionHeader}>
           <h2>
             Recent Transactions
           </h2>
@@ -494,33 +491,25 @@ function Dashboard() {
           <Link
             to="/transaction-history"
             onClick={() =>
-              window.scrollTo(
-                0,
-                0
-              )
+              window.scrollTo(0, 0)
             }
-            style={
-              styles.viewAll
-            }
+            style={styles.viewAll}
           >
             View All
           </Link>
         </div>
 
-        {transactions.length === 0 ? (
-          <p
-            style={{
-              color: "#888"
-            }}
-          >
+        {loadingTransactions ? (
+          <p style={{ color: "#888" }}>
+            Loading transactions...
+          </p>
+        ) : latestTransactions.length === 0 ? (
+          <p style={{ color: "#888" }}>
             No transactions yet.
           </p>
         ) : (
-          transactions.map(
-            (
-              transaction,
-              index
-            ) => (
+          latestTransactions.map(
+            (transaction, index) => (
               <div
                 key={
                   transaction.id ||
@@ -563,23 +552,16 @@ function Dashboard() {
                   <div>
                     <strong>
                       {transaction.description ||
-                        transaction.name ||
-                        "Transaction"}
+                        (transaction.type ===
+                        "credit"
+                          ? "Money received"
+                          : "Money sent")}
                     </strong>
 
-                    <p
-                      style={
-                        styles.date
-                      }
-                    >
-                      {transaction.createdAt
-                        ? new Date(
-                            transaction.createdAt
-                          ).toLocaleDateString(
-                            "en-GB"
-                          )
-                        : transaction.date ||
-                          "Unknown date"}
+                    <p style={styles.date}>
+                      {formatDate(
+                        transaction.createdAt
+                      )}
                     </p>
                   </div>
                 </div>
@@ -598,14 +580,13 @@ function Dashboard() {
                     : "-"}
 
                   ₦
-
                   {formatAmount(
                     transaction.amount
                   ).toLocaleString(
                     "en-NG",
                     {
                       minimumFractionDigits: 2,
-                      maximumFractionDigits: 2
+                      maximumFractionDigits: 2,
                     }
                   )}
                 </span>
@@ -621,37 +602,24 @@ function Dashboard() {
 function ActionCard({
   to,
   icon,
-  title
+  title,
 }) {
   return (
     <Link
       to={to}
       onClick={() =>
-        window.scrollTo(
-          0,
-          0
-        )
+        window.scrollTo(0, 0)
       }
       style={{
-        textDecoration: "none"
+        textDecoration: "none",
       }}
     >
-      <div
-        style={
-          styles.actionCard
-        }
-      >
-        <div
-          style={
-            styles.actionIcon
-          }
-        >
+      <div style={styles.actionCard}>
+        <div style={styles.actionIcon}>
           {icon}
         </div>
 
-        <span>
-          {title}
-        </span>
+        <span>{title}</span>
       </div>
     </Link>
   );
@@ -660,23 +628,17 @@ function ActionCard({
 function MenuLink({
   to,
   icon,
-  text
+  text,
 }) {
   return (
     <Link
       to={to}
       onClick={() =>
-        window.scrollTo(
-          0,
-          0
-        )
+        window.scrollTo(0, 0)
       }
-      style={
-        styles.menuLink
-      }
+      style={styles.menuLink}
     >
       {icon}
-
       {text}
     </Link>
   );
@@ -686,7 +648,7 @@ const styles = {
   page: {
     minHeight: "100vh",
     backgroundColor: "#0d0d0d",
-    color: "#fff"
+    color: "#fff",
   },
 
   navbar: {
@@ -698,14 +660,14 @@ const styles = {
     borderBottom: "1px solid #222",
     position: "sticky",
     top: 0,
-    zIndex: 1000
+    zIndex: 1000,
   },
 
   logoContainer: {
     display: "flex",
     alignItems: "center",
     gap: "12px",
-    textDecoration: "none"
+    textDecoration: "none",
   },
 
   logo: {
@@ -717,13 +679,13 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     color: "#000",
-    fontWeight: "800"
+    fontWeight: "800",
   },
 
   brand: {
     color: "#fff",
     fontSize: "20px",
-    fontWeight: "700"
+    fontWeight: "700",
   },
 
   accountButton: {
@@ -736,7 +698,7 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: "8px",
-    fontWeight: "600"
+    fontWeight: "600",
   },
 
   dropdown: {
@@ -747,7 +709,7 @@ const styles = {
     backgroundColor: "#1a1a1a",
     border: "1px solid #333",
     borderRadius: "12px",
-    padding: "10px"
+    padding: "10px",
   },
 
   logoutButton: {
@@ -762,30 +724,29 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: "10px",
-    fontWeight: "600"
+    fontWeight: "600",
   },
 
   container: {
-    padding: "25px 50px"
+    padding: "25px 50px",
   },
 
   title: {
     fontSize: "32px",
-    marginBottom: "5px"
+    marginBottom: "5px",
   },
 
   subtitle: {
     color: "#888",
-    marginBottom: "20px"
+    marginBottom: "20px",
   },
 
   topGrid: {
     display: "grid",
-    gridTemplateColumns:
-      "1fr 1fr",
+    gridTemplateColumns: "1fr 1fr",
     gap: "20px",
     alignItems: "stretch",
-    marginBottom: "15px"
+    marginBottom: "15px",
   },
 
   balanceCard: {
@@ -796,32 +757,32 @@ const styles = {
     minHeight: "170px",
     display: "flex",
     flexDirection: "column",
-    justifyContent: "center"
+    justifyContent: "center",
   },
 
   cardHeader: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    color: "#999"
+    color: "#999",
   },
 
   iconButton: {
     background: "transparent",
     border: "none",
     color: "#fff",
-    cursor: "pointer"
+    cursor: "pointer",
   },
 
   balance: {
     fontSize: "42px",
     color: "#22c55e",
-    margin: "10px 0"
+    margin: "10px 0",
   },
 
   balanceLabel: {
     color: "#777",
-    fontSize: "16px"
+    fontSize: "16px",
   },
 
   walletCard: {
@@ -833,32 +794,32 @@ const styles = {
     minHeight: "190px",
     border: "1px solid #333",
     boxShadow:
-      "0 15px 30px rgba(0,0,0,0.3)"
+      "0 15px 30px rgba(0,0,0,0.3)",
   },
 
   walletHeader: {
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "flex-start"
+    alignItems: "flex-start",
   },
 
   cardNumber: {
     fontSize: "25px",
     letterSpacing: "4px",
-    margin: "30px 0"
+    margin: "30px 0",
   },
 
   cardDetails: {
     display: "flex",
     justifyContent: "space-between",
-    gap: "15px"
+    gap: "15px",
   },
 
   cardActions: {
     display: "flex",
     gap: "10px",
     flexWrap: "wrap",
-    marginTop: "25px"
+    marginTop: "25px",
   },
 
   darkButton: {
@@ -871,7 +832,7 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: "6px",
-    fontWeight: "600"
+    fontWeight: "600",
   },
 
   accountBar: {
@@ -882,14 +843,14 @@ const styles = {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: "40px"
+    marginBottom: "40px",
   },
 
   accountTitle: {
     display: "block",
     color: "#888",
     fontSize: "13px",
-    marginBottom: "6px"
+    marginBottom: "6px",
   },
 
   copyButton: {
@@ -902,11 +863,11 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: "8px",
-    fontWeight: "600"
+    fontWeight: "600",
   },
 
   sectionTitle: {
-    marginBottom: "20px"
+    marginBottom: "20px",
   },
 
   actionGrid: {
@@ -914,7 +875,7 @@ const styles = {
     gridTemplateColumns:
       "repeat(auto-fit,minmax(190px,1fr))",
     gap: "18px",
-    marginBottom: "55px"
+    marginBottom: "55px",
   },
 
   actionCard: {
@@ -928,7 +889,7 @@ const styles = {
     gap: "15px",
     fontWeight: "600",
     transition: "0.1s",
-    cursor: "pointer"
+    cursor: "pointer",
   },
 
   actionIcon: {
@@ -939,20 +900,20 @@ const styles = {
     color: "#000",
     display: "flex",
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
   },
 
   transactionHeader: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: "20px"
+    marginBottom: "20px",
   },
 
   viewAll: {
     color: "#22c55e",
     textDecoration: "none",
-    fontWeight: "600"
+    fontWeight: "600",
   },
 
   transaction: {
@@ -964,13 +925,13 @@ const styles = {
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: "12px",
-    cursor: "pointer"
+    cursor: "pointer",
   },
 
   transactionLeft: {
     display: "flex",
     alignItems: "center",
-    gap: "14px"
+    gap: "14px",
   },
 
   creditIcon: {
@@ -981,7 +942,7 @@ const styles = {
     color: "#22c55e",
     display: "flex",
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
   },
 
   debitIcon: {
@@ -992,23 +953,23 @@ const styles = {
     color: "#ff5f5f",
     display: "flex",
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
   },
 
   date: {
     margin: "4px 0 0",
     color: "#888",
-    fontSize: "13px"
+    fontSize: "13px",
   },
 
   creditAmount: {
     color: "#22c55e",
-    fontWeight: "700"
+    fontWeight: "700",
   },
 
   debitAmount: {
     color: "#ff5f5f",
-    fontWeight: "700"
+    fontWeight: "700",
   },
 
   menuLink: {
@@ -1017,8 +978,8 @@ const styles = {
     gap: "10px",
     padding: "12px",
     color: "#fff",
-    textDecoration: "none"
-  }
+    textDecoration: "none",
+  },
 };
 
 export default Dashboard;
