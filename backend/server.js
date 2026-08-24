@@ -5,6 +5,8 @@ const cors = require("cors");
 const prisma = require("./lib/prisma");
 const authRoutes = require("./routes/auth");
 const transferRoutes = require("./routes/transfers");
+const addMoneyRoutes = require("./routes/addMoney");
+const payBillsRoutes = require("./routes/payBills");
 
 const app = express();
 const PORT = 5000;
@@ -43,6 +45,10 @@ app.get("/api/health", async (req, res) => {
 app.use("/api/auth", authRoutes);
 
 app.use("/api/transfers", transferRoutes);
+
+app.use("/api/add-money", addMoneyRoutes );
+
+app.use("/api/pay-bills", payBillsRoutes);
 
 app.listen(PORT, () => {
   console.log(

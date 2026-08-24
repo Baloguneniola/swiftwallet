@@ -1,8 +1,13 @@
 import React, { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 
 function PayBillsPin() {
   const [pin, setPin] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -15,231 +20,335 @@ function PayBillsPin() {
   } = location.state || {};
 
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
 
+    /*
+      GET CURRENT USER
+    */
     const currentUser =
       JSON.parse(
-        localStorage.getItem("swiftWalletCurrentUser")
+        localStorage.getItem(
+          "swiftWalletCurrentUser"
+        )
       );
 
+    /*
+      GET JWT TOKEN
+    */
+    const token =
+      localStorage.getItem(
+        "swiftWalletToken"
+      );
 
+    /*
+      CHECK USER SESSION
+    */
     if (!currentUser) {
       alert("User session not found.");
       return;
     }
 
-
-    if (!amount) {
-      alert("Payment information missing.");
+    /*
+      CHECK JWT
+    */
+    if (!token) {
+      alert(
+        "Your login session has expired. Please log in again."
+      );
       return;
     }
 
-
-    if (pin !== currentUser.pin) {
-      alert("Incorrect PIN");
+    /*
+      CHECK BILL INFORMATION
+    */
+    if (
+      !selectedBill ||
+      !provider ||
+      !accountNumber ||
+      !amount
+    ) {
+      alert(
+        "Payment information is missing."
+      );
       return;
     }
 
-
-    const billAmount = Number(amount);
-
-
-    if (billAmount <= 0) {
-      alert("Invalid payment amount.");
+    /*
+      CHECK PIN
+    */
+    if (pin.length !== 4) {
+      alert(
+        "Please enter your 4-digit PIN."
+      );
       return;
     }
 
+    /*
+      CONVERT AMOUNT
+    */
+    const billAmount =
+      Number(amount);
 
-    if (billAmount > currentUser.balance) {
-      alert("Insufficient balance.");
+    if (
+      !Number.isFinite(billAmount) ||
+      billAmount <= 0
+    ) {
+      alert(
+        "Invalid payment amount."
+      );
       return;
     }
 
+    setLoading(true);
+
+    try {
+
+      /*
+        STEP 1
+        VERIFY PIN
+      */
+      const pinResponse =
+        await fetch(
+          "http://localhost:5000/api/auth/verify-pin",
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+
+              Authorization:
+                `Bearer ${token}`,
+            },
+
+            body: JSON.stringify({
+              userId:
+                currentUser.id,
+
+              pin,
+            }),
+          }
+        );
+
+      const pinData =
+        await pinResponse.json();
+
+      if (!pinResponse.ok) {
+        alert(
+          pinData.message ||
+          "Incorrect PIN."
+        );
+
+        return;
+      }
 
 
-    const newTransaction = {
+      /*
+        STEP 2
+        PROCESS BILL PAYMENT
+        THROUGH BACKEND
+      */
+      const paymentResponse =
+        await fetch(
+          "http://localhost:5000/api/pay-bills",
+          {
+            method: "POST",
 
-      name:
-        `${selectedBill} Payment`,
+            headers: {
+              "Content-Type":
+                "application/json",
 
-      date:
-        new Date().toLocaleDateString(),
+              Authorization:
+                `Bearer ${token}`,
+            },
 
-      amount:
-        Number(billAmount),
+            body: JSON.stringify({
+              selectedBill,
+              provider,
+              accountNumber,
+              amount:
+                billAmount,
+            }),
+          }
+        );
 
-      type:
-        "debit",
+      const paymentResult =
+        await paymentResponse.json();
 
-      method:
-        "Wallet Balance",
+      if (!paymentResponse.ok) {
+        alert(
+          paymentResult.message ||
+          "Unable to process bill payment."
+        );
 
-      description:
-        `${provider} - ${accountNumber}`,
-
-      transactionId:
-        "TXN" +
-        Math.floor(
-          Math.random() * 1000000
-        ),
-
-    };
-
-
-
-    const updatedUser = {
-
-      ...currentUser,
-
-      balance:
-        currentUser.balance - billAmount,
-
-
-      transactions: [
-
-        ...(currentUser.transactions || []),
-
-        newTransaction,
-
-      ],
-
-    };
+        return;
+      }
 
 
+      /*
+        STEP 3
+        UPDATE LOCAL SESSION
+        USING BACKEND RESPONSE
 
-    const users =
-      JSON.parse(
-        localStorage.getItem("swiftWalletUsers")
-      ) || [];
+        The database is the source
+        of truth.
+      */
+      const updatedUser = {
+        ...currentUser,
+
+        balance:
+          paymentResult.newBalance,
+
+        account: {
+          ...(currentUser.account || {}),
+
+          balance:
+            paymentResult
+              .newBalance
+              .toString(),
+        },
+
+        transactions: [
+          paymentResult.transaction,
+
+          ...(currentUser.transactions || []),
+        ],
+      };
 
 
-
-    const updatedUsers =
-      users.map((user) =>
-
-        user.email === updatedUser.email
-          ? updatedUser
-          : user
-
+      /*
+        UPDATE CURRENT USER
+      */
+      localStorage.setItem(
+        "swiftWalletCurrentUser",
+        JSON.stringify(
+          updatedUser
+        )
       );
 
 
+      /*
+        STEP 4
+        GO TO SUCCESS PAGE
+      */
+      navigate(
+        "/pay-bill-success",
+        {
+          state: {
+            transactionId:
+              paymentResult
+                .transaction
+                .id,
 
-    localStorage.setItem(
-      "swiftWalletUsers",
-      JSON.stringify(updatedUsers)
-    );
+            selectedBill,
 
+            provider,
 
-    localStorage.setItem(
-      "swiftWalletCurrentUser",
-      JSON.stringify(updatedUser)
-    );
+            accountNumber,
 
+            amount:
+              billAmount,
 
+            transaction:
+              paymentResult
+                .transaction,
 
-    navigate(
-      "/pay-bill-success",
-      {
-        state: {
-
-          transactionId:
-            newTransaction.transactionId,
-
-          selectedBill,
-
-          provider,
-
-          accountNumber,
-
-          amount:
-            billAmount,
-
+            newBalance:
+              paymentResult
+                .newBalance,
+          },
         }
-      }
-    );
+      );
 
+      window.scrollTo(0, 0);
 
-    window.scrollTo(0,0);
+    } catch (error) {
 
+      console.error(
+        "Pay bill error:",
+        error
+      );
+
+      alert(
+        "Unable to connect to the Swift Wallet server."
+      );
+
+    } finally {
+
+      setLoading(false);
+
+    }
   };
 
 
-
   return (
-
     <div
       style={{
-        backgroundColor:"#0d0d0d",
-        minHeight:"100vh",
-        display:"flex",
-        justifyContent:"center",
-        alignItems:"center",
-        color:"#fff",
+        backgroundColor: "#0d0d0d",
+        minHeight: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        color: "#fff",
       }}
     >
-
 
       <Link
         to="/pay-bills"
         style={{
-          position:"absolute",
-          top:"35px",
-          left:"50px",
-          display:"flex",
-          alignItems:"center",
-          gap:"10px",
-          textDecoration:"none",
+          position: "absolute",
+          top: "35px",
+          left: "50px",
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          textDecoration: "none",
         }}
       >
 
         <div
           style={{
-            width:"40px",
-            height:"40px",
-            backgroundColor:"#22c55e",
-            borderRadius:"10px",
-            display:"flex",
-            justifyContent:"center",
-            alignItems:"center",
-            color:"#000",
-            fontWeight:"bold",
+            width: "40px",
+            height: "40px",
+            backgroundColor: "#22c55e",
+            borderRadius: "10px",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            color: "#000",
+            fontWeight: "bold",
           }}
         >
           SW
         </div>
 
-
         <span
           style={{
-            color:"#fff",
-            fontSize:"20px",
-            fontWeight:"700",
+            color: "#fff",
+            fontSize: "20px",
+            fontWeight: "700",
           }}
         >
           Swift Wallet
         </span>
 
-
       </Link>
-
 
 
       <div
         style={{
-          width:"420px",
-          backgroundColor:"#1a1a1a",
-          padding:"40px",
-          borderRadius:"15px",
-          border:"1px solid #2a2a2a",
-          textAlign:"center",
+          width: "420px",
+          backgroundColor: "#1a1a1a",
+          padding: "40px",
+          borderRadius: "15px",
+          border: "1px solid #2a2a2a",
+          textAlign: "center",
         }}
       >
 
-
         <h1
           style={{
-            color:"#22c55e",
+            color: "#22c55e",
           }}
         >
           Enter Transaction PIN
@@ -248,26 +357,25 @@ function PayBillsPin() {
 
         <p
           style={{
-            color:"#999",
+            color: "#999",
           }}
         >
           Confirm your bill payment.
         </p>
 
 
-
         <div
           style={{
-            backgroundColor:"#111",
-            padding:"20px",
-            borderRadius:"10px",
-            margin:"25px 0",
+            backgroundColor: "#111",
+            padding: "20px",
+            borderRadius: "10px",
+            margin: "25px 0",
           }}
         >
 
           <p
             style={{
-              color:"#888",
+              color: "#888",
             }}
           >
             {selectedBill}
@@ -276,26 +384,27 @@ function PayBillsPin() {
 
           <h2
             style={{
-              color:"#22c55e",
+              color: "#22c55e",
             }}
           >
             ₦
-            {Number(amount || 0)
-              .toLocaleString("en-NG")}
+            {Number(
+              amount || 0
+            ).toLocaleString(
+              "en-NG"
+            )}
           </h2>
 
 
           <small
             style={{
-              color:"#999",
+              color: "#999",
             }}
           >
             {provider}
           </small>
 
-
         </div>
-
 
 
         <input
@@ -304,94 +413,102 @@ function PayBillsPin() {
           inputMode="numeric"
           placeholder="Enter 4-digit PIN"
           value={pin}
-          onChange={(e)=>
-            setPin(e.target.value)
-          }
-          style={inputStyle}
-        />
+          onChange={(e) => {
 
+            const value =
+              e.target.value.replace(
+                /\D/g,
+                ""
+              );
+
+            setPin(value);
+          }}
+          style={inputStyle}
+          disabled={loading}
+        />
 
 
         <button
           onClick={handleContinue}
-          style={buttonStyle}
-        >
-          Confirm Payment
-        </button>
+          style={{
+            ...buttonStyle,
 
+            opacity:
+              loading
+                ? 0.7
+                : 1,
+
+            cursor:
+              loading
+                ? "not-allowed"
+                : "pointer",
+          }}
+          disabled={loading}
+        >
+          {loading
+            ? "Processing..."
+            : "Confirm Payment"}
+        </button>
 
 
         <Link
           to="/pay-bills"
           style={{
-            textDecoration:"none",
+            textDecoration: "none",
           }}
         >
 
           <button
             style={secondaryButton}
+            disabled={loading}
           >
             ← Back
           </button>
 
         </Link>
 
-
       </div>
 
-
     </div>
-
   );
-
 }
 
 
-
 const inputStyle = {
-
-  width:"100%",
-  padding:"14px",
-  marginBottom:"15px",
-  backgroundColor:"#111",
-  border:"1px solid #333",
-  borderRadius:"8px",
-  color:"#fff",
-  boxSizing:"border-box",
-
+  width: "100%",
+  padding: "14px",
+  marginBottom: "15px",
+  backgroundColor: "#111",
+  border: "1px solid #333",
+  borderRadius: "8px",
+  color: "#fff",
+  boxSizing: "border-box",
 };
-
 
 
 const buttonStyle = {
-
-  width:"100%",
-  padding:"14px",
-  backgroundColor:"#22c55e",
-  color:"#000",
-  border:"none",
-  borderRadius:"8px",
-  fontWeight:"700",
-  cursor:"pointer",
-
+  width: "100%",
+  padding: "14px",
+  backgroundColor: "#22c55e",
+  color: "#000",
+  border: "none",
+  borderRadius: "8px",
+  fontWeight: "700",
+  cursor: "pointer",
 };
-
 
 
 const secondaryButton = {
-
-  width:"100%",
-  padding:"14px",
-  marginTop:"15px",
-  backgroundColor:"transparent",
-  color:"#22c55e",
-  border:"1px solid #22c55e",
-  borderRadius:"8px",
-  fontWeight:"700",
-  cursor:"pointer",
-
+  width: "100%",
+  padding: "14px",
+  marginTop: "15px",
+  backgroundColor: "transparent",
+  color: "#22c55e",
+  border: "1px solid #22c55e",
+  borderRadius: "8px",
+  fontWeight: "700",
+  cursor: "pointer",
 };
-
 
 
 export default PayBillsPin;

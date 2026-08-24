@@ -27,140 +27,208 @@ function Dashboard() {
   const [cardCopied, setCardCopied] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
+  const [currentUser, setCurrentUser] = useState(null);
   const [transactions, setTransactions] = useState([]);
-  const [loadingTransactions, setLoadingTransactions] = useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [currentUser, setCurrentUser] = useState(() => {
-    try {
-      const savedUser = localStorage.getItem(
-        "swiftWalletCurrentUser"
-      );
+  /*
+    GET CURRENT USER FROM BACKEND
 
-      return savedUser
-        ? JSON.parse(savedUser)
-        : {};
-    } catch (error) {
-      console.error("Unable to load current user:", error);
-      return {};
-    }
-  });
+    The backend/database is now the
+    source of truth.
 
+    We no longer use localStorage for
+    balance, account, card or transactions.
+  */
   useEffect(() => {
-    const fetchTransactions = async () => {
+    const fetchCurrentUser = async () => {
       try {
-        const token = localStorage.getItem(
-          "swiftWalletToken"
-        );
+        const token =
+          localStorage.getItem(
+            "swiftWalletToken"
+          );
 
         if (!token) {
-          setLoadingTransactions(false);
+          navigate("/login");
           return;
         }
 
-        const response = await fetch(
-          "http://localhost:5000/api/transfers",
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response =
+          await fetch(
+            "http://localhost:5000/api/auth/me",
+            {
+              method: "GET",
 
-        const data = await response.json();
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+        const data =
+          await response.json();
 
         if (!response.ok) {
           throw new Error(
             data.message ||
-              "Unable to load transactions."
+              "Unable to load your account."
           );
         }
 
-        const backendTransactions =
-          Array.isArray(data.transactions)
-            ? data.transactions
-            : [];
+        /*
+          BACKEND USER
+        */
+        const backendUser =
+          data.user;
 
-        setTransactions(backendTransactions);
+        setCurrentUser(
+          backendUser
+        );
 
-        setCurrentUser((previousUser) => {
-          const updatedUser = {
-            ...previousUser,
-            transactions: backendTransactions,
-          };
+        /*
+          BACKEND TRANSACTIONS
+        */
+        setTransactions(
+          Array.isArray(
+            backendUser.transactions
+          )
+            ? backendUser.transactions
+            : []
+        );
 
-          localStorage.setItem(
-            "swiftWalletCurrentUser",
-            JSON.stringify(updatedUser)
+        /*
+          CARD STATUS
+        */
+        if (
+          backendUser.card
+        ) {
+          setCardFrozen(
+            backendUser.card.frozen
           );
+        }
 
-          return updatedUser;
-        });
       } catch (error) {
         console.error(
-          "Dashboard transaction error:",
+          "Dashboard loading error:",
           error
         );
+
+        /*
+          If JWT has expired or is invalid,
+          send user back to login.
+        */
+        if (
+          error.message
+            ?.toLowerCase()
+            .includes("token")
+        ) {
+          localStorage.removeItem(
+            "swiftWalletToken"
+          );
+
+          navigate("/login");
+        }
       } finally {
-        setLoadingTransactions(false);
+        setLoading(false);
       }
     };
 
-    fetchTransactions();
-  }, []);
+    fetchCurrentUser();
+  }, [navigate]);
 
+  /*
+    USER NAME
+  */
   const userName =
-    currentUser.firstName ||
-    currentUser.name ||
-    localStorage.getItem(
-      "swiftWalletUser"
-    ) ||
+    currentUser?.firstName ||
     "User";
 
+  /*
+    BALANCE FROM DATABASE
+  */
   const balance =
-    Number(currentUser.balance) || 0;
+    Number(
+      currentUser?.account?.balance
+    ) || 0;
 
+  /*
+    ACCOUNT NUMBER FROM DATABASE
+  */
   const accountNumber =
-    currentUser.accountNumber || "N/A";
+    currentUser?.account
+      ?.accountNumber || "N/A";
 
+  /*
+    CARD DETAILS FROM DATABASE
+  */
   const cardNumber =
-    currentUser.cardNumber ||
-    "4532 8890 4456 7890";
+    currentUser?.card
+      ?.cardNumber ||
+    "N/A";
 
   const expiryDate =
-    currentUser.expiryDate || "12/29";
+    currentUser?.card
+      ?.expiryDate ||
+    "N/A";
 
+  /*
+    ONLY SHOW THE 5 MOST RECENT
+    TRANSACTIONS
+  */
   const latestTransactions =
     transactions.slice(0, 5);
 
-  const formatAmount = (amount) => {
+  /*
+    FORMAT TRANSACTION AMOUNT
+  */
+  const formatAmount = (
+    amount
+  ) => {
     if (
-      typeof amount === "number" &&
+      typeof amount ===
+        "number" &&
       !isNaN(amount)
     ) {
       return amount;
     }
 
-    if (typeof amount === "string") {
-      const cleaned = amount.replace(
-        /[^\d.-]/g,
-        ""
-      );
+    if (
+      typeof amount ===
+      "string"
+    ) {
+      const cleaned =
+        amount.replace(
+          /[^\d.-]/g,
+          ""
+        );
 
-      return Number(cleaned) || 0;
+      return (
+        Number(cleaned) || 0
+      );
     }
 
     return 0;
   };
 
-  const formatDate = (date) => {
+  /*
+    FORMAT TRANSACTION DATE
+  */
+  const formatDate = (
+    date
+  ) => {
     if (!date) {
       return "Unknown date";
     }
 
-    const parsedDate = new Date(date);
+    const parsedDate =
+      new Date(date);
 
-    if (isNaN(parsedDate.getTime())) {
+    if (
+      isNaN(
+        parsedDate.getTime()
+      )
+    ) {
       return "Unknown date";
     }
 
@@ -174,18 +242,44 @@ function Dashboard() {
     );
   };
 
-  const copyAccountNumber = () => {
-    navigator.clipboard.writeText(accountNumber);
+  /*
+    COPY ACCOUNT NUMBER
+  */
+  const copyAccountNumber =
+    () => {
+      if (
+        !accountNumber ||
+        accountNumber ===
+          "N/A"
+      ) {
+        return;
+      }
 
-    setCopied(true);
+      navigator.clipboard.writeText(
+        accountNumber
+      );
 
-    setTimeout(() => {
-      setCopied(false);
-    }, 2000);
-  };
+      setCopied(true);
 
+      setTimeout(() => {
+        setCopied(false);
+      }, 2000);
+    };
+
+  /*
+    COPY CARD NUMBER
+  */
   const copyCardNumber = () => {
-    navigator.clipboard.writeText(cardNumber);
+    if (
+      !cardNumber ||
+      cardNumber === "N/A"
+    ) {
+      return;
+    }
+
+    navigator.clipboard.writeText(
+      cardNumber
+    );
 
     setCardCopied(true);
 
@@ -194,6 +288,9 @@ function Dashboard() {
     }, 2000);
   };
 
+  /*
+    LOGOUT
+  */
   const logout = () => {
     localStorage.removeItem(
       "swiftWalletUser"
@@ -216,7 +313,12 @@ function Dashboard() {
     window.scrollTo(0, 0);
   };
 
-  const openTransaction = (transaction) => {
+  /*
+    OPEN TRANSACTION DETAILS
+  */
+  const openTransaction = (
+    transaction
+  ) => {
     navigate(
       "/transaction-details",
       {
@@ -229,53 +331,153 @@ function Dashboard() {
     window.scrollTo(0, 0);
   };
 
+  /*
+    LOADING SCREEN
+  */
+  if (loading) {
+    return (
+      <div
+        style={{
+          ...styles.page,
+          display: "flex",
+          justifyContent:
+            "center",
+          alignItems: "center",
+          minHeight: "100vh",
+        }}
+      >
+        <p
+          style={{
+            color: "#22c55e",
+            fontSize: "18px",
+          }}
+        >
+          Loading your Swift Wallet...
+        </p>
+      </div>
+    );
+  }
+
+  /*
+    NO USER
+  */
+  if (!currentUser) {
+    return (
+      <div
+        style={{
+          ...styles.page,
+          display: "flex",
+          justifyContent:
+            "center",
+          alignItems: "center",
+          minHeight: "100vh",
+        }}
+      >
+        <div
+          style={{
+            textAlign: "center",
+          }}
+        >
+          <p
+            style={{
+              color: "#ff5f5f",
+            }}
+          >
+            Unable to load your account.
+          </p>
+
+          <button
+            onClick={() =>
+              navigate("/login")
+            }
+            style={
+              styles.copyButton
+            }
+          >
+            Return to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={styles.page}>
       <nav style={styles.navbar}>
         <Link
           to="/dashboard"
           onClick={() =>
-            window.scrollTo(0, 0)
+            window.scrollTo(
+              0,
+              0
+            )
           }
-          style={styles.logoContainer}
+          style={
+            styles.logoContainer
+          }
         >
-          <div style={styles.logo}>
+          <div
+            style={styles.logo}
+          >
             SW
           </div>
 
-          <span style={styles.brand}>
+          <span
+            style={styles.brand}
+          >
             Swift Wallet
           </span>
         </Link>
 
         <div
           style={{
-            position: "relative",
+            position:
+              "relative",
           }}
         >
           <button
             onClick={() =>
-              setMenuOpen(!menuOpen)
+              setMenuOpen(
+                !menuOpen
+              )
             }
-            style={styles.accountButton}
+            style={
+              styles.accountButton
+            }
           >
             <User size={18} />
+
             Account
           </button>
 
           {menuOpen && (
-            <div style={styles.dropdown}>
+            <div
+              style={
+                styles.dropdown
+              }
+            >
               <MenuLink
                 to="/settings"
-                icon={<Settings size={17} />}
+                icon={
+                  <Settings
+                    size={17}
+                  />
+                }
                 text="Settings"
               />
 
               <button
-                onClick={logout}
-                style={styles.logoutButton}
+                onClick={
+                  logout
+                }
+                style={
+                  styles.logoutButton
+                }
               >
-                <LogOut size={17} />
+                <LogOut
+                  size={17}
+                />
+
                 Logout
               </button>
             </div>
@@ -283,18 +485,44 @@ function Dashboard() {
         </div>
       </nav>
 
-      <main style={styles.container}>
-        <h1 style={styles.title}>
-          Welcome back, {userName}
+      <main
+        style={
+          styles.container
+        }
+      >
+        <h1
+          style={
+            styles.title
+          }
+        >
+          Welcome back,{" "}
+          {userName}
         </h1>
 
-        <p style={styles.subtitle}>
+        <p
+          style={
+            styles.subtitle
+          }
+        >
           Here's an overview of your Swift Wallet account.
         </p>
 
-        <div style={styles.topGrid}>
-          <div style={styles.balanceCard}>
-            <div style={styles.cardHeader}>
+        <div
+          style={
+            styles.topGrid
+          }
+        >
+          {/* BALANCE */}
+          <div
+            style={
+              styles.balanceCard
+            }
+          >
+            <div
+              style={
+                styles.cardHeader
+              }
+            >
               <span>
                 Available Balance
               </span>
@@ -305,17 +533,27 @@ function Dashboard() {
                     !showBalance
                   )
                 }
-                style={styles.iconButton}
+                style={
+                  styles.iconButton
+                }
               >
                 {showBalance ? (
-                  <Eye size={20} />
+                  <Eye
+                    size={20}
+                  />
                 ) : (
-                  <EyeOff size={20} />
+                  <EyeOff
+                    size={20}
+                  />
                 )}
               </button>
             </div>
 
-            <h2 style={styles.balance}>
+            <h2
+              style={
+                styles.balance
+              }
+            >
               {showBalance
                 ? `₦${balance.toLocaleString(
                     "en-NG",
@@ -327,13 +565,26 @@ function Dashboard() {
                 : "₦••••••"}
             </h2>
 
-            <p style={styles.balanceLabel}>
+            <p
+              style={
+                styles.balanceLabel
+              }
+            >
               Swift Wallet Account
             </p>
           </div>
 
-          <div style={styles.walletCard}>
-            <div style={styles.walletHeader}>
+          {/* CARD */}
+          <div
+            style={
+              styles.walletCard
+            }
+          >
+            <div
+              style={
+                styles.walletHeader
+              }
+            >
               <div>
                 <h2>
                   Swift Wallet
@@ -344,16 +595,29 @@ function Dashboard() {
                 </p>
               </div>
 
-              <CreditCard size={34} />
+              <CreditCard
+                size={34}
+              />
             </div>
 
-            <h3 style={styles.cardNumber}>
+            <h3
+              style={
+                styles.cardNumber
+              }
+            >
               {showCardNumber
                 ? cardNumber
-                : "•••• •••• •••• 7890"}
+                : cardNumber !==
+                  "N/A"
+                ? "•••• •••• •••• 7890"
+                : "N/A"}
             </h3>
 
-            <div style={styles.cardDetails}>
+            <div
+              style={
+                styles.cardDetails
+              }
+            >
               <div>
                 <small>
                   Card Holder
@@ -387,9 +651,15 @@ function Dashboard() {
               </div>
             </div>
 
-            <div style={styles.cardActions}>
+            <div
+              style={
+                styles.cardActions
+              }
+            >
               <button
-                style={styles.darkButton}
+                style={
+                  styles.darkButton
+                }
                 onClick={() =>
                   setShowCardNumber(
                     !showCardNumber
@@ -402,10 +672,16 @@ function Dashboard() {
               </button>
 
               <button
-                style={styles.darkButton}
-                onClick={copyCardNumber}
+                style={
+                  styles.darkButton
+                }
+                onClick={
+                  copyCardNumber
+                }
               >
-                <Copy size={15} />
+                <Copy
+                  size={15}
+                />
 
                 {cardCopied
                   ? "Copied"
@@ -413,14 +689,18 @@ function Dashboard() {
               </button>
 
               <button
-                style={styles.darkButton}
+                style={
+                  styles.darkButton
+                }
                 onClick={() =>
                   setCardFrozen(
                     !cardFrozen
                   )
                 }
               >
-                <Snowflake size={15} />
+                <Snowflake
+                  size={15}
+                />
 
                 {cardFrozen
                   ? "Unfreeze"
@@ -430,9 +710,18 @@ function Dashboard() {
           </div>
         </div>
 
-        <div style={styles.accountBar}>
+        {/* ACCOUNT NUMBER */}
+        <div
+          style={
+            styles.accountBar
+          }
+        >
           <div>
-            <span style={styles.accountTitle}>
+            <span
+              style={
+                styles.accountTitle
+              }
+            >
               Account Number
             </span>
 
@@ -442,10 +731,16 @@ function Dashboard() {
           </div>
 
           <button
-            onClick={copyAccountNumber}
-            style={styles.copyButton}
+            onClick={
+              copyAccountNumber
+            }
+            style={
+              styles.copyButton
+            }
           >
-            <Copy size={16} />
+            <Copy
+              size={16}
+            />
 
             {copied
               ? "Copied"
@@ -453,37 +748,67 @@ function Dashboard() {
           </button>
         </div>
 
-        <h2 style={styles.sectionTitle}>
+        {/* QUICK ACTIONS */}
+        <h2
+          style={
+            styles.sectionTitle
+          }
+        >
           Quick Actions
         </h2>
 
-        <div style={styles.actionGrid}>
+        <div
+          style={
+            styles.actionGrid
+          }
+        >
           <ActionCard
             to="/send-money"
-            icon={<Send size={22} />}
+            icon={
+              <Send
+                size={22}
+              />
+            }
             title="Send Money"
           />
 
           <ActionCard
             to="/add-money"
-            icon={<Plus size={22} />}
+            icon={
+              <Plus
+                size={22}
+              />
+            }
             title="Add Money"
           />
 
           <ActionCard
             to="/pay-bills"
-            icon={<Receipt size={22} />}
+            icon={
+              <Receipt
+                size={22}
+              />
+            }
             title="Pay Bills"
           />
 
           <ActionCard
             to="/transaction-history"
-            icon={<History size={22} />}
+            icon={
+              <History
+                size={22}
+              />
+            }
             title="Transaction History"
           />
         </div>
 
-        <div style={styles.transactionHeader}>
+        {/* RECENT TRANSACTIONS */}
+        <div
+          style={
+            styles.transactionHeader
+          }
+        >
           <h2>
             Recent Transactions
           </h2>
@@ -491,25 +816,34 @@ function Dashboard() {
           <Link
             to="/transaction-history"
             onClick={() =>
-              window.scrollTo(0, 0)
+              window.scrollTo(
+                0,
+                0
+              )
             }
-            style={styles.viewAll}
+            style={
+              styles.viewAll
+            }
           >
             View All
           </Link>
         </div>
 
-        {loadingTransactions ? (
-          <p style={{ color: "#888" }}>
-            Loading transactions...
-          </p>
-        ) : latestTransactions.length === 0 ? (
-          <p style={{ color: "#888" }}>
+        {latestTransactions.length ===
+        0 ? (
+          <p
+            style={{
+              color: "#888",
+            }}
+          >
             No transactions yet.
           </p>
         ) : (
           latestTransactions.map(
-            (transaction, index) => (
+            (
+              transaction,
+              index
+            ) => (
               <div
                 key={
                   transaction.id ||
@@ -558,7 +892,11 @@ function Dashboard() {
                           : "Money sent")}
                     </strong>
 
-                    <p style={styles.date}>
+                    <p
+                      style={
+                        styles.date
+                      }
+                    >
                       {formatDate(
                         transaction.createdAt
                       )}
@@ -608,18 +946,32 @@ function ActionCard({
     <Link
       to={to}
       onClick={() =>
-        window.scrollTo(0, 0)
+        window.scrollTo(
+          0,
+          0
+        )
       }
       style={{
-        textDecoration: "none",
+        textDecoration:
+          "none",
       }}
     >
-      <div style={styles.actionCard}>
-        <div style={styles.actionIcon}>
+      <div
+        style={
+          styles.actionCard
+        }
+      >
+        <div
+          style={
+            styles.actionIcon
+          }
+        >
           {icon}
         </div>
 
-        <span>{title}</span>
+        <span>
+          {title}
+        </span>
       </div>
     </Link>
   );
@@ -634,11 +986,17 @@ function MenuLink({
     <Link
       to={to}
       onClick={() =>
-        window.scrollTo(0, 0)
+        window.scrollTo(
+          0,
+          0
+        )
       }
-      style={styles.menuLink}
+      style={
+        styles.menuLink
+      }
     >
       {icon}
+
       {text}
     </Link>
   );

@@ -16,16 +16,10 @@ function EnterPin() {
   const transferData = location.state;
 
   const handleContinue = async () => {
-    /*
-      GET CURRENT USER
-    */
     const currentUser = JSON.parse(
       localStorage.getItem("swiftWalletCurrentUser")
     );
 
-    /*
-      GET JWT TOKEN
-    */
     const token = localStorage.getItem(
       "swiftWalletToken"
     );
@@ -57,7 +51,7 @@ function EnterPin() {
     try {
       /*
         STEP 1:
-        VERIFY TRANSACTION PIN
+        VERIFY PIN USING JWT
       */
       const pinResponse = await fetch(
         "http://localhost:5000/api/auth/verify-pin",
@@ -66,21 +60,22 @@ function EnterPin() {
 
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
 
           body: JSON.stringify({
-            userId: currentUser.id,
             pin,
           }),
         }
       );
 
-      const pinData = await pinResponse.json();
+      const pinData =
+        await pinResponse.json();
 
       if (!pinResponse.ok) {
         alert(
           pinData.message ||
-            "Incorrect PIN."
+          "Incorrect PIN."
         );
 
         setLoading(false);
@@ -88,38 +83,33 @@ function EnterPin() {
       }
 
       /*
-        PIN IS CORRECT
-        NOW MAKE THE TRANSFER
+        STEP 2:
+        MAKE TRANSFER
       */
-      const transferResponse = await fetch(
-        "http://localhost:5000/api/transfers",
-        {
-          method: "POST",
+      const transferResponse =
+        await fetch(
+          "http://localhost:5000/api/transfers",
+          {
+            method: "POST",
 
-          headers: {
-            "Content-Type": "application/json",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
 
-            /*
-              SEND JWT TOKEN
-            */
-            Authorization: `Bearer ${token}`,
-          },
+            body: JSON.stringify({
+              recipientAccountNumber:
+                transferData.accountNumber,
 
-          body: JSON.stringify({
-            senderId: currentUser.id,
+              amount:
+                transferData.amount,
 
-            recipientAccountNumber:
-              transferData.accountNumber,
-
-            amount:
-              transferData.amount,
-
-            description:
-              transferData.description ||
-              "Transfer",
-          }),
-        }
-      );
+              description:
+                transferData.description ||
+                "Transfer",
+            }),
+          }
+        );
 
       const transferResult =
         await transferResponse.json();
@@ -127,7 +117,7 @@ function EnterPin() {
       if (!transferResponse.ok) {
         alert(
           transferResult.message ||
-            "Unable to complete transfer."
+          "Unable to complete transfer."
         );
 
         setLoading(false);
@@ -136,7 +126,6 @@ function EnterPin() {
 
       /*
         UPDATE LOCAL SESSION
-        WITH NEW BALANCE
       */
       const updatedUser = {
         ...currentUser,
@@ -155,7 +144,7 @@ function EnterPin() {
       );
 
       /*
-        GO TO SUCCESS PAGE
+        SUCCESS PAGE
       */
       navigate(
         "/transfer-success",
