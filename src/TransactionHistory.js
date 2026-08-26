@@ -18,9 +18,16 @@ function TransactionHistory() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  /*
+    GET LOGGED-IN USER'S
+    TRANSACTIONS FROM BACKEND
+  */
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
+        setLoading(true);
+        setError("");
+
         const token = localStorage.getItem(
           "swiftWalletToken"
         );
@@ -38,8 +45,10 @@ function TransactionHistory() {
           "http://localhost:5000/api/transfers",
           {
             method: "GET",
+
             headers: {
               Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
             },
           }
         );
@@ -47,16 +56,57 @@ function TransactionHistory() {
         const data = await response.json();
 
         if (!response.ok) {
+          /*
+            If JWT has expired or is invalid,
+            send the user back to login.
+          */
+          if (
+            response.status === 401 ||
+            response.status === 403
+          ) {
+            localStorage.removeItem(
+              "swiftWalletToken"
+            );
+
+            localStorage.removeItem(
+              "swiftWalletCurrentUser"
+            );
+
+            navigate("/login");
+
+            return;
+          }
+
           throw new Error(
             data.message ||
               "Unable to load transactions."
           );
         }
 
-        setTransactions(
+        /*
+          Backend returns:
+
+          {
+            transactions: [
+              {
+                id,
+                type,
+                amount,
+                description,
+                status,
+                createdAt
+              }
+            ]
+          }
+        */
+
+        const backendTransactions =
           Array.isArray(data.transactions)
             ? data.transactions
-            : []
+            : [];
+
+        setTransactions(
+          backendTransactions
         );
       } catch (error) {
         console.error(
@@ -74,42 +124,87 @@ function TransactionHistory() {
     };
 
     fetchTransactions();
-  }, []);
+  }, [navigate]);
 
+  /*
+    SAFELY CONVERT BACKEND AMOUNT
+    TO A NUMBER
+
+    Prisma Decimal is converted to a
+    string by the backend.
+
+    Example:
+
+    "5000.00" -> 5000
+  */
   const getAmount = (amount) => {
     if (
       typeof amount === "number" &&
-      !isNaN(amount)
+      Number.isFinite(amount)
     ) {
       return amount;
     }
 
-    return (
-      Number(
-        String(amount || "").replace(
-          /[^\d.-]/g,
-          ""
-        )
-      ) || 0
-    );
-  };
-
-  const getTransactionName = (transaction) => {
-    if (transaction.description) {
-      return transaction.description;
+    if (
+      amount === null ||
+      amount === undefined ||
+      amount === ""
+    ) {
+      return 0;
     }
 
-    if (transaction.type === "credit") {
+    const cleanedAmount = String(
+      amount
+    ).replace(/[^\d.-]/g, "");
+
+    const parsedAmount =
+      Number(cleanedAmount);
+
+    return Number.isFinite(
+      parsedAmount
+    )
+      ? parsedAmount
+      : 0;
+  };
+
+  /*
+    GET TRANSACTION DESCRIPTION
+  */
+  const getTransactionName = (
+    transaction
+  ) => {
+    if (
+      transaction &&
+      transaction.description &&
+      String(
+        transaction.description
+      ).trim()
+    ) {
+      return String(
+        transaction.description
+      ).trim();
+    }
+
+    if (
+      transaction &&
+      transaction.type === "credit"
+    ) {
       return "Money received";
     }
 
-    if (transaction.type === "debit") {
+    if (
+      transaction &&
+      transaction.type === "debit"
+    ) {
       return "Money sent";
     }
 
     return "Transaction";
   };
 
+  /*
+    FORMAT BACKEND ISO DATE
+  */
   const formatDate = (date) => {
     if (!date) {
       return "Unknown date";
@@ -117,7 +212,11 @@ function TransactionHistory() {
 
     const parsedDate = new Date(date);
 
-    if (isNaN(parsedDate.getTime())) {
+    if (
+      isNaN(
+        parsedDate.getTime()
+      )
+    ) {
       return "Unknown date";
     }
 
@@ -131,54 +230,82 @@ function TransactionHistory() {
     );
   };
 
+  /*
+    FILTER + SEARCH
+  */
   const filteredTransactions =
-    transactions.filter((transaction) => {
-      const matchesFilter =
-        filter === "All" ||
-        (filter === "Credit" &&
-          transaction.type === "credit") ||
-        (filter === "Debit" &&
-          transaction.type === "debit");
+    transactions.filter(
+      (transaction) => {
+        const matchesFilter =
+          filter === "All" ||
+          (filter === "Credit" &&
+            transaction.type ===
+              "credit") ||
+          (filter === "Debit" &&
+            transaction.type ===
+              "debit");
 
-      const transactionName =
-        getTransactionName(transaction);
+        const transactionName =
+          getTransactionName(
+            transaction
+          );
 
-      const matchesSearch =
-        transactionName
-          .toLowerCase()
-          .includes(search.toLowerCase());
+        const matchesSearch =
+          transactionName
+            .toLowerCase()
+            .includes(
+              search.toLowerCase()
+            );
 
-      return (
-        matchesFilter &&
-        matchesSearch
-      );
-    });
+        return (
+          matchesFilter &&
+          matchesSearch
+        );
+      }
+    );
 
+  /*
+    TOTAL MONEY RECEIVED
+  */
   const moneyIn = transactions
     .filter(
       (transaction) =>
-        transaction.type === "credit"
+        transaction.type ===
+        "credit"
     )
     .reduce(
       (total, transaction) =>
         total +
-        getAmount(transaction.amount),
+        getAmount(
+          transaction.amount
+        ),
       0
     );
 
+  /*
+    TOTAL MONEY SENT
+  */
   const moneyOut = transactions
     .filter(
       (transaction) =>
-        transaction.type === "debit"
+        transaction.type ===
+        "debit"
     )
     .reduce(
       (total, transaction) =>
         total +
-        getAmount(transaction.amount),
+        getAmount(
+          transaction.amount
+        ),
       0
     );
 
-  const openTransaction = (transaction) => {
+  /*
+    OPEN TRANSACTION DETAILS
+  */
+  const openTransaction = (
+    transaction
+  ) => {
     navigate(
       "/transaction-details",
       {
@@ -193,6 +320,7 @@ function TransactionHistory() {
 
   return (
     <div style={styles.page}>
+      {/* NAVBAR */}
       <div style={styles.navbar}>
         <Link
           to="/dashboard"
@@ -211,6 +339,7 @@ function TransactionHistory() {
         </Link>
       </div>
 
+      {/* MAIN CONTENT */}
       <div style={styles.container}>
         <h1 style={styles.heading}>
           Transaction History
@@ -220,14 +349,31 @@ function TransactionHistory() {
           View all wallet activity.
         </p>
 
-        <div style={styles.summaryContainer}>
-          <div style={styles.summaryCard}>
-            <div style={styles.summaryHeader}>
+        {/* SUMMARY */}
+        <div
+          style={
+            styles.summaryContainer
+          }
+        >
+          {/* MONEY IN */}
+          <div
+            style={styles.summaryCard}
+          >
+            <div
+              style={
+                styles.summaryHeader
+              }
+            >
               <TrendingUp size={20} />
+
               Money In
             </div>
 
-            <h2 style={styles.creditAmount}>
+            <h2
+              style={
+                styles.creditAmount
+              }
+            >
               +₦
               {moneyIn.toLocaleString(
                 "en-NG",
@@ -239,13 +385,27 @@ function TransactionHistory() {
             </h2>
           </div>
 
-          <div style={styles.summaryCard}>
-            <div style={styles.summaryHeader}>
-              <TrendingDown size={20} />
+          {/* MONEY OUT */}
+          <div
+            style={styles.summaryCard}
+          >
+            <div
+              style={
+                styles.summaryHeader
+              }
+            >
+              <TrendingDown
+                size={20}
+              />
+
               Money Out
             </div>
 
-            <h2 style={styles.debitAmount}>
+            <h2
+              style={
+                styles.debitAmount
+              }
+            >
               -₦
               {moneyOut.toLocaleString(
                 "en-NG",
@@ -258,25 +418,36 @@ function TransactionHistory() {
           </div>
         </div>
 
+        {/* SEARCH + FILTER */}
         <div
           style={{
             ...styles.card,
             marginBottom: "30px",
           }}
         >
-          <div style={styles.inputWrapper}>
+          {/* SEARCH */}
+          <div
+            style={
+              styles.inputWrapper
+            }
+          >
             <Search size={18} />
 
             <input
-              style={styles.searchInput}
+              style={
+                styles.searchInput
+              }
               placeholder="Search transactions"
               value={search}
               onChange={(e) =>
-                setSearch(e.target.value)
+                setSearch(
+                  e.target.value
+                )
               }
             />
           </div>
 
+          {/* FILTER */}
           <div
             style={{
               position: "relative",
@@ -290,7 +461,9 @@ function TransactionHistory() {
               }}
               value={filter}
               onChange={(e) =>
-                setFilter(e.target.value)
+                setFilter(
+                  e.target.value
+                )
               }
             >
               <option value="All">
@@ -323,6 +496,7 @@ function TransactionHistory() {
           </div>
         </div>
 
+        {/* TRANSACTIONS */}
         <div style={styles.card}>
           <h2
             style={{
@@ -333,11 +507,17 @@ function TransactionHistory() {
             Transactions
           </h2>
 
+          {/* LOADING */}
           {loading ? (
-            <p style={{ color: "#888" }}>
+            <p
+              style={{
+                color: "#888",
+              }}
+            >
               Loading transactions...
             </p>
           ) : error ? (
+            /* ERROR */
             <p
               style={{
                 color: "#ff5f5f",
@@ -345,13 +525,26 @@ function TransactionHistory() {
             >
               {error}
             </p>
-          ) : filteredTransactions.length === 0 ? (
-            <p style={{ color: "#888" }}>
-              No transactions found.
+          ) : filteredTransactions.length ===
+            0 ? (
+            /* EMPTY */
+            <p
+              style={{
+                color: "#888",
+              }}
+            >
+              {search ||
+              filter !== "All"
+                ? "No transactions match your search or filter."
+                : "No transactions found."}
             </p>
           ) : (
+            /* TRANSACTION LIST */
             filteredTransactions.map(
-              (transaction, index) => {
+              (
+                transaction,
+                index
+              ) => {
                 const amount =
                   getAmount(
                     transaction.amount
@@ -362,11 +555,15 @@ function TransactionHistory() {
                     transaction
                   );
 
+                const isCredit =
+                  transaction.type ===
+                  "credit";
+
                 return (
                   <div
                     key={
                       transaction.id ||
-                      index
+                      `transaction-${index}`
                     }
                     onClick={() =>
                       openTransaction(
@@ -375,6 +572,7 @@ function TransactionHistory() {
                     }
                     style={{
                       ...styles.transaction,
+
                       borderBottom:
                         index ===
                         filteredTransactions.length -
@@ -383,24 +581,25 @@ function TransactionHistory() {
                           : "1px solid #2a2a2a",
                     }}
                   >
+                    {/* LEFT SIDE */}
                     <div
                       style={{
                         display: "flex",
                         alignItems:
                           "center",
                         gap: "15px",
+                        minWidth: 0,
                       }}
                     >
+                      {/* ICON */}
                       <div
                         style={
-                          transaction.type ===
-                          "credit"
+                          isCredit
                             ? styles.creditIcon
                             : styles.debitIcon
                         }
                       >
-                        {transaction.type ===
-                        "credit" ? (
+                        {isCredit ? (
                           <ArrowDownLeft
                             size={20}
                           />
@@ -411,7 +610,12 @@ function TransactionHistory() {
                         )}
                       </div>
 
-                      <div>
+                      {/* DETAILS */}
+                      <div
+                        style={{
+                          minWidth: 0,
+                        }}
+                      >
                         <strong>
                           {name}
                         </strong>
@@ -430,6 +634,7 @@ function TransactionHistory() {
                           )}
                         </p>
 
+                        {/* STATUS */}
                         {transaction.status && (
                           <p
                             style={{
@@ -438,10 +643,13 @@ function TransactionHistory() {
                                 "completed"
                                   ? "#22c55e"
                                   : "#888",
+
                               margin:
                                 "5px 0",
+
                               fontSize:
                                 "13px",
+
                               textTransform:
                                 "capitalize",
                             }}
@@ -450,39 +658,51 @@ function TransactionHistory() {
                           </p>
                         )}
 
+                        {/* TRANSACTION ID */}
                         {transaction.id && (
                           <small
                             style={{
-                              color: "#666",
+                              color:
+                                "#666",
+                              display:
+                                "block",
+                              marginTop:
+                                "4px",
+                              wordBreak:
+                                "break-all",
                             }}
                           >
                             ID:{" "}
-                            {transaction.id}
+                            {
+                              transaction.id
+                            }
                           </small>
                         )}
                       </div>
                     </div>
 
+                    {/* AMOUNT */}
                     <span
                       style={{
-                        color:
-                          transaction.type ===
-                          "credit"
-                            ? "#22c55e"
-                            : "#ff5f5f",
-                        fontWeight: "700",
-                        fontSize: "16px",
+                        color: isCredit
+                          ? "#22c55e"
+                          : "#ff5f5f",
+
+                        fontWeight:
+                          "700",
+
+                        fontSize:
+                          "16px",
+
                         whiteSpace:
                           "nowrap",
                       }}
                     >
-                      {transaction.type ===
-                      "credit"
+                      {isCredit
                         ? "+"
                         : "-"}
 
                       ₦
-
                       {amount.toLocaleString(
                         "en-NG",
                         {
@@ -498,6 +718,7 @@ function TransactionHistory() {
           )}
         </div>
 
+        {/* BACK TO DASHBOARD */}
         <Link
           to="/dashboard"
           onClick={() =>
@@ -521,6 +742,9 @@ function TransactionHistory() {
   );
 }
 
+/*
+  STYLES
+*/
 const styles = {
   page: {
     backgroundColor: "#0d0d0d",
@@ -530,7 +754,8 @@ const styles = {
 
   navbar: {
     padding: "20px 50px",
-    borderBottom: "1px solid #222",
+    borderBottom:
+      "1px solid #222",
   },
 
   logoContainer: {
@@ -645,7 +870,8 @@ const styles = {
 
   transaction: {
     display: "flex",
-    justifyContent: "space-between",
+    justifyContent:
+      "space-between",
     alignItems: "center",
     padding: "20px 0",
     gap: "20px",

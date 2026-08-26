@@ -1,126 +1,79 @@
-import React, {
-  useEffect,
-  useState,
-} from "react";
-
+import React from "react";
 import {
   Link,
+  useLocation,
   useNavigate,
 } from "react-router-dom";
 
 import {
   ArrowDownLeft,
   ArrowUpRight,
-  Search,
-  TrendingUp,
-  TrendingDown,
+  CheckCircle,
+  Copy,
 } from "lucide-react";
 
-function TransactionHistory() {
+function TransactionDetails() {
+  const location = useLocation();
   const navigate = useNavigate();
 
-  const [
-    transactions,
-    setTransactions,
-  ] = useState([]);
-
-  const [
-    filter,
-    setFilter,
-  ] = useState("All");
-
-  const [
-    search,
-    setSearch,
-  ] = useState("");
-
-  const [
-    loading,
-    setLoading,
-  ] = useState(true);
-
-  const [
-    error,
-    setError,
-  ] = useState("");
+  const transaction =
+    location.state?.transaction;
 
   /*
-    LOAD REAL TRANSACTIONS
-    FROM BACKEND
+    If someone opens the page directly
+    without selecting a transaction first.
   */
-  useEffect(() => {
-    const fetchTransactions =
-      async () => {
-        try {
-          const token =
-            localStorage.getItem(
-              "swiftWalletToken"
-            );
+  if (!transaction) {
+    return (
+      <div style={styles.page}>
+        <div style={styles.navbar}>
+          <Link
+            to="/dashboard"
+            style={styles.logoContainer}
+          >
+            <div style={styles.logo}>
+              SW
+            </div>
 
-          if (!token) {
-            setError(
-              "Authentication session not found. Please log in again."
-            );
+            <span style={styles.brand}>
+              Swift Wallet
+            </span>
+          </Link>
+        </div>
 
-            setLoading(false);
-            return;
-          }
+        <div style={styles.container}>
+          <div style={styles.card}>
+            <h1 style={styles.heading}>
+              Transaction Not Found
+            </h1>
 
-          const response =
-            await fetch(
-              "http://localhost:5000/api/transfers",
-              {
-                method: "GET",
+            <p style={styles.subtitle}>
+              Please select a transaction from
+              your transaction history.
+            </p>
 
-                headers: {
-                  Authorization:
-                    `Bearer ${token}`,
-                },
-              }
-            );
+            <button
+              onClick={() => {
+                navigate(
+                  "/transaction-history"
+                );
 
-          const data =
-            await response.json();
-
-          if (!response.ok) {
-            throw new Error(
-              data.message ||
-                "Unable to load transactions."
-            );
-          }
-
-          setTransactions(
-            Array.isArray(
-              data.transactions
-            )
-              ? data.transactions
-              : []
-          );
-        } catch (error) {
-          console.error(
-            "Transaction history error:",
-            error
-          );
-
-          setError(
-            error.message ||
-              "Unable to load transaction history."
-          );
-        } finally {
-          setLoading(false);
-        }
-      };
-
-    fetchTransactions();
-  }, []);
+                window.scrollTo(0, 0);
+              }}
+              style={styles.button}
+            >
+              ← Back to Transaction History
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   /*
-    SAFELY CONVERT TRANSACTION AMOUNT
-    INTO A NUMBER
+    SAFELY CONVERT AMOUNT
   */
-  const getAmount = (
-    amount
-  ) => {
+  const getAmount = (amount) => {
     if (
       typeof amount === "number" &&
       !isNaN(amount)
@@ -130,60 +83,45 @@ function TransactionHistory() {
 
     return (
       Number(
-        String(amount || "")
-          .replace(
-            /[^\d.-]/g,
-            ""
-          )
+        String(amount || "").replace(
+          /[^\d.-]/g,
+          ""
+        )
       ) || 0
     );
   };
 
+  const amount = getAmount(
+    transaction.amount
+  );
+
   /*
-    GET TRANSACTION DISPLAY NAME
+    TRANSACTION TYPE
   */
-  const getTransactionName =
-    (transaction) => {
-      if (
-        transaction.description
-      ) {
-        return transaction.description;
-      }
+  const isCredit =
+    transaction.type === "credit";
 
-      if (
-        transaction.type ===
-        "credit"
-      ) {
-        return "Money received";
-      }
-
-      if (
-        transaction.type ===
-        "debit"
-      ) {
-        return "Money sent";
-      }
-
-      return "Transaction";
-    };
+  /*
+    DESCRIPTION
+  */
+  const description =
+    transaction.description ||
+    (isCredit
+      ? "Money received"
+      : "Money sent");
 
   /*
     FORMAT DATE
   */
-  const formatDate = (
-    date
-  ) => {
+  const formatDate = (date) => {
     if (!date) {
       return "Unknown date";
     }
 
-    const parsedDate =
-      new Date(date);
+    const parsedDate = new Date(date);
 
     if (
-      isNaN(
-        parsedDate.getTime()
-      )
+      isNaN(parsedDate.getTime())
     ) {
       return "Unknown date";
     }
@@ -192,537 +130,288 @@ function TransactionHistory() {
       "en-GB",
       {
         day: "numeric",
-        month: "short",
+        month: "long",
         year: "numeric",
       }
     );
   };
 
   /*
-    FILTER + SEARCH
+    FORMAT TIME
   */
-  const filteredTransactions =
-    transactions.filter(
-      (transaction) => {
-        const matchesFilter =
-          filter === "All" ||
-          (
-            filter === "Credit" &&
-            transaction.type ===
-              "credit"
-          ) ||
-          (
-            filter === "Debit" &&
-            transaction.type ===
-              "debit"
-          );
+  const formatTime = (date) => {
+    if (!date) {
+      return "Unknown time";
+    }
 
-        const transactionName =
-          getTransactionName(
-            transaction
-          );
+    const parsedDate = new Date(date);
 
-        const matchesSearch =
-          transactionName
-            .toLowerCase()
-            .includes(
-              search.toLowerCase()
-            );
+    if (
+      isNaN(parsedDate.getTime())
+    ) {
+      return "Unknown time";
+    }
 
-        return (
-          matchesFilter &&
-          matchesSearch
-        );
-      }
-    );
-
-  /*
-    TOTAL MONEY IN
-  */
-  const moneyIn =
-    transactions
-      .filter(
-        (transaction) =>
-          transaction.type ===
-          "credit"
-      )
-      .reduce(
-        (
-          total,
-          transaction
-        ) =>
-          total +
-          getAmount(
-            transaction.amount
-          ),
-        0
-      );
-
-  /*
-    TOTAL MONEY OUT
-  */
-  const moneyOut =
-    transactions
-      .filter(
-        (transaction) =>
-          transaction.type ===
-          "debit"
-      )
-      .reduce(
-        (
-          total,
-          transaction
-        ) =>
-          total +
-          getAmount(
-            transaction.amount
-          ),
-        0
-      );
-
-  /*
-    OPEN TRANSACTION DETAILS
-  */
-  const openTransaction = (
-    transaction
-  ) => {
-    navigate(
-      "/transaction-details",
+    return parsedDate.toLocaleTimeString(
+      "en-GB",
       {
-        state: {
-          transaction,
-        },
+        hour: "2-digit",
+        minute: "2-digit",
       }
-    );
-
-    window.scrollTo(
-      0,
-      0
     );
   };
 
+  /*
+    COPY TRANSACTION ID
+  */
+  const copyTransactionId = () => {
+    if (transaction.id) {
+      navigator.clipboard.writeText(
+        transaction.id
+      );
+    }
+  };
+
   return (
-    <div
-      style={styles.page}
-    >
-      <div
-        style={styles.navbar}
-      >
+    <div style={styles.page}>
+      {/* NAVBAR */}
+      <div style={styles.navbar}>
         <Link
           to="/dashboard"
           onClick={() =>
-            window.scrollTo(
-              0,
-              0
-            )
+            window.scrollTo(0, 0)
           }
-          style={
-            styles.logoContainer
-          }
+          style={styles.logoContainer}
         >
-          <div
-            style={styles.logo}
-          >
+          <div style={styles.logo}>
             SW
           </div>
 
-          <span
-            style={styles.brand}
-          >
+          <span style={styles.brand}>
             Swift Wallet
           </span>
         </Link>
       </div>
 
-      <div
-        style={styles.container}
-      >
-        <h1
-          style={styles.heading}
+      {/* MAIN CONTENT */}
+      <div style={styles.container}>
+        <button
+          onClick={() => {
+            navigate(
+              "/transaction-history"
+            );
+
+            window.scrollTo(0, 0);
+          }}
+          style={styles.backButton}
         >
-          Transaction History
+          ← Back to Transaction History
+        </button>
+
+        <h1 style={styles.heading}>
+          Transaction Details
         </h1>
 
-        <p
-          style={styles.subtitle}
-        >
-          View all wallet activity.
+        <p style={styles.subtitle}>
+          View your transaction receipt.
         </p>
 
-        <div
-          style={
-            styles.summaryContainer
-          }
-        >
-          <div
-            style={
-              styles.summaryCard
-            }
-          >
+        {/* RECEIPT */}
+        <div style={styles.receipt}>
+          {/* SUCCESS HEADER */}
+          <div style={styles.receiptHeader}>
             <div
               style={
-                styles.summaryHeader
+                isCredit
+                  ? styles.creditCircle
+                  : styles.debitCircle
               }
             >
-              <TrendingUp
-                size={20}
-              />
-
-              Money In
+              {isCredit ? (
+                <ArrowDownLeft size={30} />
+              ) : (
+                <ArrowUpRight size={30} />
+              )}
             </div>
 
-            <h2
+            <h2 style={styles.receiptTitle}>
+              {isCredit
+                ? "Money Received"
+                : "Money Sent"}
+            </h2>
+
+            <div
               style={
-                styles.creditAmount
+                styles.statusContainer
               }
             >
-              +₦
-              {moneyIn.toLocaleString(
+              <CheckCircle
+                size={17}
+              />
+
+              <span>
+                {transaction.status
+                  ? transaction.status
+                  : "Completed"}
+              </span>
+            </div>
+          </div>
+
+          {/* AMOUNT */}
+          <div style={styles.amountSection}>
+            <p style={styles.amountLabel}>
+              Amount
+            </p>
+
+            <h1
+              style={
+                isCredit
+                  ? styles.creditAmount
+                  : styles.debitAmount
+              }
+            >
+              {isCredit ? "+" : "-"}₦
+              {amount.toLocaleString(
                 "en-NG",
                 {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 }
               )}
-            </h2>
+            </h1>
           </div>
 
-          <div
-            style={
-              styles.summaryCard
-            }
-          >
-            <div
-              style={
-                styles.summaryHeader
-              }
-            >
-              <TrendingDown
-                size={20}
-              />
+          {/* DIVIDER */}
+          <div style={styles.divider} />
 
-              Money Out
+          {/* DETAILS */}
+          <div style={styles.details}>
+            <div style={styles.detailRow}>
+              <span style={styles.detailLabel}>
+                Description
+              </span>
+
+              <span
+                style={styles.detailValue}
+              >
+                {description}
+              </span>
             </div>
 
-            <h2
-              style={
-                styles.debitAmount
-              }
-            >
-              -₦
-              {moneyOut.toLocaleString(
-                "en-NG",
-                {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                }
-              )}
-            </h2>
-          </div>
-        </div>
+            <div style={styles.detailRow}>
+              <span style={styles.detailLabel}>
+                Date
+              </span>
 
-        <div
-          style={{
-            ...styles.card,
-            marginBottom: "30px",
-          }}
-        >
-          <div
-            style={
-              styles.inputWrapper
-            }
-          >
-            <Search size={18} />
+              <span
+                style={styles.detailValue}
+              >
+                {formatDate(
+                  transaction.createdAt
+                )}
+              </span>
+            </div>
 
-            <input
-              style={
-                styles.searchInput
-              }
-              placeholder="Search transactions"
-              value={search}
-              onChange={(e) =>
-                setSearch(
-                  e.target.value
-                )
-              }
-            />
-          </div>
+            <div style={styles.detailRow}>
+              <span style={styles.detailLabel}>
+                Time
+              </span>
 
-          <div
-            style={{
-              position: "relative",
-            }}
-          >
-            <select
-              style={{
-                ...styles.input,
-                appearance: "none",
-                cursor: "pointer",
-              }}
-              value={filter}
-              onChange={(e) =>
-                setFilter(
-                  e.target.value
-                )
-              }
-            >
-              <option value="All">
-                All Transactions
-              </option>
+              <span
+                style={styles.detailValue}
+              >
+                {formatTime(
+                  transaction.createdAt
+                )}
+              </span>
+            </div>
 
-              <option value="Credit">
-                Money In
-              </option>
+            <div style={styles.detailRow}>
+              <span style={styles.detailLabel}>
+                Status
+              </span>
 
-              <option value="Debit">
-                Money Out
-              </option>
-            </select>
+              <span
+                style={{
+                  ...styles.detailValue,
+                  color:
+                    transaction.status ===
+                      "completed" ||
+                    !transaction.status
+                      ? "#22c55e"
+                      : "#fff",
+                  textTransform:
+                    "capitalize",
+                }}
+              >
+                {transaction.status ||
+                  "Completed"}
+              </span>
+            </div>
 
-            <span
-              style={{
-                position:
-                  "absolute",
-                right: "15px",
-                top: "50%",
-                transform:
-                  "translateY(-50%)",
-                pointerEvents:
-                  "none",
-                color: "#fff",
-                fontSize: "12px",
-              }}
-            >
-              ▼
-            </span>
-          </div>
-        </div>
+            {transaction.id && (
+              <div
+                style={{
+                  ...styles.detailRow,
+                  alignItems: "flex-start",
+                }}
+              >
+                <span
+                  style={styles.detailLabel}
+                >
+                  Transaction ID
+                </span>
 
-        <div
-          style={styles.card}
-        >
-          <h2
-            style={{
-              color: "#22c55e",
-              marginBottom:
-                "25px",
-            }}
-          >
-            Transactions
-          </h2>
-
-          {loading ? (
-            <p
-              style={{
-                color: "#888",
-              }}
-            >
-              Loading transactions...
-            </p>
-          ) : error ? (
-            <p
-              style={{
-                color:
-                  "#ff5f5f",
-              }}
-            >
-              {error}
-            </p>
-          ) : filteredTransactions.length ===
-            0 ? (
-            <p
-              style={{
-                color: "#888",
-              }}
-            >
-              No transactions found.
-            </p>
-          ) : (
-            filteredTransactions.map(
-              (
-                transaction,
-                index
-              ) => {
-                const amount =
-                  getAmount(
-                    transaction.amount
-                  );
-
-                const name =
-                  getTransactionName(
-                    transaction
-                  );
-
-                return (
-                  <div
-                    key={
-                      transaction.id ||
-                      index
+                <div
+                  style={
+                    styles.transactionIdContainer
+                  }
+                >
+                  <span
+                    style={
+                      styles.transactionId
                     }
-                    onClick={() =>
-                      openTransaction(
-                        transaction
-                      )
-                    }
-                    style={{
-                      ...styles.transaction,
-                      borderBottom:
-                        index ===
-                        filteredTransactions.length -
-                          1
-                          ? "none"
-                          : "1px solid #2a2a2a",
-                    }}
                   >
-                    <div
-                      style={{
-                        display:
-                          "flex",
-                        alignItems:
-                          "center",
-                        gap: "15px",
-                      }}
-                    >
-                      <div
-                        style={
-                          transaction.type ===
-                          "credit"
-                            ? styles.creditIcon
-                            : styles.debitIcon
-                        }
-                      >
-                        {transaction.type ===
-                        "credit" ? (
-                          <ArrowDownLeft
-                            size={20}
-                          />
-                        ) : (
-                          <ArrowUpRight
-                            size={20}
-                          />
-                        )}
-                      </div>
+                    {transaction.id}
+                  </span>
 
-                      <div>
-                        <strong>
-                          {name}
-                        </strong>
+                  <button
+                    onClick={
+                      copyTransactionId
+                    }
+                    style={
+                      styles.copyButton
+                    }
+                    title="Copy transaction ID"
+                  >
+                    <Copy size={15} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
 
-                        <p
-                          style={{
-                            color:
-                              "#888",
-                            margin:
-                              "6px 0",
-                            fontSize:
-                              "13px",
-                          }}
-                        >
-                          {formatDate(
-                            transaction.createdAt
-                          )}
-                        </p>
-
-                        {transaction.status && (
-                          <p
-                            style={{
-                              color:
-                                transaction.status ===
-                                "completed"
-                                  ? "#22c55e"
-                                  : "#888",
-                              margin:
-                                "5px 0",
-                              fontSize:
-                                "13px",
-                              textTransform:
-                                "capitalize",
-                            }}
-                          >
-                            {
-                              transaction.status
-                            }
-                          </p>
-                        )}
-
-                        {transaction.id && (
-                          <small
-                            style={{
-                              color:
-                                "#666",
-                            }}
-                          >
-                            ID:{" "}
-                            {
-                              transaction.id
-                            }
-                          </small>
-                        )}
-                      </div>
-                    </div>
-
-                    <span
-                      style={{
-                        color:
-                          transaction.type ===
-                          "credit"
-                            ? "#22c55e"
-                            : "#ff5f5f",
-                        fontWeight:
-                          "700",
-                        fontSize:
-                          "16px",
-                        whiteSpace:
-                          "nowrap",
-                      }}
-                    >
-                      {transaction.type ===
-                      "credit"
-                        ? "+"
-                        : "-"}
-
-                      ₦
-
-                      {amount.toLocaleString(
-                        "en-NG",
-                        {
-                          minimumFractionDigits:
-                            2,
-                          maximumFractionDigits:
-                            2,
-                        }
-                      )}
-                    </span>
-                  </div>
-                );
-              }
-            )
-          )}
+          {/* RECEIPT FOOTER */}
+          <div style={styles.receiptFooter}>
+            <p>
+              Swift Wallet Transaction
+            </p>
+          </div>
         </div>
 
-        <Link
-          to="/dashboard"
-          onClick={() =>
-            window.scrollTo(
-              0,
-              0
-            )
-          }
-          style={{
-            textDecoration:
-              "none",
+        {/* BACK BUTTON */}
+        <button
+          onClick={() => {
+            navigate(
+              "/transaction-history"
+            );
+
+            window.scrollTo(0, 0);
           }}
+          style={styles.button}
         >
-          <button
-            style={{
-              ...styles.button,
-              marginTop:
-                "30px",
-            }}
-          >
-            ← Back to Dashboard
-          </button>
-        </Link>
+          Back to Transaction History
+        </button>
       </div>
     </div>
   );
@@ -730,38 +419,31 @@ function TransactionHistory() {
 
 const styles = {
   page: {
-    backgroundColor:
-      "#0d0d0d",
+    backgroundColor: "#0d0d0d",
     minHeight: "100vh",
     color: "#fff",
   },
 
   navbar: {
     padding: "20px 50px",
-    borderBottom:
-      "1px solid #222",
+    borderBottom: "1px solid #222",
   },
 
   logoContainer: {
     display: "flex",
-    alignItems:
-      "center",
+    alignItems: "center",
     gap: "10px",
-    textDecoration:
-      "none",
+    textDecoration: "none",
   },
 
   logo: {
     width: "40px",
     height: "40px",
-    backgroundColor:
-      "#22c55e",
+    backgroundColor: "#22c55e",
     borderRadius: "10px",
     display: "flex",
-    justifyContent:
-      "center",
-    alignItems:
-      "center",
+    justifyContent: "center",
+    alignItems: "center",
     color: "#000",
     fontWeight: "800",
   },
@@ -773,163 +455,190 @@ const styles = {
   },
 
   container: {
-    maxWidth: "800px",
-    margin: "45px auto",
-    padding: "0 20px",
+    maxWidth: "650px",
+    margin: "40px auto",
+    padding: "0 20px 50px",
+  },
+
+  backButton: {
+    background: "transparent",
+    border: "none",
+    color: "#999",
+    padding: "0",
+    fontSize: "14px",
+    cursor: "pointer",
+    marginBottom: "30px",
   },
 
   heading: {
     color: "#22c55e",
     fontSize: "36px",
+    marginBottom: "8px",
   },
 
   subtitle: {
     color: "#999",
-    marginBottom:
-      "35px",
+    marginBottom: "30px",
   },
 
-  summaryContainer: {
-    display: "grid",
-    gridTemplateColumns:
-      "repeat(auto-fit,minmax(250px,1fr))",
-    gap: "20px",
-    marginBottom:
-      "30px",
+  receipt: {
+    backgroundColor: "#1a1a1a",
+    border: "1px solid #2a2a2a",
+    borderRadius: "18px",
+    overflow: "hidden",
   },
 
-  summaryCard: {
-    backgroundColor:
-      "#1a1a1a",
-    border:
-      "1px solid #2a2a2a",
-    borderRadius:
-      "16px",
-    padding: "25px",
+  receiptHeader: {
+    textAlign: "center",
+    padding: "35px 25px 25px",
   },
 
-  summaryHeader: {
+  creditCircle: {
+    width: "65px",
+    height: "65px",
+    borderRadius: "50%",
+    backgroundColor: "#123d23",
+    color: "#22c55e",
     display: "flex",
-    alignItems:
-      "center",
-    gap: "10px",
-    color: "#999",
+    justifyContent: "center",
+    alignItems: "center",
+    margin: "0 auto 18px",
+  },
+
+  debitCircle: {
+    width: "65px",
+    height: "65px",
+    borderRadius: "50%",
+    backgroundColor: "#3b1111",
+    color: "#ff5f5f",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    margin: "0 auto 18px",
+  },
+
+  receiptTitle: {
+    margin: "0 0 12px",
+    fontSize: "24px",
+  },
+
+  statusContainer: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "7px",
+    color: "#22c55e",
+    fontSize: "14px",
+    textTransform: "capitalize",
+  },
+
+  amountSection: {
+    textAlign: "center",
+    padding: "10px 25px 30px",
+  },
+
+  amountLabel: {
+    color: "#888",
+    margin: "0 0 5px",
+    fontSize: "14px",
   },
 
   creditAmount: {
     color: "#22c55e",
-    marginBottom: 0,
+    fontSize: "38px",
+    margin: 0,
   },
 
   debitAmount: {
     color: "#ff5f5f",
-    marginBottom: 0,
+    fontSize: "38px",
+    margin: 0,
   },
 
-  card: {
-    backgroundColor:
-      "#1a1a1a",
-    border:
-      "1px solid #2a2a2a",
-    borderRadius:
-      "16px",
-    padding: "25px",
+  divider: {
+    height: "1px",
+    backgroundColor: "#2a2a2a",
+    margin: "0 25px",
   },
 
-  inputWrapper: {
+  details: {
+    padding: "10px 25px 20px",
+  },
+
+  detailRow: {
     display: "flex",
-    alignItems:
-      "center",
-    gap: "10px",
-    backgroundColor:
-      "#111",
-    border:
-      "1px solid #333",
-    borderRadius:
-      "10px",
-    padding: "0 14px",
-    marginBottom:
-      "15px",
+    justifyContent: "space-between",
+    gap: "25px",
+    padding: "17px 0",
+    borderBottom: "1px solid #252525",
   },
 
-  searchInput: {
-    width: "100%",
-    padding: "15px 0",
-    background:
-      "transparent",
-    border: "none",
+  detailLabel: {
+    color: "#888",
+    fontSize: "14px",
+    flexShrink: 0,
+  },
+
+  detailValue: {
     color: "#fff",
-    outline: "none",
+    fontSize: "14px",
+    textAlign: "right",
+    wordBreak: "break-word",
   },
 
-  input: {
-    width: "100%",
-    padding: "15px",
-    backgroundColor:
-      "#111",
-    color: "#fff",
-    border:
-      "1px solid #333",
-    borderRadius:
-      "10px",
-    boxSizing:
-      "border-box",
-  },
-
-  transaction: {
+  transactionIdContainer: {
     display: "flex",
-    justifyContent:
-      "space-between",
-    alignItems:
-      "center",
-    padding: "20px 0",
-    gap: "20px",
+    alignItems: "center",
+    gap: "8px",
+    maxWidth: "65%",
+  },
+
+  transactionId: {
+    color: "#aaa",
+    fontSize: "12px",
+    wordBreak: "break-all",
+    textAlign: "right",
+  },
+
+  copyButton: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#252525",
+    border: "1px solid #333",
+    color: "#aaa",
+    borderRadius: "6px",
+    padding: "6px",
     cursor: "pointer",
-  },
-
-  creditIcon: {
-    width: "42px",
-    height: "42px",
-    borderRadius: "50%",
-    backgroundColor:
-      "#123d23",
-    color: "#22c55e",
-    display: "flex",
-    justifyContent:
-      "center",
-    alignItems:
-      "center",
     flexShrink: 0,
   },
 
-  debitIcon: {
-    width: "42px",
-    height: "42px",
-    borderRadius: "50%",
-    backgroundColor:
-      "#3b1111",
-    color: "#ff5f5f",
-    display: "flex",
-    justifyContent:
-      "center",
-    alignItems:
-      "center",
-    flexShrink: 0,
+  receiptFooter: {
+    borderTop: "1px dashed #333",
+    padding: "18px 25px",
+    textAlign: "center",
+    color: "#666",
+    fontSize: "12px",
   },
 
   button: {
     width: "100%",
     padding: "15px",
-    backgroundColor:
-      "#22c55e",
+    marginTop: "25px",
+    backgroundColor: "#22c55e",
     color: "#000",
     border: "none",
-    borderRadius:
-      "10px",
-    fontWeight:
-      "700",
+    borderRadius: "10px",
+    fontWeight: "700",
     cursor: "pointer",
+    fontSize: "15px",
+  },
+
+  card: {
+    backgroundColor: "#1a1a1a",
+    border: "1px solid #2a2a2a",
+    borderRadius: "16px",
+    padding: "30px",
   },
 };
 
-export default TransactionHistory;
+export default TransactionDetails;
