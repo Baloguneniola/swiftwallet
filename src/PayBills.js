@@ -65,9 +65,10 @@ function PayBills() {
 
     "Wi-Fi": [
       "MTN Fibre",
-      "Airtel Fibre",
-      "Spectranet",
-      "Smile"
+      "FiberOne",
+      "Starlink",
+      "ipNX",
+      "Tizeti"
     ],
 
     Airtime: [
