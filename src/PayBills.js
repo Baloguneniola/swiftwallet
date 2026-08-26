@@ -43,6 +43,52 @@ function PayBills() {
 
 
 
+  /*
+    PROVIDERS BASED ON BILL TYPE
+  */
+  const providers = {
+
+    Electricity: [
+      "Ikeja Electric",
+      "Eko Electricity",
+      "Abuja Electricity"
+    ],
+
+    Water: [
+      "Lagos Water Corporation",
+      "Abuja Water Board"
+    ],
+
+    DSTV: [
+      "DStv"
+    ],
+
+    "Wi-Fi": [
+      "MTN Fibre",
+      "Airtel Fibre",
+      "Spectranet",
+      "Smile"
+    ],
+
+    Airtime: [
+      "MTN",
+      "Airtel",
+      "Glo",
+      "9mobile"
+    ]
+
+  };
+
+
+
+  /*
+    GET PROVIDERS FOR SELECTED BILL
+  */
+  const availableProviders =
+    providers[selectedBill] || [];
+
+
+
   const recentPayments =
     currentUser?.transactions
       ?.filter(
@@ -122,8 +168,6 @@ function PayBills() {
 
 
 
-
-
   const getBillIcon = () => {
 
     switch (selectedBill) {
@@ -137,22 +181,18 @@ function PayBills() {
       case "DSTV":
         return <Tv size={22} />;
 
-
       case "Wi-Fi":
         return <Wifi size={22} />;
-
 
       case "Airtime":
         return <Phone size={22} />;
 
-
       default:
+        return null;
 
     }
 
   };
-
-
 
 
 
@@ -205,8 +245,6 @@ function PayBills() {
 
 
 
-
-
       <div
         style={styles.container}
       >
@@ -216,7 +254,6 @@ function PayBills() {
         <h1
           style={styles.heading}
         >
-
 
           Pay Bills
 
@@ -234,8 +271,6 @@ function PayBills() {
 
 
 
-
-
         <div
           style={styles.card}
         >
@@ -244,7 +279,6 @@ function PayBills() {
           <div
             style={styles.sectionHeader}
           >
-
 
             Available Balance
 
@@ -288,6 +322,7 @@ function PayBills() {
             style={styles.sectionHeader}
           >
 
+
             {
               getBillIcon()
             }
@@ -314,6 +349,11 @@ function PayBills() {
             Select a service and enter your payment details.
           </p>
 
+
+
+
+          {/* BILL TYPE */}
+
           <div
             style={{
               position: "relative"
@@ -327,11 +367,19 @@ function PayBills() {
                 cursor: "pointer"
               }}
               value={selectedBill}
-              onChange={(e) =>
+              onChange={(e) => {
+
                 setSelectedBill(
                   e.target.value
-                )
-              }
+                );
+
+                /*
+                  RESET PROVIDER WHEN
+                  BILL TYPE CHANGES
+                */
+                setProvider("");
+
+              }}
             >
 
               <option value="">
@@ -366,7 +414,8 @@ function PayBills() {
                 position: "absolute",
                 right: "15px",
                 top: "50%",
-                transform: "translateY(-50%)",
+                transform:
+                  "translateY(-50%)",
                 pointerEvents: "none",
                 color: "#fff",
                 fontSize: "12px"
@@ -380,20 +429,92 @@ function PayBills() {
 
 
 
-          <input
-            style={styles.input}
-            placeholder="Provider"
-            value={provider}
-            onChange={(e) =>
-              setProvider(
-                e.target.value
-              )
-            }
-          />
+
+
+          {/* PROVIDER */}
+
+          <div
+            style={{
+              position: "relative"
+            }}
+          >
+
+            <select
+              style={{
+                ...styles.input,
+                appearance: "none",
+                cursor:
+                  selectedBill
+                    ? "pointer"
+                    : "not-allowed",
+                opacity:
+                  selectedBill
+                    ? 1
+                    : 0.6
+              }}
+              value={provider}
+              onChange={(e) =>
+                setProvider(
+                  e.target.value
+                )
+              }
+              disabled={!selectedBill}
+            >
+
+              <option value="">
+
+                {
+                  selectedBill
+                    ? "Choose Provider"
+                    : "Choose a service first"
+                }
+
+              </option>
+
+
+              {
+                availableProviders.map(
+                  (providerName) => (
+
+                    <option
+                      key={providerName}
+                      value={providerName}
+                    >
+                      {providerName}
+                    </option>
+
+                  )
+                )
+              }
+
+            </select>
+
+
+            <span
+              style={{
+                position: "absolute",
+                right: "15px",
+                top: "50%",
+                transform:
+                  "translateY(-50%)",
+                pointerEvents: "none",
+                color:
+                  selectedBill
+                    ? "#fff"
+                    : "#666",
+                fontSize: "12px"
+              }}
+            >
+              ▼
+            </span>
+
+          </div>
 
 
 
 
+
+          {/* ACCOUNT / PHONE NUMBER */}
 
           <input
             style={styles.input}
@@ -409,6 +530,8 @@ function PayBills() {
 
 
 
+
+          {/* AMOUNT */}
 
           <input
             style={styles.input}
@@ -471,7 +594,6 @@ function PayBills() {
               marginBottom: "20px"
             }}
           >
-
 
             Recent Payments
 
@@ -591,12 +713,16 @@ function PayBills() {
                             String(
                               payment.amount
                             )
-                              .replace(/[^\d]/g, "")
+                              .replace(
+                                /[^\d]/g,
+                                ""
+                              )
                           )
                             .toLocaleString(
                               "en-NG",
                               {
-                                minimumFractionDigits: 2
+                                minimumFractionDigits:
+                                  2
                               }
                             )
                         }
@@ -619,8 +745,6 @@ function PayBills() {
 
 
         </div>
-
-
 
 
 
@@ -667,8 +791,6 @@ function PayBills() {
 
 
 
-
-
 function WalletIcon() {
 
   return (
@@ -695,8 +817,6 @@ function WalletIcon() {
   );
 
 }
-
-
 
 
 
@@ -860,7 +980,6 @@ const styles = {
 
 
 };
-
 
 
 export default PayBills;
