@@ -28,7 +28,6 @@ const sendVerificationEmail = async (
     from: `"Swift Wallet" <${process.env.SMTP_USER}>`,
     to: email,
     subject: "Your Swift Wallet verification code",
-
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color:#0d0d0d; color: #ffffff;">
         <div style="text-align: center;">
@@ -93,8 +92,7 @@ router.post("/signup", async (req, res) => {
 
     if (!name || !email || !password) {
       return res.status(400).json({
-        message:
-          "Name, email and password are required",
+        message: "Name, email and password are required",
       });
     }
 
@@ -188,7 +186,6 @@ router.post("/signup", async (req, res) => {
         email: user.email,
       },
     });
-
   } catch (error) {
     console.error(
       "Signup error:",
@@ -302,7 +299,6 @@ router.post(
             updatedUser.email,
         },
       });
-
     } catch (error) {
       console.error(
         "Email verification error:",
@@ -402,7 +398,6 @@ router.post(
         message:
           "A new verification code has been sent to your email",
       });
-
     } catch (error) {
       console.error(
         "Resend code error:",
@@ -524,7 +519,6 @@ router.post(
             updatedUser.email,
         },
       });
-
     } catch (error) {
       console.error(
         "Complete profile error:",
@@ -639,7 +633,6 @@ router.post(
             updatedUser.email,
         },
       });
-
     } catch (error) {
       console.error(
         "Identity verification error:",
@@ -828,11 +821,15 @@ router.post(
               await tx.transaction.create({
                 data: {
                   userId: user.id,
+
                   type: "credit",
+
                   amount:
                     welcomeBalance,
+
                   description:
                     "Welcome Bonus",
+
                   status:
                     "completed",
                 },
@@ -863,7 +860,8 @@ router.post(
 
         account: {
           accountNumber:
-            result.account.accountNumber,
+            result.account
+              .accountNumber,
 
           balance:
             result.account.balance.toString(),
@@ -880,7 +878,6 @@ router.post(
             result.card.frozen,
         },
       });
-
     } catch (error) {
       console.error(
         "Create PIN error:",
@@ -1002,6 +999,339 @@ router.post(
         token,
 
         user: {
+          id: user.id,
+
+          firstName:
+            user.firstName,
+
+          lastName:
+            user.lastName,
+
+          email:
+            user.email,
+
+          emailVerified:
+            user.emailVerified,
+
+          phoneNumber:
+            user.phoneNumber,
+
+          dateOfBirth:
+            user.dateOfBirth,
+
+          residentialAddress:
+            user.residentialAddress,
+
+          country:
+            user.country,
+
+          stateProvince:
+            user.stateProvince,
+
+          nationality:
+            user.nationality,
+
+          identityType:
+            user.identityType,
+
+          identityNumber:
+            user.identityNumber,
+
+          identityDocument:
+            user.identityDocument,
+
+          account:
+            user.account
+              ? {
+                  id:
+                    user.account.id,
+
+                  accountNumber:
+                    user.account
+                      .accountNumber,
+
+                  balance:
+                    user.account.balance.toString(),
+                }
+              : null,
+
+          card:
+            card
+              ? {
+                  id: card.id,
+
+                  cardNumber:
+                    card.cardNumber,
+
+                  expiryDate:
+                    card.expiryDate,
+
+                  frozen:
+                    card.frozen,
+                }
+              : null,
+
+          hasPin:
+            !!user
+              .securitySettings
+              ?.pinHash,
+
+          transactions:
+            user.transactions.map(
+              (transaction) => ({
+                id:
+                  transaction.id,
+
+                type:
+                  transaction.type,
+
+                amount:
+                  transaction.amount.toString(),
+
+                description:
+                  transaction.description ||
+                  "",
+
+                status:
+                  transaction.status,
+
+                createdAt:
+                  transaction.createdAt,
+              })
+            ),
+        },
+      });
+    } catch (error) {
+      console.error(
+        "Login error:",
+        error
+      );
+
+      res.status(500).json({
+        message:
+          "Something went wrong while signing you in",
+      });
+    }
+  }
+);
+
+
+/*
+  VERIFY PIN
+  PROTECTED BY JWT
+*/
+router.post(
+  "/verify-pin",
+  async (req, res) => {
+    try {
+      const {
+        pin,
+      } = req.body;
+
+      /*
+        CHECK PIN
+      */
+      if (!pin) {
+        return res.status(400).json({
+          message:
+            "PIN is required",
+        });
+      }
+
+      /*
+        CHECK PIN FORMAT
+      */
+      if (!/^\d{4}$/.test(pin)) {
+        return res.status(400).json({
+          message:
+            "PIN must be exactly 4 digits",
+        });
+      }
+
+      /*
+        GET JWT
+      */
+      const authHeader =
+        req.headers.authorization;
+
+      const token =
+        authHeader &&
+        authHeader.startsWith("Bearer ")
+          ? authHeader.split(" ")[1]
+          : null;
+
+      if (!token) {
+        return res.status(401).json({
+          message:
+            "Access denied. No authentication token provided.",
+        });
+      }
+
+      /*
+        VERIFY JWT
+      */
+      let decoded;
+
+      try {
+        decoded =
+          jwt.verify(
+            token,
+            process.env.JWT_SECRET
+          );
+      } catch (error) {
+        return res.status(403).json({
+          message:
+            "Invalid or expired authentication token.",
+        });
+      }
+
+      /*
+        FIND USER USING JWT USER ID
+      */
+      const user =
+        await prisma.user.findUnique({
+          where: {
+            id: decoded.userId,
+          },
+
+          include: {
+            securitySettings: true,
+          },
+        });
+
+      if (!user) {
+        return res.status(404).json({
+          message:
+            "User not found.",
+        });
+      }
+
+      /*
+        CHECK FOR PIN
+      */
+      if (
+        !user.securitySettings ||
+        !user.securitySettings.pinHash
+      ) {
+        return res.status(400).json({
+          message:
+            "No transaction PIN has been created for this account.",
+        });
+      }
+
+      /*
+        COMPARE PIN WITH BCRYPT HASH
+      */
+      const pinMatches =
+        await bcrypt.compare(
+          pin,
+          user.securitySettings.pinHash
+        );
+
+      if (!pinMatches) {
+        return res.status(401).json({
+          message:
+            "Incorrect PIN.",
+        });
+      }
+
+      /*
+        PIN VERIFIED
+      */
+      res.json({
+        message:
+          "PIN verified successfully.",
+      });
+
+    } catch (error) {
+      console.error(
+        "PIN verification error:",
+        error
+      );
+
+      res.status(500).json({
+        message:
+          "Something went wrong while verifying your PIN.",
+      });
+    }
+  }
+);
+
+
+/*
+  GET CURRENT LOGGED-IN USER
+  PROTECTED BY JWT
+*/
+router.get(
+  "/me",
+  async (req, res) => {
+    try {
+      const authHeader =
+        req.headers.authorization;
+
+      const token =
+        authHeader &&
+        authHeader.startsWith("Bearer ")
+          ? authHeader.split(" ")[1]
+          : null;
+
+      if (!token) {
+        return res.status(401).json({
+          message:
+            "Access denied. No token provided.",
+        });
+      }
+
+      let decoded;
+
+      try {
+        decoded =
+          jwt.verify(
+            token,
+            process.env.JWT_SECRET
+          );
+      } catch (error) {
+        return res.status(403).json({
+          message:
+            "Invalid or expired authentication token.",
+        });
+      }
+
+      const user =
+        await prisma.user.findUnique({
+          where: {
+            id: decoded.userId,
+          },
+
+          include: {
+            account: true,
+
+            cards: true,
+
+            transactions: {
+              orderBy: {
+                createdAt: "desc",
+              },
+
+              take: 5,
+            },
+
+            securitySettings: true,
+          },
+        });
+
+      if (!user) {
+        return res.status(404).json({
+          message:
+            "User not found.",
+        });
+      }
+
+      const card =
+        user.cards?.[0] || null;
+
+      res.json({
+        user: {
           id:
             user.id,
 
@@ -1104,639 +1434,6 @@ router.post(
             ),
         },
       });
-
-    } catch (error) {
-      console.error(
-        "Login error:",
-        error
-      );
-
-      res.status(500).json({
-        message:
-          "Something went wrong while signing you in",
-      });
-    }
-  }
-);
-
-
-/*
-  VERIFY PIN
-  PROTECTED BY JWT
-
-  IMPORTANT:
-  The frontend only sends the PIN.
-  The user's ID comes from the JWT.
-*/
-router.post(
-  "/verify-pin",
-  async (req, res) => {
-    try {
-
-      /*
-        GET PIN FROM REQUEST
-      */
-      const { pin } = req.body;
-
-      /*
-        VALIDATE PIN
-      */
-      if (!pin) {
-        return res.status(400).json({
-          message:
-            "PIN is required.",
-        });
-      }
-
-      if (!/^\d{4}$/.test(pin)) {
-        return res.status(400).json({
-          message:
-            "PIN must be exactly 4 digits.",
-        });
-      }
-
-      /*
-        GET JWT FROM HEADER
-      */
-      const authHeader =
-        req.headers.authorization;
-
-      const token =
-        authHeader &&
-        authHeader.startsWith("Bearer ")
-          ? authHeader.split(" ")[1]
-          : null;
-
-      if (!token) {
-        return res.status(401).json({
-          message:
-            "Access denied. No authentication token provided.",
-        });
-      }
-
-      /*
-        VERIFY JWT
-      */
-      let decoded;
-
-      try {
-        decoded =
-          jwt.verify(
-            token,
-            process.env.JWT_SECRET
-          );
-      } catch (error) {
-        return res.status(403).json({
-          message:
-            "Invalid or expired authentication token.",
-        });
-      }
-
-      /*
-        GET USER ID FROM JWT
-      */
-      const userId =
-        decoded.userId;
-
-      if (!userId) {
-        return res.status(403).json({
-          message:
-            "Invalid authentication token.",
-        });
-      }
-
-      /*
-        FIND USER
-      */
-      const user =
-        await prisma.user.findUnique({
-          where: {
-            id: userId,
-          },
-
-          include: {
-            securitySettings: true,
-          },
-        });
-
-      if (!user) {
-        return res.status(404).json({
-          message:
-            "User not found.",
-        });
-      }
-
-      /*
-        CHECK WHETHER USER HAS A PIN
-      */
-      if (
-        !user.securitySettings ||
-        !user.securitySettings.pinHash
-      ) {
-        return res.status(400).json({
-          message:
-            "No transaction PIN has been created for this account.",
-        });
-      }
-
-      /*
-        COMPARE ENTERED PIN
-        WITH BCRYPT HASH
-      */
-      const pinMatches =
-        await bcrypt.compare(
-          pin,
-          user.securitySettings.pinHash
-        );
-
-      if (!pinMatches) {
-        return res.status(401).json({
-          message:
-            "Incorrect PIN.",
-        });
-      }
-
-      /*
-        PIN VERIFIED
-      */
-      return res.json({
-        message:
-          "PIN verified successfully.",
-      });
-
-    } catch (error) {
-      console.error(
-        "PIN verification error:",
-        error
-      );
-
-      return res.status(500).json({
-        message:
-          "Something went wrong while verifying your PIN.",
-      });
-    }
-  }
-);
-
-
-/*
-  CHANGE PIN
-  PROTECTED BY JWT
-*/
-router.post(
-  "/change-pin",
-  async (req, res) => {
-    try {
-      const {
-        currentPin,
-        newPin,
-        confirmPin,
-      } = req.body;
-
-      /*
-        CHECK REQUIRED FIELDS
-      */
-      if (
-        !currentPin ||
-        !newPin ||
-        !confirmPin
-      ) {
-        return res.status(400).json({
-          message:
-            "Current PIN, new PIN and confirmation PIN are required.",
-        });
-      }
-
-      /*
-        CHECK PIN FORMAT
-      */
-      if (
-        !/^\d{4}$/.test(currentPin) ||
-        !/^\d{4}$/.test(newPin) ||
-        !/^\d{4}$/.test(confirmPin)
-      ) {
-        return res.status(400).json({
-          message:
-            "PINs must be exactly 4 digits.",
-        });
-      }
-
-      /*
-        CHECK NEW PIN MATCH
-      */
-      if (newPin !== confirmPin) {
-        return res.status(400).json({
-          message:
-            "New PINs do not match.",
-        });
-      }
-
-      /*
-        PREVENT SAME PIN
-      */
-      if (currentPin === newPin) {
-        return res.status(400).json({
-          message:
-            "Your new PIN must be different from your current PIN.",
-        });
-      }
-
-      /*
-        GET JWT
-      */
-      const authHeader =
-        req.headers.authorization;
-
-      const token =
-        authHeader &&
-        authHeader.startsWith("Bearer ")
-          ? authHeader.split(" ")[1]
-          : null;
-
-      if (!token) {
-        return res.status(401).json({
-          message:
-            "Access denied. No authentication token provided.",
-        });
-      }
-
-      /*
-        VERIFY JWT
-      */
-      let decoded;
-
-      try {
-        decoded =
-          jwt.verify(
-            token,
-            process.env.JWT_SECRET
-          );
-      } catch (error) {
-        return res.status(403).json({
-          message:
-            "Invalid or expired authentication token.",
-        });
-      }
-
-      /*
-        FIND USER
-      */
-      const user =
-        await prisma.user.findUnique({
-          where: {
-            id: decoded.userId,
-          },
-
-          include: {
-            securitySettings: true,
-          },
-        });
-
-      if (!user) {
-        return res.status(404).json({
-          message:
-            "User not found.",
-        });
-      }
-
-      /*
-        CHECK EXISTING PIN
-      */
-      if (
-        !user.securitySettings ||
-        !user.securitySettings.pinHash
-      ) {
-        return res.status(400).json({
-          message:
-            "No transaction PIN has been created for this account.",
-        });
-      }
-
-      /*
-        VERIFY CURRENT PIN
-      */
-      const currentPinMatches =
-        await bcrypt.compare(
-          currentPin,
-          user.securitySettings.pinHash
-        );
-
-      if (!currentPinMatches) {
-        return res.status(401).json({
-          message:
-            "Current PIN is incorrect.",
-        });
-      }
-
-      /*
-        HASH NEW PIN
-      */
-      const newPinHash =
-        await bcrypt.hash(
-          newPin,
-          10
-        );
-
-      /*
-        UPDATE PIN
-      */
-      await prisma.securitySettings.update({
-        where: {
-          userId: user.id,
-        },
-
-        data: {
-          pinHash: newPinHash,
-        },
-      });
-
-      res.json({
-        message:
-          "PIN changed successfully.",
-      });
-
-    } catch (error) {
-      console.error(
-        "Change PIN error:",
-        error
-      );
-
-      res.status(500).json({
-        message:
-          "Something went wrong while changing your PIN.",
-      });
-    }
-  }
-);
-
-
-/*
-  RESET ALL EXISTING ACCOUNT PINS TO 1234
-  DEVELOPMENT ONLY
-*/
-router.post(
-  "/reset-pin",
-  async (req, res) => {
-    try {
-
-      console.log(
-        "Starting reset of all account PINs..."
-      );
-
-      const defaultPin =
-        "1234";
-
-      const pinHash =
-        await bcrypt.hash(
-          defaultPin,
-          10
-        );
-
-      const users =
-        await prisma.user.findMany({
-          select: {
-            id: true,
-            email: true,
-          },
-        });
-
-      for (const user of users) {
-
-        await prisma.securitySettings.upsert({
-          where: {
-            userId: user.id,
-          },
-
-          update: {
-            pinHash,
-          },
-
-          create: {
-            userId: user.id,
-            pinHash,
-          },
-        });
-
-        console.log(
-          `PIN reset for ${user.email}`
-        );
-      }
-
-      console.log(
-        `Successfully reset ${users.length} PIN(s).`
-      );
-
-      res.json({
-        message:
-          "All account PINs have been reset to 1234.",
-
-        usersUpdated:
-          users.length,
-      });
-
-    } catch (error) {
-      console.error(
-        "Reset PIN error:",
-        error
-      );
-
-      res.status(500).json({
-        message:
-          "Unable to reset all account PINs.",
-      });
-    }
-  }
-);
-
-
-/*
-  GET CURRENT LOGGED-IN USER
-  PROTECTED BY JWT
-*/
-router.get(
-  "/me",
-  async (req, res) => {
-    try {
-
-      /*
-        GET JWT
-      */
-      const authHeader =
-        req.headers.authorization;
-
-      const token =
-        authHeader &&
-        authHeader.startsWith("Bearer ")
-          ? authHeader.split(" ")[1]
-          : null;
-
-      if (!token) {
-        return res.status(401).json({
-          message:
-            "Access denied. No token provided.",
-        });
-      }
-
-      /*
-        VERIFY JWT
-      */
-      let decoded;
-
-      try {
-        decoded =
-          jwt.verify(
-            token,
-            process.env.JWT_SECRET
-          );
-      } catch (error) {
-        return res.status(403).json({
-          message:
-            "Invalid or expired authentication token.",
-        });
-      }
-
-      /*
-        FIND CURRENT USER
-      */
-      const user =
-        await prisma.user.findUnique({
-          where: {
-            id: decoded.userId,
-          },
-
-          include: {
-            account: true,
-
-            cards: true,
-
-            transactions: {
-              orderBy: {
-                createdAt: "desc",
-              },
-
-              take: 5,
-            },
-
-            securitySettings: true,
-          },
-        });
-
-      if (!user) {
-        return res.status(404).json({
-          message:
-            "User not found.",
-        });
-      }
-
-      const card =
-        user.cards?.[0] || null;
-
-      res.json({
-        user: {
-          id:
-            user.id,
-
-          firstName:
-            user.firstName,
-
-          lastName:
-            user.lastName,
-
-          email:
-            user.email,
-
-          emailVerified:
-            user.emailVerified,
-
-          phoneNumber:
-            user.phoneNumber,
-
-          dateOfBirth:
-            user.dateOfBirth,
-
-          residentialAddress:
-            user.residentialAddress,
-
-          country:
-            user.country,
-
-          stateProvince:
-            user.stateProvince,
-
-          nationality:
-            user.nationality,
-
-          identityType:
-            user.identityType,
-
-          identityNumber:
-            user.identityNumber,
-
-          identityDocument:
-            user.identityDocument,
-
-          account:
-            user.account
-              ? {
-                  id:
-                    user.account.id,
-
-                  accountNumber:
-                    user.account
-                      .accountNumber,
-
-                  balance:
-                    user.account.balance.toString(),
-                }
-              : null,
-
-          card:
-            card
-              ? {
-                  id:
-                    card.id,
-
-                  cardNumber:
-                    card.cardNumber,
-
-                  expiryDate:
-                    card.expiryDate,
-
-                  frozen:
-                    card.frozen,
-                }
-              : null,
-
-          hasPin:
-            !!user.securitySettings
-              ?.pinHash,
-
-          transactions:
-            user.transactions.map(
-              (transaction) => ({
-                id:
-                  transaction.id,
-
-                type:
-                  transaction.type,
-
-                amount:
-                  transaction.amount.toString(),
-
-                description:
-                  transaction.description ||
-                  "",
-
-                status:
-                  transaction.status,
-
-                createdAt:
-                  transaction.createdAt,
-              })
-            ),
-        },
-      });
-
     } catch (error) {
       console.error(
         "Get current user error:",
@@ -1750,6 +1447,5 @@ router.get(
     }
   }
 );
-
 
 module.exports = router;
