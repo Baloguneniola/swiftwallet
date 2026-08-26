@@ -9,7 +9,6 @@ import {
   Settings,
   Send,
   Plus,
-  Receipt,
   History,
   Snowflake,
   CreditCard,
@@ -782,12 +781,19 @@ function Dashboard() {
             title="Add Money"
           />
 
+          {/* PAY BILLS - NAIRA SYMBOL */}
           <ActionCard
             to="/pay-bills"
             icon={
-              <Receipt
-                size={22}
-              />
+              <span
+                style={{
+                  fontSize: "22px",
+                  fontWeight: "300",
+                  lineHeight: 1,
+                }}
+              >
+                ₦
+              </span>
             }
             title="Pay Bills"
           />

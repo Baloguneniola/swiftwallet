@@ -2,6 +2,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 const prisma = require("../lib/prisma");
 
 require("dotenv").config();
@@ -79,6 +80,86 @@ const sendVerificationEmail = async (
   });
 };
 
+
+/*
+  SEND PASSWORD RESET EMAIL
+*/
+const sendPasswordResetEmail = async (
+  email,
+  firstName,
+  resetToken
+) => {
+  const resetLink =
+    `http://localhost:3000/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
+
+  await transporter.sendMail({
+    from: `"Swift Wallet" <${process.env.SMTP_USER}>`,
+    to: email,
+    subject: "Reset your Swift Wallet password",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color:#0d0d0d; color:#ffffff;">
+        <div style="text-align:center;">
+
+          <div style="margin-bottom:30px;">
+            <div style="display:inline-flex; align-items:center; gap:10px;">
+
+              <div style="width:40px; height:40px; background-color:#22c55e; border-radius:10px; display:inline-flex; align-items:center; justify-content:center; font-weight:bold; color:#000000;">
+                SW
+              </div>
+
+              <span style="font-size:20px; font-weight:700; color:#ffffff;">
+                Swift Wallet
+              </span>
+
+            </div>
+          </div>
+
+          <h1 style="color:#22c55e;">
+            Reset your password
+          </h1>
+
+          <p style="color:#cccccc; font-size:16px;">
+            Hi ${firstName},
+          </p>
+
+          <p style="color:#cccccc; font-size:16px;">
+            We received a request to reset your Swift Wallet password.
+          </p>
+
+          <p style="color:#cccccc; font-size:16px;">
+            Click the button below to create a new password.
+          </p>
+
+          <div style="margin:30px 0;">
+            <a
+              href="${resetLink}"
+              style="
+                display:inline-block;
+                padding:15px 30px;
+                background-color:#22c55e;
+                color:#000000;
+                text-decoration:none;
+                border-radius:10px;
+                font-weight:700;
+              "
+            >
+              Reset Password
+            </a>
+          </div>
+
+          <p style="color:#888888; font-size:14px;">
+            This link expires in 10 minutes.
+          </p>
+
+          <p style="color:#888888; font-size:14px;">
+            If you did not request a password reset, you can safely ignore this email.
+          </p>
+
+        </div>
+      </div>
+    `,
+  });
+};
 
 /*
   SIGN UP
@@ -1120,6 +1201,256 @@ router.post(
   }
 );
 
+
+
+/*
+  FORGOT PASSWORD
+*/
+router.post(
+  "/forgot-password",
+  async (req, res) => {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({
+          message: "Email is required",
+        });
+      }
+
+      const normalizedEmail =
+        email.toLowerCase().trim();
+
+      const user =
+        await prisma.user.findUnique({
+          where: {
+            email: normalizedEmail,
+          },
+        });
+
+/*
+  RESET PASSWORD
+*/
+router.post(
+  "/reset-password",
+  async (req, res) => {
+    try {
+      const {
+        email,
+        token,
+        newPassword,
+      } = req.body;
+
+      if (
+        !email ||
+        !token ||
+        !newPassword
+      ) {
+        return res.status(400).json({
+          message:
+            "Email, reset token and new password are required.",
+        });
+      }
+
+      /*
+        Check password length.
+      */
+      if (newPassword.length < 8) {
+        return res.status(400).json({
+          message:
+            "Password must be at least 8 characters long.",
+        });
+      }
+
+      const normalizedEmail =
+        email.toLowerCase().trim();
+
+      /*
+        Hash the token received from the reset link.
+      */
+      const resetTokenHash =
+        crypto
+          .createHash("sha256")
+          .update(token)
+          .digest("hex");
+
+      /*
+        Find the user using both email
+        and reset token.
+      */
+      const user =
+        await prisma.user.findFirst({
+          where: {
+            email: normalizedEmail,
+
+            resetPasswordToken:
+              resetTokenHash,
+          },
+        });
+
+      if (!user) {
+        return res.status(400).json({
+          message:
+            "Invalid or expired password reset link.",
+        });
+      }
+
+      /*
+        Check token expiry.
+      */
+      if (
+        !user.resetPasswordExpires ||
+        new Date() >
+          user.resetPasswordExpires
+      ) {
+        return res.status(400).json({
+          message:
+            "This password reset link has expired.",
+        });
+      }
+
+      /*
+        Hash the new password.
+      */
+      const passwordHash =
+        await bcrypt.hash(
+          newPassword,
+          10
+        );
+
+      /*
+        Update password and invalidate
+        the reset token.
+      */
+      await prisma.user.update({
+        where: {
+          id: user.id,
+        },
+
+        data: {
+          passwordHash,
+
+          resetPasswordToken: null,
+
+          resetPasswordExpires: null,
+        },
+      });
+
+      res.json({
+        message:
+          "Password reset successfully. You can now sign in with your new password.",
+      });
+
+    } catch (error) {
+      console.error(
+        "Reset password error:",
+        error
+      );
+
+      res.status(500).json({
+        message:
+          "Something went wrong while resetting your password.",
+      });
+    }
+  }
+);
+
+      /*
+        Do not reveal whether an account exists.
+      */
+      if (!user) {
+        return res.json({
+          message:
+            "If an account exists with that email, a password reset link has been sent.",
+        });
+      }
+
+      /*
+        Generate a secure random token.
+      */
+      const resetToken =
+        crypto.randomBytes(32).toString("hex");
+
+      /*
+        Store a hash of the token in the database.
+      */
+      const resetTokenHash =
+        crypto
+          .createHash("sha256")
+          .update(resetToken)
+          .digest("hex");
+
+      /*
+        Token expires in 10 minutes.
+      */
+      const resetPasswordExpires =
+        new Date(
+          Date.now() + 10 * 60 * 1000
+        );
+
+      await prisma.user.update({
+        where: {
+          id: user.id,
+        },
+
+        data: {
+          resetPasswordToken:
+            resetTokenHash,
+
+          resetPasswordExpires,
+        },
+      });
+
+      try {
+        await sendPasswordResetEmail(
+          user.email,
+          user.firstName,
+          resetToken
+        );
+      } catch (emailError) {
+        console.error(
+          "Password reset email error:",
+          emailError
+        );
+
+        /*
+          Remove the reset token if email failed.
+        */
+        await prisma.user.update({
+          where: {
+            id: user.id,
+          },
+
+          data: {
+            resetPasswordToken: null,
+            resetPasswordExpires: null,
+          },
+        });
+
+        return res.status(500).json({
+          message:
+            "Unable to send password reset email.",
+        });
+      }
+
+      res.json({
+        message:
+          "If an account exists with that email, a password reset link has been sent.",
+      });
+
+    } catch (error) {
+      console.error(
+        "Forgot password error:",
+        error
+      );
+
+      res.status(500).json({
+        message:
+          "Something went wrong while requesting a password reset.",
+      });
+    }
+  }
+);
 
 /*
   VERIFY PIN

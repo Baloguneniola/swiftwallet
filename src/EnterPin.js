@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-
 import {
   Link,
   useLocation,
@@ -9,6 +8,7 @@ import {
 function EnterPin() {
   const [pin, setPin] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -16,33 +16,42 @@ function EnterPin() {
   const transferData = location.state;
 
   const handleContinue = async () => {
-    const currentUser = JSON.parse(
-      localStorage.getItem("swiftWalletCurrentUser")
-    );
+    setError("");
 
     const token = localStorage.getItem(
       "swiftWalletToken"
     );
 
-    if (!currentUser) {
-      alert("User session not found.");
-      return;
-    }
-
+    /*
+      CHECK LOGIN SESSION
+    */
     if (!token) {
-      alert(
+      setError(
         "Your login session has expired. Please log in again."
       );
+
       return;
     }
 
+    /*
+      CHECK TRANSFER DATA
+    */
     if (!transferData) {
-      alert("Transfer information missing.");
+      setError(
+        "Transfer information is missing."
+      );
+
       return;
     }
 
+    /*
+      CHECK PIN
+    */
     if (pin.length !== 4) {
-      alert("Please enter your 4-digit PIN.");
+      setError(
+        "Please enter your 4-digit PIN."
+      );
+
       return;
     }
 
@@ -50,8 +59,8 @@ function EnterPin() {
 
     try {
       /*
-        STEP 1:
-        VERIFY PIN USING JWT
+        STEP 1
+        VERIFY TRANSACTION PIN
       */
       const pinResponse = await fetch(
         "http://localhost:5000/api/auth/verify-pin",
@@ -72,19 +81,47 @@ function EnterPin() {
       const pinData =
         await pinResponse.json();
 
-      if (!pinResponse.ok) {
-        alert(
-          pinData.message ||
-          "Incorrect PIN."
+      /*
+        HANDLE INVALID / EXPIRED TOKEN
+      */
+      if (
+        pinResponse.status === 401 ||
+        pinResponse.status === 403
+      ) {
+        localStorage.removeItem(
+          "swiftWalletToken"
         );
 
-        setLoading(false);
+        localStorage.removeItem(
+          "swiftWalletCurrentUser"
+        );
+
+        localStorage.removeItem(
+          "swiftWalletUser"
+        );
+
+        setError(
+          "Your login session has expired. Please log in again."
+        );
+
         return;
       }
 
       /*
-        STEP 2:
-        MAKE TRANSFER
+        HANDLE INCORRECT PIN
+      */
+      if (!pinResponse.ok) {
+        setError(
+          pinData.message ||
+            "Incorrect PIN."
+        );
+
+        return;
+      }
+
+      /*
+        STEP 2
+        COMPLETE THE TRANSFER
       */
       const transferResponse =
         await fetch(
@@ -102,7 +139,9 @@ function EnterPin() {
                 transferData.accountNumber,
 
               amount:
-                transferData.amount,
+                Number(
+                  transferData.amount
+                ),
 
               description:
                 transferData.description ||
@@ -114,37 +153,46 @@ function EnterPin() {
       const transferResult =
         await transferResponse.json();
 
-      if (!transferResponse.ok) {
-        alert(
-          transferResult.message ||
-          "Unable to complete transfer."
+      /*
+        HANDLE INVALID / EXPIRED TOKEN
+      */
+      if (
+        transferResponse.status === 401 ||
+        transferResponse.status === 403
+      ) {
+        localStorage.removeItem(
+          "swiftWalletToken"
         );
 
-        setLoading(false);
+        localStorage.removeItem(
+          "swiftWalletCurrentUser"
+        );
+
+        localStorage.removeItem(
+          "swiftWalletUser"
+        );
+
+        setError(
+          "Your login session has expired. Please log in again."
+        );
+
         return;
       }
 
       /*
-        UPDATE LOCAL SESSION
+        HANDLE TRANSFER FAILURE
       */
-      const updatedUser = {
-        ...currentUser,
+      if (!transferResponse.ok) {
+        setError(
+          transferResult.message ||
+            "Unable to complete transfer."
+        );
 
-        account: {
-          ...(currentUser.account || {}),
-
-          balance:
-            transferResult.newBalance.toString(),
-        },
-      };
-
-      localStorage.setItem(
-        "swiftWalletCurrentUser",
-        JSON.stringify(updatedUser)
-      );
+        return;
+      }
 
       /*
-        SUCCESS PAGE
+        TRANSFER SUCCESSFUL
       */
       navigate(
         "/transfer-success",
@@ -155,11 +203,19 @@ function EnterPin() {
             transaction:
               transferResult.transaction,
 
+            transfer:
+              transferResult.transfer,
+
+            recipient:
+              transferResult.recipient,
+
             newBalance:
               transferResult.newBalance,
           },
         }
       );
+
+      window.scrollTo(0, 0);
 
     } catch (error) {
       console.error(
@@ -167,8 +223,8 @@ function EnterPin() {
         error
       );
 
-      alert(
-        "Unable to connect to the Swift Wallet server."
+      setError(
+        "Unable to connect to the Swift Wallet server. Please try again."
       );
     } finally {
       setLoading(false);
@@ -186,7 +242,7 @@ function EnterPin() {
         position: "relative",
       }}
     >
-
+      {/* LOGO */}
       <Link
         to="/confirm-transfer"
         state={transferData}
@@ -200,7 +256,6 @@ function EnterPin() {
           textDecoration: "none",
         }}
       >
-
         <div
           style={{
             width: "40px",
@@ -226,9 +281,9 @@ function EnterPin() {
         >
           Swift Wallet
         </span>
-
       </Link>
 
+      {/* PIN CARD */}
       <div
         style={{
           width: "420px",
@@ -237,12 +292,14 @@ function EnterPin() {
           borderRadius: "15px",
           border: "1px solid #2a2a2a",
           textAlign: "center",
+          boxShadow:
+            "0 0 20px rgba(34,197,94,0.15)",
         }}
       >
-
         <h1
           style={{
             color: "#22c55e",
+            marginBottom: "10px",
           }}
         >
           Enter Transaction PIN
@@ -251,9 +308,10 @@ function EnterPin() {
         <p
           style={{
             color: "#aaa",
+            marginBottom: "20px",
           }}
         >
-          Enter your 4-digit PIN to complete transfer.
+          Enter your 4-digit PIN to complete the transfer.
         </p>
 
         <input
@@ -262,6 +320,8 @@ function EnterPin() {
           maxLength="4"
           placeholder="Enter PIN"
           value={pin}
+          disabled={loading}
+          autoComplete="off"
           onChange={(e) => {
             const value =
               e.target.value.replace(
@@ -270,33 +330,73 @@ function EnterPin() {
               );
 
             setPin(value);
+            setError("");
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handleContinue();
+            }
           }}
           style={inputStyle}
-          disabled={loading}
         />
+
+        {error && (
+          <div
+            style={{
+              backgroundColor:
+                "rgba(239,68,68,0.1)",
+              border:
+                "1px solid #ef4444",
+              borderRadius: "8px",
+              padding: "12px",
+              marginBottom: "20px",
+              color: "#ef4444",
+              fontSize: "14px",
+              lineHeight: "1.5",
+            }}
+          >
+            {error}
+          </div>
+        )}
 
         <button
           onClick={handleContinue}
+          disabled={loading}
           style={{
             ...buttonStyle,
-
-            opacity:
-              loading ? 0.7 : 1,
-
-            cursor:
-              loading
-                ? "not-allowed"
-                : "pointer",
+            opacity: loading ? 0.7 : 1,
+            cursor: loading
+              ? "not-allowed"
+              : "pointer",
           }}
-          disabled={loading}
         >
           {loading
             ? "Processing..."
             : "Confirm Transfer"}
         </button>
 
+        <Link
+          to="/confirm-transfer"
+          state={transferData}
+          style={{
+            textDecoration: "none",
+          }}
+        >
+          <button
+            disabled={loading}
+            style={{
+              ...secondaryButton,
+              marginTop: "15px",
+              opacity: loading ? 0.5 : 1,
+              cursor: loading
+                ? "not-allowed"
+                : "pointer",
+            }}
+          >
+            ← Back
+          </button>
+        </Link>
       </div>
-
     </div>
   );
 }
@@ -304,7 +404,7 @@ function EnterPin() {
 const inputStyle = {
   width: "100%",
   padding: "14px",
-  marginTop: "20px",
+  marginTop: "10px",
   marginBottom: "20px",
   backgroundColor: "#111",
   border: "1px solid #333",
@@ -313,6 +413,8 @@ const inputStyle = {
   boxSizing: "border-box",
   fontSize: "16px",
   outline: "none",
+  textAlign: "center",
+  letterSpacing: "6px",
 };
 
 const buttonStyle = {
@@ -323,6 +425,19 @@ const buttonStyle = {
   border: "none",
   borderRadius: "8px",
   fontWeight: "700",
+  cursor: "pointer",
+  fontSize: "15px",
+};
+
+const secondaryButton = {
+  width: "100%",
+  padding: "14px",
+  backgroundColor: "transparent",
+  color: "#22c55e",
+  border: "1px solid #22c55e",
+  borderRadius: "8px",
+  fontWeight: "700",
+  fontSize: "15px",
   cursor: "pointer",
 };
 
