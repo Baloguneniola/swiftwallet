@@ -16,6 +16,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+
 /*
   SEND VERIFICATION EMAIL
 */
@@ -92,7 +93,8 @@ router.post("/signup", async (req, res) => {
 
     if (!name || !email || !password) {
       return res.status(400).json({
-        message: "Name, email and password are required",
+        message:
+          "Name, email and password are required",
       });
     }
 
@@ -231,7 +233,8 @@ router.post(
 
       if (!user) {
         return res.status(404).json({
-          message: "User not found",
+          message:
+            "User not found",
         });
       }
 
@@ -769,10 +772,12 @@ router.post(
 
       const expiryDate =
         "12/" +
-        (29 +
+        (
+          29 +
           Math.floor(
             Math.random() * 3
-          ));
+          )
+        );
 
       const welcomeBalance =
         200350;
@@ -1259,6 +1264,188 @@ router.post(
 
 
 /*
+  CHANGE TRANSACTION PIN
+  PROTECTED BY JWT
+*/
+router.post(
+  "/change-pin",
+  async (req, res) => {
+    try {
+      const {
+        currentPin,
+        newPin,
+      } = req.body;
+
+      /*
+        CHECK REQUIRED FIELDS
+      */
+      if (!currentPin || !newPin) {
+        return res.status(400).json({
+          message:
+            "Current PIN and new PIN are required.",
+        });
+      }
+
+      /*
+        CHECK PIN FORMAT
+      */
+      if (!/^\d{4}$/.test(currentPin)) {
+        return res.status(400).json({
+          message:
+            "Current PIN must be exactly 4 digits.",
+        });
+      }
+
+      if (!/^\d{4}$/.test(newPin)) {
+        return res.status(400).json({
+          message:
+            "New PIN must be exactly 4 digits.",
+        });
+      }
+
+      /*
+        MAKE SURE NEW PIN IS DIFFERENT
+      */
+      if (currentPin === newPin) {
+        return res.status(400).json({
+          message:
+            "Your new PIN must be different from your current PIN.",
+        });
+      }
+
+      /*
+        GET JWT
+      */
+      const authHeader =
+        req.headers.authorization;
+
+      const token =
+        authHeader &&
+        authHeader.startsWith("Bearer ")
+          ? authHeader.split(" ")[1]
+          : null;
+
+      if (!token) {
+        return res.status(401).json({
+          message:
+            "Access denied. No authentication token provided.",
+        });
+      }
+
+      /*
+        VERIFY JWT
+      */
+      let decoded;
+
+      try {
+        decoded =
+          jwt.verify(
+            token,
+            process.env.JWT_SECRET
+          );
+      } catch (error) {
+        return res.status(403).json({
+          message:
+            "Invalid or expired authentication token.",
+        });
+      }
+
+      /*
+        FIND USER USING JWT USER ID
+      */
+      const user =
+        await prisma.user.findUnique({
+          where: {
+            id: decoded.userId,
+          },
+
+          include: {
+            securitySettings: true,
+          },
+        });
+
+      if (!user) {
+        return res.status(404).json({
+          message:
+            "User not found.",
+        });
+      }
+
+      /*
+        CHECK THAT USER HAS A PIN
+      */
+      if (
+        !user.securitySettings ||
+        !user.securitySettings.pinHash
+      ) {
+        return res.status(400).json({
+          message:
+            "No transaction PIN has been created for this account.",
+        });
+      }
+
+      /*
+        VERIFY CURRENT PIN
+      */
+      const currentPinMatches =
+        await bcrypt.compare(
+          currentPin,
+          user.securitySettings.pinHash
+        );
+
+      if (!currentPinMatches) {
+        return res.status(401).json({
+          message:
+            "Current PIN is incorrect.",
+        });
+      }
+
+      /*
+        HASH NEW PIN
+      */
+      const newPinHash =
+        await bcrypt.hash(
+          newPin,
+          10
+        );
+
+      /*
+        UPDATE PIN
+      */
+      await prisma.securitySettings.update({
+        where: {
+          userId: user.id,
+        },
+
+        data: {
+          pinHash: newPinHash,
+        },
+      });
+
+      /*
+        SUCCESS
+      */
+      res.json({
+        message:
+          "Transaction PIN changed successfully.",
+      });
+
+    } catch (error) {
+      console.error(
+        "Change PIN error:",
+        error
+      );
+
+      res.status(500).json({
+        message:
+          "Something went wrong while changing your PIN.",
+      });
+    }
+  }
+);
+
+
+/*
   GET CURRENT LOGGED-IN USER
   PROTECTED BY JWT
 */
@@ -1447,5 +1634,6 @@ router.get(
     }
   }
 );
+
 
 module.exports = router;
