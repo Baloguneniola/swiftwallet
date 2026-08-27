@@ -207,6 +207,7 @@ function Login() {
         position: "relative",
       }}
     >
+      {/* Swift Wallet Logo */}
       <Link
         to="/"
         onClick={() =>
@@ -251,6 +252,7 @@ function Login() {
         </span>
       </Link>
 
+      {/* Login Card */}
       <div
         style={{
           backgroundColor: "#1a1a1a",
@@ -283,6 +285,7 @@ function Login() {
           Sign in to access your Swift Wallet.
         </p>
 
+        {/* Email */}
         <input
           type="email"
           name="swiftwallet-login-email"
@@ -295,6 +298,7 @@ function Login() {
           }
         />
 
+        {/* Password */}
         <input
           type="password"
           name="swiftwallet-login-password"
@@ -312,6 +316,7 @@ function Login() {
           }}
         />
 
+        {/* Error Message */}
         {error && (
           <p
             style={{
@@ -325,6 +330,7 @@ function Login() {
           </p>
         )}
 
+        {/* Log In Button */}
         <button
           type="button"
           onClick={handleLogin}
@@ -342,10 +348,35 @@ function Login() {
             : "Log In"}
         </button>
 
+        {/* Forgot Password */}
         <p
           style={{
             color: "#888",
-            marginTop: "25px",
+            marginTop: "14px",
+            marginBottom: "0",
+            fontSize: "14px",
+          }}
+        >
+          Forgot Password?{" "}
+
+          <Link
+            to="/forgot-password"
+            style={{
+              color: "#22c55e",
+              textDecoration: "none",
+              fontWeight: "600",
+            }}
+          >
+            Click here
+          </Link>
+        </p>
+
+        {/* Sign Up */}
+        <p
+          style={{
+            color: "#888",
+            marginTop: "12px",
+            marginBottom: "0",
             fontSize: "14px",
           }}
         >

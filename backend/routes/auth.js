@@ -9,6 +9,9 @@ require("dotenv").config();
 
 const router = express.Router();
 
+/*
+  EMAIL TRANSPORTER
+*/
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -30,6 +33,7 @@ const sendVerificationEmail = async (
     from: `"Swift Wallet" <${process.env.SMTP_USER}>`,
     to: email,
     subject: "Your Swift Wallet verification code",
+
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color:#0d0d0d; color: #ffffff;">
         <div style="text-align: center;">
@@ -96,6 +100,7 @@ const sendPasswordResetEmail = async (
     from: `"Swift Wallet" <${process.env.SMTP_USER}>`,
     to: email,
     subject: "Reset your Swift Wallet password",
+
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color:#0d0d0d; color:#ffffff;">
         <div style="text-align:center;">
@@ -160,6 +165,7 @@ const sendPasswordResetEmail = async (
     `,
   });
 };
+
 
 /*
   SIGN UP
@@ -946,8 +952,7 @@ router.post(
 
         account: {
           accountNumber:
-            result.account
-              .accountNumber,
+            result.account.accountNumber,
 
           balance:
             result.account.balance.toString(),
@@ -1085,7 +1090,8 @@ router.post(
         token,
 
         user: {
-          id: user.id,
+          id:
+            user.id,
 
           firstName:
             user.firstName,
@@ -1133,8 +1139,7 @@ router.post(
                     user.account.id,
 
                   accountNumber:
-                    user.account
-                      .accountNumber,
+                    user.account.accountNumber,
 
                   balance:
                     user.account.balance.toString(),
@@ -1144,7 +1149,8 @@ router.post(
           card:
             card
               ? {
-                  id: card.id,
+                  id:
+                    card.id,
 
                   cardNumber:
                     card.cardNumber,
@@ -1202,7 +1208,6 @@ router.post(
 );
 
 
-
 /*
   FORGOT PASSWORD
 */
@@ -1214,7 +1219,8 @@ router.post(
 
       if (!email) {
         return res.status(400).json({
-          message: "Email is required",
+          message:
+            "Email is required",
         });
       }
 
@@ -1228,133 +1234,6 @@ router.post(
           },
         });
 
-/*
-  RESET PASSWORD
-*/
-router.post(
-  "/reset-password",
-  async (req, res) => {
-    try {
-      const {
-        email,
-        token,
-        newPassword,
-      } = req.body;
-
-      if (
-        !email ||
-        !token ||
-        !newPassword
-      ) {
-        return res.status(400).json({
-          message:
-            "Email, reset token and new password are required.",
-        });
-      }
-
-      /*
-        Check password length.
-      */
-      if (newPassword.length < 8) {
-        return res.status(400).json({
-          message:
-            "Password must be at least 8 characters long.",
-        });
-      }
-
-      const normalizedEmail =
-        email.toLowerCase().trim();
-
-      /*
-        Hash the token received from the reset link.
-      */
-      const resetTokenHash =
-        crypto
-          .createHash("sha256")
-          .update(token)
-          .digest("hex");
-
-      /*
-        Find the user using both email
-        and reset token.
-      */
-      const user =
-        await prisma.user.findFirst({
-          where: {
-            email: normalizedEmail,
-
-            resetPasswordToken:
-              resetTokenHash,
-          },
-        });
-
-      if (!user) {
-        return res.status(400).json({
-          message:
-            "Invalid or expired password reset link.",
-        });
-      }
-
-      /*
-        Check token expiry.
-      */
-      if (
-        !user.resetPasswordExpires ||
-        new Date() >
-          user.resetPasswordExpires
-      ) {
-        return res.status(400).json({
-          message:
-            "This password reset link has expired.",
-        });
-      }
-
-      /*
-        Hash the new password.
-      */
-      const passwordHash =
-        await bcrypt.hash(
-          newPassword,
-          10
-        );
-
-      /*
-        Update password and invalidate
-        the reset token.
-      */
-      await prisma.user.update({
-        where: {
-          id: user.id,
-        },
-
-        data: {
-          passwordHash,
-
-          resetPasswordToken: null,
-
-          resetPasswordExpires: null,
-        },
-      });
-
-      res.json({
-        message:
-          "Password reset successfully. You can now sign in with your new password.",
-      });
-
-    } catch (error) {
-      console.error(
-        "Reset password error:",
-        error
-      );
-
-      res.status(500).json({
-        message:
-          "Something went wrong while resetting your password.",
-      });
-    }
-  }
-);
-
       /*
         Do not reveal whether an account exists.
       */
@@ -1366,13 +1245,13 @@ router.post(
       }
 
       /*
-        Generate a secure random token.
+        Generate secure random token.
       */
       const resetToken =
         crypto.randomBytes(32).toString("hex");
 
       /*
-        Store a hash of the token in the database.
+        Hash token before storing it.
       */
       const resetTokenHash =
         crypto
@@ -1414,7 +1293,7 @@ router.post(
         );
 
         /*
-          Remove the reset token if email failed.
+          Remove reset token if email failed.
         */
         await prisma.user.update({
           where: {
@@ -1451,6 +1330,136 @@ router.post(
     }
   }
 );
+
+
+/*
+  RESET PASSWORD
+*/
+router.post(
+  "/reset-password",
+  async (req, res) => {
+    try {
+      const {
+        email,
+        token,
+        newPassword,
+      } = req.body;
+
+      if (
+        !email ||
+        !token ||
+        !newPassword
+      ) {
+        return res.status(400).json({
+          message:
+            "Email, reset token and new password are required.",
+        });
+      }
+
+      /*
+        CHECK PASSWORD LENGTH
+      */
+      if (newPassword.length < 8) {
+        return res.status(400).json({
+          message:
+            "Password must be at least 8 characters long.",
+        });
+      }
+
+      const normalizedEmail =
+        email.toLowerCase().trim();
+
+      /*
+        HASH TOKEN RECEIVED FROM
+        RESET LINK
+      */
+      const resetTokenHash =
+        crypto
+          .createHash("sha256")
+          .update(token)
+          .digest("hex");
+
+      /*
+        FIND USER USING EMAIL
+        AND HASHED RESET TOKEN
+      */
+      const user =
+        await prisma.user.findFirst({
+          where: {
+            email: normalizedEmail,
+
+            resetPasswordToken:
+              resetTokenHash,
+          },
+        });
+
+      if (!user) {
+        return res.status(400).json({
+          message:
+            "Invalid or expired password reset link.",
+        });
+      }
+
+      /*
+        CHECK TOKEN EXPIRY
+      */
+      if (
+        !user.resetPasswordExpires ||
+        new Date() >
+          user.resetPasswordExpires
+      ) {
+        return res.status(400).json({
+          message:
+            "This password reset link has expired.",
+        });
+      }
+
+      /*
+        HASH NEW PASSWORD
+      */
+      const passwordHash =
+        await bcrypt.hash(
+          newPassword,
+          10
+        );
+
+      /*
+        UPDATE PASSWORD
+        AND INVALIDATE TOKEN
+      */
+      await prisma.user.update({
+        where: {
+          id: user.id,
+        },
+
+        data: {
+          passwordHash,
+
+          resetPasswordToken: null,
+
+          resetPasswordExpires: null,
+        },
+      });
+
+      res.json({
+        message:
+          "Password reset successfully. You can now sign in with your new password.",
+      });
+
+    } catch (error) {
+      console.error(
+        "Reset password error:",
+        error
+      );
+
+      res.status(500).json({
+        message:
+          "Something went wrong while resetting your password.",
+      });
+    }
+  }
+);
+
 
 /*
   VERIFY PIN
@@ -1784,6 +1793,9 @@ router.get(
   "/me",
   async (req, res) => {
     try {
+      /*
+        GET JWT
+      */
       const authHeader =
         req.headers.authorization;
 
@@ -1800,6 +1812,9 @@ router.get(
         });
       }
 
+      /*
+        VERIFY JWT
+      */
       let decoded;
 
       try {
@@ -1815,6 +1830,10 @@ router.get(
         });
       }
 
+      /*
+        GET CURRENT USER
+        FROM DATABASE
+      */
       const user =
         await prisma.user.findUnique({
           where: {
@@ -1848,6 +1867,9 @@ router.get(
       const card =
         user.cards?.[0] || null;
 
+      /*
+        RETURN USER DATA
+      */
       res.json({
         user: {
           id:
@@ -1952,6 +1974,7 @@ router.get(
             ),
         },
       });
+
     } catch (error) {
       console.error(
         "Get current user error:",

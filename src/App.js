@@ -32,6 +32,8 @@ import EditProfile from "./EditProfile";
 import ChangePin from "./ChangePin";
 import Settings from "./Settings";
 import ManageAccountProtection from "./ManageAccountProtection";
+import ForgotPassword from "./ForgotPassword";
+import ResetPassword from "./ResetPassword";
 
 
 function App() {
@@ -285,7 +287,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        
+
         <Route
           path="/manage-account-protection"
           element={
@@ -295,6 +297,15 @@ function App() {
           }
         />
 
+        <Route
+          path="/forgot-password"
+          element={<ForgotPassword />}
+        />
+  
+        <Route
+          path="/reset-password"
+          element={<ResetPassword />}
+        />
 
       </Routes>
 
