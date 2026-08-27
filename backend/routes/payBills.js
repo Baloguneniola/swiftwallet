@@ -1,43 +1,8 @@
 const express = require("express");
-const jwt = require("jsonwebtoken");
 const prisma = require("../lib/prisma");
+const authenticateToken = require("../middleware/auth");
 
 const router = express.Router();
-
-/*
-  JWT AUTHENTICATION MIDDLEWARE
-*/
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-
-  const token =
-    authHeader &&
-    authHeader.startsWith("Bearer ")
-      ? authHeader.split(" ")[1]
-      : null;
-
-  if (!token) {
-    return res.status(401).json({
-      message: "Access denied. No token provided.",
-    });
-  }
-
-  try {
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET
-    );
-
-    req.user = decoded;
-
-    next();
-  } catch (error) {
-    return res.status(403).json({
-      message:
-        "Invalid or expired authentication token.",
-    });
-  }
-};
 
 
 /*
@@ -49,9 +14,10 @@ router.post(
   async (req, res) => {
     try {
       /*
-        GET USER FROM JWT
+        USER ID COMES FROM JWT
       */
-      const userId = req.user.userId;
+      const userId =
+        req.user.userId;
 
       const {
         selectedBill,
@@ -76,16 +42,16 @@ router.post(
         });
       }
 
-      /*
-        CONVERT AMOUNT TO NUMBER
-      */
-      const billAmount = Number(amount);
+      const billAmount =
+        Number(amount);
 
       /*
         VALIDATE AMOUNT
       */
       if (
-        !Number.isFinite(billAmount) ||
+        !Number.isFinite(
+          billAmount
+        ) ||
         billAmount <= 0
       ) {
         return res.status(400).json({
@@ -101,7 +67,6 @@ router.post(
       const result =
         await prisma.$transaction(
           async (tx) => {
-
             /*
               FIND USER ACCOUNT
             */
@@ -122,7 +87,9 @@ router.post(
               CHECK BALANCE
             */
             const currentBalance =
-              Number(account.balance);
+              Number(
+                account.balance
+              );
 
             if (
               billAmount >
@@ -134,19 +101,13 @@ router.post(
             }
 
             /*
-              CALCULATE NEW BALANCE
-            */
-            const newBalance =
-              currentBalance -
-              billAmount;
-
-            /*
-              UPDATE ACCOUNT BALANCE
+              UPDATE BALANCE
             */
             const updatedAccount =
               await tx.account.update({
                 where: {
-                  id: account.id,
+                  id:
+                    account.id,
                 },
 
                 data: {
@@ -158,14 +119,15 @@ router.post(
               });
 
             /*
-              CREATE DATABASE TRANSACTION
+              CREATE TRANSACTION
             */
             const transaction =
               await tx.transaction.create({
                 data: {
                   userId,
 
-                  type: "debit",
+                  type:
+                    "debit",
 
                   amount:
                     billAmount,
@@ -181,14 +143,10 @@ router.post(
             return {
               updatedAccount,
               transaction,
-              newBalance,
             };
           }
         );
 
-      /*
-        SEND SUCCESS RESPONSE
-      */
       res.json({
         message:
           "Bill payment successful.",
@@ -220,8 +178,11 @@ router.post(
 
         bill: {
           selectedBill,
+
           provider,
+
           accountNumber,
+
           amount:
             billAmount,
         },

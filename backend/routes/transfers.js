@@ -1,43 +1,66 @@
 const express = require("express");
-const jwt = require("jsonwebtoken");
 const prisma = require("../lib/prisma");
+const authenticateToken = require("../middleware/auth");
 
 const router = express.Router();
 
 /*
-  JWT AUTHENTICATION MIDDLEWARE
+  HELPER
+  Convert a value to a valid positive monetary amount.
 */
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-
-  const token =
-    authHeader &&
-    authHeader.startsWith("Bearer ")
-      ? authHeader.split(" ")[1]
-      : null;
-
-  if (!token) {
-    return res.status(401).json({
-      message: "Access denied. No token provided.",
-    });
+const parseAmount = (amount) => {
+  if (
+    amount === null ||
+    amount === undefined ||
+    amount === ""
+  ) {
+    return null;
   }
 
-  try {
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET
-    );
+  const parsed = Number(amount);
 
-    req.user = decoded;
-
-    next();
-  } catch (error) {
-    return res.status(403).json({
-      message:
-        "Invalid or expired authentication token.",
-    });
+  if (!Number.isFinite(parsed)) {
+    return null;
   }
+
+  if (parsed <= 0) {
+    return null;
+  }
+
+  /*
+    Restrict transfers to 2 decimal places.
+  */
+  if (
+    !Number.isInteger(
+      parsed * 100
+    )
+  ) {
+    return null;
+  }
+
+  return parsed;
 };
+
+
+/*
+  HELPER
+  Convert Prisma Decimal values safely to numbers.
+*/
+const decimalToNumber = (value) => {
+  if (
+    value === null ||
+    value === undefined
+  ) {
+    return 0;
+  }
+
+  const number = Number(value);
+
+  return Number.isFinite(number)
+    ? number
+    : 0;
+};
+
 
 /*
   LOOK UP AN ACCOUNT
@@ -47,8 +70,24 @@ router.get(
   authenticateToken,
   async (req, res) => {
     try {
-      const { accountNumber } = req.params;
+      const accountNumber =
+        String(
+          req.params.accountNumber || ""
+        ).trim();
 
+      /*
+        Validate account number.
+      */
+      if (!accountNumber) {
+        return res.status(400).json({
+          message:
+            "Please provide an account number.",
+        });
+      }
+
+      /*
+        Find recipient account.
+      */
       const account =
         await prisma.account.findUnique({
           where: {
@@ -67,31 +106,43 @@ router.get(
           },
         });
 
+      /*
+        Account does not exist.
+      */
       if (!account) {
         return res.status(404).json({
-          message: "Account not found.",
+          message:
+            "Account not found.",
         });
       }
 
-      res.json({
-        accountNumber: account.accountNumber,
+      /*
+        Return only the information
+        needed by the frontend.
+      */
+      return res.json({
+        accountNumber:
+          account.accountNumber,
 
-        bank: "Swift Wallet",
+        bank:
+          "Swift Wallet",
 
         user: {
-          id: account.user.id,
+          id:
+            account.user.id,
 
           name:
             `${account.user.firstName} ${account.user.lastName}`.trim(),
         },
       });
+
     } catch (error) {
       console.error(
         "Account lookup error:",
         error
       );
 
-      res.status(500).json({
+      return res.status(500).json({
         message:
           "Unable to look up account.",
       });
@@ -109,8 +160,27 @@ router.get(
   authenticateToken,
   async (req, res) => {
     try {
-      const userId = req.user.userId;
+      /*
+        The user ID comes from the
+        verified JWT.
 
+        It is NOT taken from the
+        frontend request.
+      */
+      const userId =
+        req.user.userId;
+
+      if (!userId) {
+        return res.status(401).json({
+          message:
+            "Invalid authentication token.",
+        });
+      }
+
+      /*
+        Only retrieve transactions
+        belonging to the logged-in user.
+      */
       const transactions =
         await prisma.transaction.findMany({
           where: {
@@ -122,40 +192,39 @@ router.get(
           },
         });
 
-      res.json({
+      return res.json({
         transactions:
           transactions.map(
             (transaction) => ({
-              id: transaction.id,
+              id:
+                transaction.id,
 
-              type: transaction.type,
+              type:
+                transaction.type,
 
               amount:
                 transaction.amount.toString(),
 
               description:
-                transaction.description || "",
+                transaction.description ||
+                "",
 
               status:
                 transaction.status,
 
-              /*
-                IMPORTANT:
-                Return the transaction date
-                as an ISO string.
-              */
               createdAt:
                 transaction.createdAt.toISOString(),
             })
           ),
       });
+
     } catch (error) {
       console.error(
         "Transaction history error:",
         error
       );
 
-      res.status(500).json({
+      return res.status(500).json({
         message:
           "Unable to retrieve transaction history.",
       });
@@ -173,38 +242,90 @@ router.post(
   async (req, res) => {
     try {
       /*
-        GET REAL SENDER
-        FROM JWT
+        The sender MUST come from
+        the authenticated JWT.
+
+        Never trust a sender ID
+        supplied by the frontend.
       */
       const senderId =
         req.user.userId;
+
+      if (!senderId) {
+        return res.status(401).json({
+          message:
+            "Invalid authentication token.",
+        });
+      }
 
       const {
         recipientAccountNumber,
         amount,
         description,
-      } = req.body;
-
-      const transferAmount =
-        Number(amount);
+      } = req.body || {};
 
       /*
-        VALIDATE TRANSFER
+        NORMALISE ACCOUNT NUMBER
       */
-      if (
-        !recipientAccountNumber ||
-        !transferAmount ||
-        transferAmount <= 0
-      ) {
+      const recipientNumber =
+        String(
+          recipientAccountNumber || ""
+        ).trim();
+
+      /*
+        VALIDATE ACCOUNT NUMBER
+      */
+      if (!recipientNumber) {
         return res.status(400).json({
           message:
-            "Please provide valid transfer information.",
+            "Please provide a recipient account number.",
         });
       }
 
       /*
-        PERFORM TRANSFER
-        INSIDE DATABASE TRANSACTION
+        VALIDATE AMOUNT
+      */
+      const transferAmount =
+        parseAmount(amount);
+
+      if (
+        transferAmount === null
+      ) {
+        return res.status(400).json({
+          message:
+            "Please provide a valid transfer amount with a maximum of 2 decimal places.",
+        });
+      }
+
+      /*
+        CLEAN DESCRIPTION
+      */
+      const cleanDescription =
+        typeof description ===
+        "string"
+          ? description.trim()
+          : "";
+
+      /*
+        Prevent excessively large
+        descriptions.
+      */
+      if (
+        cleanDescription.length >
+        255
+      ) {
+        return res.status(400).json({
+          message:
+            "Transfer description is too long.",
+        });
+      }
+
+      /*
+        PERFORM EVERYTHING INSIDE
+        ONE DATABASE TRANSACTION.
+
+        If any part fails, Prisma
+        rolls the entire operation back.
       */
       const result =
         await prisma.$transaction(
@@ -216,11 +337,18 @@ router.post(
             const senderAccount =
               await tx.account.findUnique({
                 where: {
-                  userId: senderId,
+                  userId:
+                    senderId,
                 },
 
                 include: {
-                  user: true,
+                  user: {
+                    select: {
+                      id: true,
+                      firstName: true,
+                      lastName: true,
+                    },
+                  },
                 },
               });
 
@@ -237,18 +365,30 @@ router.post(
               await tx.account.findUnique({
                 where: {
                   accountNumber:
-                    recipientAccountNumber,
+                    recipientNumber,
                 },
 
                 include: {
-                  user: true,
+                  user: {
+                    select: {
+                      id: true,
+                      firstName: true,
+                      lastName: true,
+                    },
+                  },
                 },
               });
 
             if (!recipientAccount) {
-              throw new Error(
-                "Recipient account not found."
-              );
+              const error =
+                new Error(
+                  "Recipient account not found."
+                );
+
+              error.code =
+                "RECIPIENT_NOT_FOUND";
+
+              throw error;
             }
 
             /*
@@ -258,66 +398,108 @@ router.post(
               senderAccount.userId ===
               recipientAccount.userId
             ) {
-              throw new Error(
-                "You cannot transfer money to yourself."
-              );
+              const error =
+                new Error(
+                  "You cannot transfer money to yourself."
+                );
+
+              error.code =
+                "SELF_TRANSFER";
+
+              throw error;
             }
+
+            /*
+              GET SENDER BALANCE
+            */
+            const senderBalance =
+              decimalToNumber(
+                senderAccount.balance
+              );
 
             /*
               CHECK BALANCE
             */
             if (
-              Number(
-                senderAccount.balance
-              ) < transferAmount
+              senderBalance <
+              transferAmount
             ) {
-              throw new Error(
-                "Insufficient balance."
-              );
+              const error =
+                new Error(
+                  "Insufficient balance."
+                );
+
+              error.code =
+                "INSUFFICIENT_BALANCE";
+
+              throw error;
             }
 
             /*
-              REMOVE MONEY
-              FROM SENDER
+              ROUND THE AMOUNT TO
+              TWO DECIMAL PLACES.
+
+              This keeps monetary values
+              consistent.
+            */
+            const amountForDatabase =
+              Math.round(
+                transferAmount * 100
+              ) / 100;
+
+            /*
+              REMOVE MONEY FROM SENDER
             */
             const updatedSenderAccount =
               await tx.account.update({
                 where: {
-                  id: senderAccount.id,
+                  id:
+                    senderAccount.id,
                 },
 
                 data: {
                   balance: {
                     decrement:
-                      transferAmount,
+                      amountForDatabase,
                   },
                 },
               });
 
             /*
-              ADD MONEY
-              TO RECIPIENT
+              ADD MONEY TO RECIPIENT
             */
             const updatedRecipientAccount =
               await tx.account.update({
                 where: {
-                  id: recipientAccount.id,
+                  id:
+                    recipientAccount.id,
                 },
 
                 data: {
                   balance: {
                     increment:
-                      transferAmount,
+                      amountForDatabase,
                   },
                 },
               });
 
             /*
-              USE ONE DATE FOR THE
-              ENTIRE TRANSFER
+              CREATE ONE SHARED TIMESTAMP
+              FOR THE TRANSFER.
             */
             const transferDate =
               new Date();
+
+            /*
+              DEFAULT DESCRIPTION
+            */
+            const senderDescription =
+              cleanDescription ||
+              `Transfer to ${recipientAccount.user.firstName} ${recipientAccount.user.lastName}`;
+
+            const recipientDescription =
+              cleanDescription ||
+              `Transfer from ${senderAccount.user.firstName} ${senderAccount.user.lastName}`;
 
             /*
               CREATE SENDER TRANSACTION
@@ -325,17 +507,20 @@ router.post(
             const senderTransaction =
               await tx.transaction.create({
                 data: {
-                  userId: senderId,
+                  userId:
+                    senderId,
 
-                  type: "debit",
+                  type:
+                    "debit",
 
-                  amount: transferAmount,
+                  amount:
+                    amountForDatabase,
 
                   description:
-                    description ||
-                    `Transfer to ${recipientAccount.user.firstName} ${recipientAccount.user.lastName}`,
+                    senderDescription,
 
-                  status: "completed",
+                  status:
+                    "completed",
 
                   createdAt:
                     transferDate,
@@ -351,15 +536,17 @@ router.post(
                   userId:
                     recipientAccount.userId,
 
-                  type: "credit",
+                  type:
+                    "credit",
 
-                  amount: transferAmount,
+                  amount:
+                    amountForDatabase,
 
                   description:
-                    description ||
-                    `Transfer from ${senderAccount.user.firstName} ${senderAccount.user.lastName}`,
+                    recipientDescription,
 
-                  status: "completed",
+                  status:
+                    "completed",
 
                   createdAt:
                     transferDate,
@@ -378,7 +565,7 @@ router.post(
                     recipientAccount.userId,
 
                   amount:
-                    transferAmount,
+                    amountForDatabase,
 
                   status:
                     "completed",
@@ -388,6 +575,10 @@ router.post(
                 },
               });
 
+            /*
+              RETURN ALL INFORMATION
+              REQUIRED BY THE FRONTEND.
+            */
             return {
               senderAccount:
                 updatedSenderAccount,
@@ -416,9 +607,9 @@ router.post(
         );
 
       /*
-        SEND SUCCESS RESPONSE
+        SUCCESS RESPONSE
       */
-      res.json({
+      return res.status(200).json({
         message:
           "Transfer completed successfully.",
 
@@ -466,23 +657,77 @@ router.post(
           result.recipient,
 
         newBalance:
-          Number(
+          decimalToNumber(
             result.senderAccount.balance
           ),
       });
+
     } catch (error) {
       console.error(
         "Transfer error:",
         error
       );
 
-      res.status(400).json({
+      /*
+        KNOWN BUSINESS ERRORS
+      */
+      if (
+        error.code ===
+        "RECIPIENT_NOT_FOUND"
+      ) {
+        return res.status(404).json({
+          message:
+            "Recipient account not found.",
+        });
+      }
+
+      if (
+        error.code ===
+        "SELF_TRANSFER"
+      ) {
+        return res.status(400).json({
+          message:
+            "You cannot transfer money to yourself.",
+        });
+      }
+
+      if (
+        error.code ===
+        "INSUFFICIENT_BALANCE"
+      ) {
+        return res.status(400).json({
+          message:
+            "Insufficient balance.",
+        });
+      }
+
+      /*
+        Handle Prisma/database errors
+        without exposing internal
+        database information to the user.
+      */
+      if (
+        error.code &&
+        typeof error.code ===
+          "string" &&
+        error.code.startsWith("P")
+      ) {
+        return res.status(500).json({
+          message:
+            "Unable to complete transfer. Please try again.",
+        });
+      }
+
+      /*
+        Generic server error.
+      */
+      return res.status(500).json({
         message:
-          error.message ||
-          "Unable to complete transfer.",
+          "Unable to complete transfer. Please try again.",
       });
     }
   }
 );
+
 
 module.exports = router;

@@ -1,43 +1,8 @@
 const express = require("express");
-const jwt = require("jsonwebtoken");
 const prisma = require("../lib/prisma");
+const authenticateToken = require("../middleware/auth");
 
 const router = express.Router();
-
-/*
-  JWT AUTHENTICATION MIDDLEWARE
-*/
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-
-  const token =
-    authHeader &&
-    authHeader.startsWith("Bearer ")
-      ? authHeader.split(" ")[1]
-      : null;
-
-  if (!token) {
-    return res.status(401).json({
-      message: "Access denied. No token provided.",
-    });
-  }
-
-  try {
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET
-    );
-
-    req.user = decoded;
-
-    next();
-  } catch (error) {
-    return res.status(403).json({
-      message:
-        "Invalid or expired authentication token.",
-    });
-  }
-};
 
 
 /*
@@ -52,11 +17,14 @@ router.post(
         GET LOGGED-IN USER
         FROM JWT
       */
-      const userId = req.user.userId;
+      const userId =
+        req.user.userId;
 
-      const { amount } = req.body;
+      const { amount } =
+        req.body;
 
-      const addAmount = Number(amount);
+      const addAmount =
+        Number(amount);
 
       /*
         VALIDATE AMOUNT
@@ -100,7 +68,8 @@ router.post(
             const updatedAccount =
               await tx.account.update({
                 where: {
-                  id: account.id,
+                  id:
+                    account.id,
                 },
 
                 data: {
@@ -119,7 +88,8 @@ router.post(
                 data: {
                   userId,
 
-                  type: "credit",
+                  type:
+                    "credit",
 
                   amount:
                     addAmount,
@@ -188,5 +158,6 @@ router.post(
     }
   }
 );
+
 
 module.exports = router;

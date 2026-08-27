@@ -2,8 +2,8 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
-const crypto = require("crypto");
 const prisma = require("../lib/prisma");
+const authenticateToken = require("../middleware/auth");
 
 require("dotenv").config();
 
@@ -20,7 +20,6 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-
 /*
   SEND VERIFICATION EMAIL
 */
@@ -33,7 +32,6 @@ const sendVerificationEmail = async (
     from: `"Swift Wallet" <${process.env.SMTP_USER}>`,
     to: email,
     subject: "Your Swift Wallet verification code",
-
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color:#0d0d0d; color: #ffffff;">
         <div style="text-align: center;">
@@ -76,88 +74,6 @@ const sendVerificationEmail = async (
 
           <p style="color: #888888; font-size: 14px;">
             If you did not create a Swift Wallet account, you can safely ignore this email.
-          </p>
-
-        </div>
-      </div>
-    `,
-  });
-};
-
-
-/*
-  SEND PASSWORD RESET EMAIL
-*/
-const sendPasswordResetEmail = async (
-  email,
-  firstName,
-  resetToken
-) => {
-  const resetLink =
-    `http://localhost:3000/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
-
-  await transporter.sendMail({
-    from: `"Swift Wallet" <${process.env.SMTP_USER}>`,
-    to: email,
-    subject: "Reset your Swift Wallet password",
-
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color:#0d0d0d; color:#ffffff;">
-        <div style="text-align:center;">
-
-          <div style="margin-bottom:30px;">
-            <div style="display:inline-flex; align-items:center; gap:10px;">
-
-              <div style="width:40px; height:40px; background-color:#22c55e; border-radius:10px; display:inline-flex; align-items:center; justify-content:center; font-weight:bold; color:#000000;">
-                SW
-              </div>
-
-              <span style="font-size:20px; font-weight:700; color:#ffffff;">
-                Swift Wallet
-              </span>
-
-            </div>
-          </div>
-
-          <h1 style="color:#22c55e;">
-            Reset your password
-          </h1>
-
-          <p style="color:#cccccc; font-size:16px;">
-            Hi ${firstName},
-          </p>
-
-          <p style="color:#cccccc; font-size:16px;">
-            We received a request to reset your Swift Wallet password.
-          </p>
-
-          <p style="color:#cccccc; font-size:16px;">
-            Click the button below to create a new password.
-          </p>
-
-          <div style="margin:30px 0;">
-            <a
-              href="${resetLink}"
-              style="
-                display:inline-block;
-                padding:15px 30px;
-                background-color:#22c55e;
-                color:#000000;
-                text-decoration:none;
-                border-radius:10px;
-                font-weight:700;
-              "
-            >
-              Reset Password
-            </a>
-          </div>
-
-          <p style="color:#888888; font-size:14px;">
-            This link expires in 10 minutes.
-          </p>
-
-          <p style="color:#888888; font-size:14px;">
-            If you did not request a password reset, you can safely ignore this email.
           </p>
 
         </div>
@@ -290,6 +206,70 @@ router.post("/signup", async (req, res) => {
 
 
 /*
+  SEND PASSWORD RESET EMAIL
+*/
+const sendPasswordResetEmail = async (
+  email,
+  firstName,
+  resetCode
+) => {
+  await transporter.sendMail({
+    from: `"Swift Wallet" <${process.env.SMTP_USER}>`,
+    to: email,
+    subject: "Your Swift Wallet password reset code",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color:#0d0d0d; color: #ffffff;">
+        <div style="text-align: center;">
+
+          <div style="margin-bottom: 30px;">
+            <div style="display: inline-flex; align-items: center; gap: 10px;">
+
+              <div style="width: 40px; height: 40px; background-color: #22c55e; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; color: #000000;">
+                SW
+              </div>
+
+              <span style="font-size: 20px; font-weight: 700; color: #ffffff;">
+                Swift Wallet
+              </span>
+
+            </div>
+          </div>
+
+          <h1 style="color: #22c55e;">
+            Reset your password
+          </h1>
+
+          <p style="color: #cccccc; font-size: 16px;">
+            Hi ${firstName},
+          </p>
+
+          <p style="color: #cccccc; font-size: 16px;">
+            Use the password reset code below to create a new Swift Wallet password.
+          </p>
+
+          <div style="margin: 30px 0; padding: 20px; background-color: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px;">
+            <div style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #22c55e;">
+              ${resetCode}
+            </div>
+          </div>
+
+          <p style="color: #888888; font-size: 14px;">
+            This code expires in 10 minutes.
+          </p>
+
+          <p style="color: #888888; font-size: 14px;">
+            If you did not request a password reset, you can safely ignore this email.
+          </p>
+
+        </div>
+      </div>
+    `,
+  });
+};
+
+
+
+/*
   VERIFY EMAIL
 */
 router.post(
@@ -320,8 +300,7 @@ router.post(
 
       if (!user) {
         return res.status(404).json({
-          message:
-            "User not found",
+          message: "User not found",
         });
       }
 
@@ -497,6 +476,255 @@ router.post(
       res.status(500).json({
         message:
           "Something went wrong while resending the verification code",
+      });
+    }
+  }
+);
+
+
+/*
+  FORGOT PASSWORD
+*/
+router.post(
+  "/forgot-password",
+  async (req, res) => {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({
+          message:
+            "Email is required",
+        });
+      }
+
+      const normalizedEmail =
+        email.toLowerCase().trim();
+
+      const user =
+        await prisma.user.findUnique({
+          where: {
+            email: normalizedEmail,
+          },
+        });
+
+      if (!user) {
+        return res.status(404).json({
+          message:
+            "No account was found with this email address.",
+        });
+      }
+
+      if (!user.emailVerified) {
+        return res.status(400).json({
+          message:
+            "Please verify your email before resetting your password.",
+        });
+      }
+
+      const resetCode =
+        Math.floor(
+          100000 +
+          Math.random() * 900000
+        ).toString();
+
+      const resetExpires =
+        new Date(
+          Date.now() + 10 * 60 * 1000
+        );
+
+      await prisma.user.update({
+        where: {
+          id: user.id,
+        },
+
+        data: {
+          passwordResetCode:
+            resetCode,
+
+          passwordResetExpires:
+            resetExpires,
+        },
+      });
+
+      try {
+        await sendPasswordResetEmail(
+          user.email,
+          user.firstName,
+          resetCode
+        );
+      } catch (emailError) {
+        console.error(
+          "Password reset email error:",
+          emailError
+        );
+
+        await prisma.user.update({
+          where: {
+            id: user.id,
+          },
+
+          data: {
+            passwordResetCode: null,
+            passwordResetExpires: null,
+          },
+        });
+
+        return res.status(500).json({
+          message:
+            "Unable to send password reset email.",
+        });
+      }
+
+      res.json({
+        message:
+          "A password reset code has been sent to your email address.",
+      });
+    } catch (error) {
+      console.error(
+        "Forgot password error:",
+        error
+      );
+
+      res.status(500).json({
+        message:
+          "Something went wrong while requesting a password reset.",
+      });
+    }
+  }
+);
+
+/*
+  RESET PASSWORD
+*/
+router.post(
+  "/reset-password",
+  async (req, res) => {
+    try {
+      const {
+        email,
+        code,
+        newPassword,
+      } = req.body;
+
+      if (
+        !email ||
+        !code ||
+        !newPassword
+      ) {
+        return res.status(400).json({
+          message:
+            "Email, verification code and new password are required.",
+        });
+      }
+
+      if (!/^\d{6}$/.test(code.toString())) {
+        return res.status(400).json({
+          message:
+            "Verification code must be exactly 6 digits.",
+        });
+      }
+
+      if (newPassword.length < 8) {
+        return res.status(400).json({
+          message:
+            "Your password must be at least 8 characters long.",
+        });
+      }
+
+      const normalizedEmail =
+        email.toLowerCase().trim();
+
+      const user =
+        await prisma.user.findUnique({
+          where: {
+            email: normalizedEmail,
+          },
+        });
+
+      if (!user) {
+        return res.status(404).json({
+          message:
+            "User not found.",
+        });
+      }
+
+      if (
+        !user.passwordResetCode ||
+        !user.passwordResetExpires
+      ) {
+        return res.status(400).json({
+          message:
+            "No password reset request is available. Please request a new code.",
+        });
+      }
+
+      if (
+        new Date() >
+        user.passwordResetExpires
+      ) {
+        await prisma.user.update({
+          where: {
+            id: user.id,
+          },
+
+          data: {
+            passwordResetCode: null,
+            passwordResetExpires: null,
+          },
+        });
+
+        return res.status(400).json({
+          message:
+            "Your password reset code has expired. Please request a new code.",
+        });
+      }
+
+      if (
+        user.passwordResetCode !==
+        code.toString()
+      ) {
+        return res.status(400).json({
+          message:
+            "Invalid password reset code.",
+        });
+      }
+
+      const passwordHash =
+        await bcrypt.hash(
+          newPassword,
+          10
+        );
+
+      await prisma.user.update({
+        where: {
+          id: user.id,
+        },
+
+        data: {
+          passwordHash,
+
+          passwordResetCode:
+            null,
+
+          passwordResetExpires:
+            null,
+        },
+      });
+
+      res.json({
+        message:
+          "Your password has been reset successfully. You can now log in with your new password.",
+      });
+    } catch (error) {
+      console.error(
+        "Reset password error:",
+        error
+      );
+
+      res.status(500).json({
+        message:
+          "Something went wrong while resetting your password.",
       });
     }
   }
@@ -859,12 +1087,10 @@ router.post(
 
       const expiryDate =
         "12/" +
-        (
-          29 +
+        (29 +
           Math.floor(
             Math.random() * 3
-          )
-        );
+          ));
 
       const welcomeBalance =
         200350;
@@ -872,7 +1098,6 @@ router.post(
       const result =
         await prisma.$transaction(
           async (tx) => {
-
             const securitySettings =
               await tx.securitySettings.upsert({
                 where: {
@@ -913,15 +1138,11 @@ router.post(
               await tx.transaction.create({
                 data: {
                   userId: user.id,
-
                   type: "credit",
-
                   amount:
                     welcomeBalance,
-
                   description:
                     "Welcome Bonus",
-
                   status:
                     "completed",
                 },
@@ -1063,9 +1284,6 @@ router.post(
         });
       }
 
-      /*
-        CREATE JWT
-      */
       const token =
         jwt.sign(
           {
@@ -1164,8 +1382,7 @@ router.post(
               : null,
 
           hasPin:
-            !!user
-              .securitySettings
+            !!user.securitySettings
               ?.pinHash,
 
           transactions:
@@ -1209,273 +1426,18 @@ router.post(
 
 
 /*
-  FORGOT PASSWORD
-*/
-router.post(
-  "/forgot-password",
-  async (req, res) => {
-    try {
-      const { email } = req.body;
-
-      if (!email) {
-        return res.status(400).json({
-          message:
-            "Email is required",
-        });
-      }
-
-      const normalizedEmail =
-        email.toLowerCase().trim();
-
-      const user =
-        await prisma.user.findUnique({
-          where: {
-            email: normalizedEmail,
-          },
-        });
-
-      /*
-        Do not reveal whether an account exists.
-      */
-      if (!user) {
-        return res.json({
-          message:
-            "If an account exists with that email, a password reset link has been sent.",
-        });
-      }
-
-      /*
-        Generate secure random token.
-      */
-      const resetToken =
-        crypto.randomBytes(32).toString("hex");
-
-      /*
-        Hash token before storing it.
-      */
-      const resetTokenHash =
-        crypto
-          .createHash("sha256")
-          .update(resetToken)
-          .digest("hex");
-
-      /*
-        Token expires in 10 minutes.
-      */
-      const resetPasswordExpires =
-        new Date(
-          Date.now() + 10 * 60 * 1000
-        );
-
-      await prisma.user.update({
-        where: {
-          id: user.id,
-        },
-
-        data: {
-          resetPasswordToken:
-            resetTokenHash,
-
-          resetPasswordExpires,
-        },
-      });
-
-      try {
-        await sendPasswordResetEmail(
-          user.email,
-          user.firstName,
-          resetToken
-        );
-      } catch (emailError) {
-        console.error(
-          "Password reset email error:",
-          emailError
-        );
-
-        /*
-          Remove reset token if email failed.
-        */
-        await prisma.user.update({
-          where: {
-            id: user.id,
-          },
-
-          data: {
-            resetPasswordToken: null,
-            resetPasswordExpires: null,
-          },
-        });
-
-        return res.status(500).json({
-          message:
-            "Unable to send password reset email.",
-        });
-      }
-
-      res.json({
-        message:
-          "If an account exists with that email, a password reset link has been sent.",
-      });
-
-    } catch (error) {
-      console.error(
-        "Forgot password error:",
-        error
-      );
-
-      res.status(500).json({
-        message:
-          "Something went wrong while requesting a password reset.",
-      });
-    }
-  }
-);
-
-
-/*
-  RESET PASSWORD
-*/
-router.post(
-  "/reset-password",
-  async (req, res) => {
-    try {
-      const {
-        email,
-        token,
-        newPassword,
-      } = req.body;
-
-      if (
-        !email ||
-        !token ||
-        !newPassword
-      ) {
-        return res.status(400).json({
-          message:
-            "Email, reset token and new password are required.",
-        });
-      }
-
-      /*
-        CHECK PASSWORD LENGTH
-      */
-      if (newPassword.length < 8) {
-        return res.status(400).json({
-          message:
-            "Password must be at least 8 characters long.",
-        });
-      }
-
-      const normalizedEmail =
-        email.toLowerCase().trim();
-
-      /*
-        HASH TOKEN RECEIVED FROM
-        RESET LINK
-      */
-      const resetTokenHash =
-        crypto
-          .createHash("sha256")
-          .update(token)
-          .digest("hex");
-
-      /*
-        FIND USER USING EMAIL
-        AND HASHED RESET TOKEN
-      */
-      const user =
-        await prisma.user.findFirst({
-          where: {
-            email: normalizedEmail,
-
-            resetPasswordToken:
-              resetTokenHash,
-          },
-        });
-
-      if (!user) {
-        return res.status(400).json({
-          message:
-            "Invalid or expired password reset link.",
-        });
-      }
-
-      /*
-        CHECK TOKEN EXPIRY
-      */
-      if (
-        !user.resetPasswordExpires ||
-        new Date() >
-          user.resetPasswordExpires
-      ) {
-        return res.status(400).json({
-          message:
-            "This password reset link has expired.",
-        });
-      }
-
-      /*
-        HASH NEW PASSWORD
-      */
-      const passwordHash =
-        await bcrypt.hash(
-          newPassword,
-          10
-        );
-
-      /*
-        UPDATE PASSWORD
-        AND INVALIDATE TOKEN
-      */
-      await prisma.user.update({
-        where: {
-          id: user.id,
-        },
-
-        data: {
-          passwordHash,
-
-          resetPasswordToken: null,
-
-          resetPasswordExpires: null,
-        },
-      });
-
-      res.json({
-        message:
-          "Password reset successfully. You can now sign in with your new password.",
-      });
-
-    } catch (error) {
-      console.error(
-        "Reset password error:",
-        error
-      );
-
-      res.status(500).json({
-        message:
-          "Something went wrong while resetting your password.",
-      });
-    }
-  }
-);
-
-
-/*
   VERIFY PIN
-  PROTECTED BY JWT
+  PROTECTED BY JWT MIDDLEWARE
 */
 router.post(
   "/verify-pin",
+  authenticateToken,
   async (req, res) => {
     try {
       const {
         pin,
       } = req.body;
 
-      /*
-        CHECK PIN
-      */
       if (!pin) {
         return res.status(400).json({
           message:
@@ -1483,9 +1445,6 @@ router.post(
         });
       }
 
-      /*
-        CHECK PIN FORMAT
-      */
       if (!/^\d{4}$/.test(pin)) {
         return res.status(400).json({
           message:
@@ -1494,49 +1453,16 @@ router.post(
       }
 
       /*
-        GET JWT
+        USER ID COMES FROM JWT
+        NOT FROM THE FRONTEND
       */
-      const authHeader =
-        req.headers.authorization;
+      const userId =
+        req.user.userId;
 
-      const token =
-        authHeader &&
-        authHeader.startsWith("Bearer ")
-          ? authHeader.split(" ")[1]
-          : null;
-
-      if (!token) {
-        return res.status(401).json({
-          message:
-            "Access denied. No authentication token provided.",
-        });
-      }
-
-      /*
-        VERIFY JWT
-      */
-      let decoded;
-
-      try {
-        decoded =
-          jwt.verify(
-            token,
-            process.env.JWT_SECRET
-          );
-      } catch (error) {
-        return res.status(403).json({
-          message:
-            "Invalid or expired authentication token.",
-        });
-      }
-
-      /*
-        FIND USER USING JWT USER ID
-      */
       const user =
         await prisma.user.findUnique({
           where: {
-            id: decoded.userId,
+            id: userId,
           },
 
           include: {
@@ -1551,9 +1477,6 @@ router.post(
         });
       }
 
-      /*
-        CHECK FOR PIN
-      */
       if (
         !user.securitySettings ||
         !user.securitySettings.pinHash
@@ -1564,9 +1487,6 @@ router.post(
         });
       }
 
-      /*
-        COMPARE PIN WITH BCRYPT HASH
-      */
       const pinMatches =
         await bcrypt.compare(
           pin,
@@ -1580,9 +1500,6 @@ router.post(
         });
       }
 
-      /*
-        PIN VERIFIED
-      */
       res.json({
         message:
           "PIN verified successfully.",
@@ -1603,241 +1520,20 @@ router.post(
 );
 
 
-/*
-  CHANGE TRANSACTION PIN
-  PROTECTED BY JWT
-*/
-router.post(
-  "/change-pin",
-  async (req, res) => {
-    try {
-      const {
-        currentPin,
-        newPin,
-      } = req.body;
-
-      /*
-        CHECK REQUIRED FIELDS
-      */
-      if (!currentPin || !newPin) {
-        return res.status(400).json({
-          message:
-            "Current PIN and new PIN are required.",
-        });
-      }
-
-      /*
-        CHECK PIN FORMAT
-      */
-      if (!/^\d{4}$/.test(currentPin)) {
-        return res.status(400).json({
-          message:
-            "Current PIN must be exactly 4 digits.",
-        });
-      }
-
-      if (!/^\d{4}$/.test(newPin)) {
-        return res.status(400).json({
-          message:
-            "New PIN must be exactly 4 digits.",
-        });
-      }
-
-      /*
-        MAKE SURE NEW PIN IS DIFFERENT
-      */
-      if (currentPin === newPin) {
-        return res.status(400).json({
-          message:
-            "Your new PIN must be different from your current PIN.",
-        });
-      }
-
-      /*
-        GET JWT
-      */
-      const authHeader =
-        req.headers.authorization;
-
-      const token =
-        authHeader &&
-        authHeader.startsWith("Bearer ")
-          ? authHeader.split(" ")[1]
-          : null;
-
-      if (!token) {
-        return res.status(401).json({
-          message:
-            "Access denied. No authentication token provided.",
-        });
-      }
-
-      /*
-        VERIFY JWT
-      */
-      let decoded;
-
-      try {
-        decoded =
-          jwt.verify(
-            token,
-            process.env.JWT_SECRET
-          );
-      } catch (error) {
-        return res.status(403).json({
-          message:
-            "Invalid or expired authentication token.",
-        });
-      }
-
-      /*
-        FIND USER USING JWT USER ID
-      */
-      const user =
-        await prisma.user.findUnique({
-          where: {
-            id: decoded.userId,
-          },
-
-          include: {
-            securitySettings: true,
-          },
-        });
-
-      if (!user) {
-        return res.status(404).json({
-          message:
-            "User not found.",
-        });
-      }
-
-      /*
-        CHECK THAT USER HAS A PIN
-      */
-      if (
-        !user.securitySettings ||
-        !user.securitySettings.pinHash
-      ) {
-        return res.status(400).json({
-          message:
-            "No transaction PIN has been created for this account.",
-        });
-      }
-
-      /*
-        VERIFY CURRENT PIN
-      */
-      const currentPinMatches =
-        await bcrypt.compare(
-          currentPin,
-          user.securitySettings.pinHash
-        );
-
-      if (!currentPinMatches) {
-        return res.status(401).json({
-          message:
-            "Current PIN is incorrect.",
-        });
-      }
-
-      /*
-        HASH NEW PIN
-      */
-      const newPinHash =
-        await bcrypt.hash(
-          newPin,
-          10
-        );
-
-      /*
-        UPDATE PIN
-      */
-      await prisma.securitySettings.update({
-        where: {
-          userId: user.id,
-        },
-
-        data: {
-          pinHash: newPinHash,
-        },
-      });
-
-      /*
-        SUCCESS
-      */
-      res.json({
-        message:
-          "Transaction PIN changed successfully.",
-      });
-
-    } catch (error) {
-      console.error(
-        "Change PIN error:",
-        error
-      );
-
-      res.status(500).json({
-        message:
-          "Something went wrong while changing your PIN.",
-      });
-    }
-  }
-);
-
 
 /*
   GET CURRENT LOGGED-IN USER
-  PROTECTED BY JWT
+  PROTECTED BY JWT MIDDLEWARE
 */
 router.get(
   "/me",
+  authenticateToken,
   async (req, res) => {
     try {
-      /*
-        GET JWT
-      */
-      const authHeader =
-        req.headers.authorization;
-
-      const token =
-        authHeader &&
-        authHeader.startsWith("Bearer ")
-          ? authHeader.split(" ")[1]
-          : null;
-
-      if (!token) {
-        return res.status(401).json({
-          message:
-            "Access denied. No token provided.",
-        });
-      }
-
-      /*
-        VERIFY JWT
-      */
-      let decoded;
-
-      try {
-        decoded =
-          jwt.verify(
-            token,
-            process.env.JWT_SECRET
-          );
-      } catch (error) {
-        return res.status(403).json({
-          message:
-            "Invalid or expired authentication token.",
-        });
-      }
-
-      /*
-        GET CURRENT USER
-        FROM DATABASE
-      */
       const user =
         await prisma.user.findUnique({
           where: {
-            id: decoded.userId,
+            id: req.user.userId,
           },
 
           include: {
@@ -1867,9 +1563,6 @@ router.get(
       const card =
         user.cards?.[0] || null;
 
-      /*
-        RETURN USER DATA
-      */
       res.json({
         user: {
           id:
@@ -1974,7 +1667,6 @@ router.get(
             ),
         },
       });
-
     } catch (error) {
       console.error(
         "Get current user error:",
@@ -1989,5 +1681,118 @@ router.get(
   }
 );
 
+/*
+  UPDATE PROFILE
+  PROTECTED BY JWT MIDDLEWARE
+*/
+router.put(
+  "/update-profile",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const userId = req.user.userId;
+
+      const {
+        firstName,
+        lastName,
+        phoneNumber,
+        country,
+      } = req.body;
+
+      if (
+        !firstName ||
+        !lastName ||
+        !phoneNumber ||
+        !country
+      ) {
+        return res.status(400).json({
+          message:
+            "First name, last name, phone number and country are required.",
+        });
+      }
+
+      const cleanedFirstName =
+        firstName.trim();
+
+      const cleanedLastName =
+        lastName.trim();
+
+      const cleanedPhoneNumber =
+        phoneNumber.trim();
+
+      const cleanedCountry =
+        country.trim();
+
+      if (
+        !cleanedFirstName ||
+        !cleanedLastName ||
+        !cleanedPhoneNumber ||
+        !cleanedCountry
+      ) {
+        return res.status(400).json({
+          message:
+            "All profile fields must contain valid information.",
+        });
+      }
+
+      const updatedUser =
+        await prisma.user.update({
+          where: {
+            id: userId,
+          },
+
+          data: {
+            firstName:
+              cleanedFirstName,
+
+            lastName:
+              cleanedLastName,
+
+            phoneNumber:
+              cleanedPhoneNumber,
+
+            country:
+              cleanedCountry,
+          },
+        });
+
+      res.json({
+        message:
+          "Profile updated successfully.",
+
+        user: {
+          id:
+            updatedUser.id,
+
+          firstName:
+            updatedUser.firstName,
+
+          lastName:
+            updatedUser.lastName,
+
+          email:
+            updatedUser.email,
+
+          phoneNumber:
+            updatedUser.phoneNumber,
+
+          country:
+            updatedUser.country,
+        },
+      });
+
+    } catch (error) {
+      console.error(
+        "Update profile error:",
+        error
+      );
+
+      res.status(500).json({
+        message:
+          "Unable to update your profile.",
+      });
+    }
+  }
+);
 
 module.exports = router;

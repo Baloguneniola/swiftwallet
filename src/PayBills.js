@@ -293,12 +293,10 @@ function PayBills() {
           >
 
             ₦
-            {
-              Number(balance)
-                .toLocaleString(
-                  "en-NG"
-                )
-            }
+            {balance.toLocaleString("en-NG", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
 
           </h2>
 

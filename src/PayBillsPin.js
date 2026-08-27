@@ -19,267 +19,298 @@ function PayBillsPin() {
     amount,
   } = location.state || {};
 
+  const handleContinue =
+    async () => {
+      const currentUser =
+        JSON.parse(
+          localStorage.getItem(
+            "swiftWalletCurrentUser"
+          )
+        );
 
-  const handleContinue = async () => {
-
-    /*
-      GET CURRENT USER
-    */
-    const currentUser =
-      JSON.parse(
+      const token =
         localStorage.getItem(
-          "swiftWalletCurrentUser"
-        )
-      );
-
-    /*
-      GET JWT TOKEN
-    */
-    const token =
-      localStorage.getItem(
-        "swiftWalletToken"
-      );
-
-    /*
-      CHECK USER SESSION
-    */
-    if (!currentUser) {
-      alert("User session not found.");
-      return;
-    }
-
-    /*
-      CHECK JWT
-    */
-    if (!token) {
-      alert(
-        "Your login session has expired. Please log in again."
-      );
-      return;
-    }
-
-    /*
-      CHECK BILL INFORMATION
-    */
-    if (
-      !selectedBill ||
-      !provider ||
-      !accountNumber ||
-      !amount
-    ) {
-      alert(
-        "Payment information is missing."
-      );
-      return;
-    }
-
-    /*
-      CHECK PIN
-    */
-    if (pin.length !== 4) {
-      alert(
-        "Please enter your 4-digit PIN."
-      );
-      return;
-    }
-
-    /*
-      CONVERT AMOUNT
-    */
-    const billAmount =
-      Number(amount);
-
-    if (
-      !Number.isFinite(billAmount) ||
-      billAmount <= 0
-    ) {
-      alert(
-        "Invalid payment amount."
-      );
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-
-      /*
-        STEP 1
-        VERIFY PIN
-      */
-      const pinResponse =
-        await fetch(
-          "http://localhost:5000/api/auth/verify-pin",
-          {
-            method: "POST",
-
-            headers: {
-              "Content-Type":
-                "application/json",
-
-              Authorization:
-                `Bearer ${token}`,
-            },
-
-            body: JSON.stringify({
-              userId:
-                currentUser.id,
-
-              pin,
-            }),
-          }
+          "swiftWalletToken"
         );
 
-      const pinData =
-        await pinResponse.json();
-
-      if (!pinResponse.ok) {
+      if (!currentUser) {
         alert(
-          pinData.message ||
-          "Incorrect PIN."
+          "User session not found."
         );
+        return;
+      }
+
+      if (!token) {
+        alert(
+          "Your login session has expired. Please log in again."
+        );
+
+        navigate("/login");
 
         return;
       }
 
-
-      /*
-        STEP 2
-        PROCESS BILL PAYMENT
-        THROUGH BACKEND
-      */
-      const paymentResponse =
-        await fetch(
-          "http://localhost:5000/api/pay-bills",
-          {
-            method: "POST",
-
-            headers: {
-              "Content-Type":
-                "application/json",
-
-              Authorization:
-                `Bearer ${token}`,
-            },
-
-            body: JSON.stringify({
-              selectedBill,
-              provider,
-              accountNumber,
-              amount:
-                billAmount,
-            }),
-          }
-        );
-
-      const paymentResult =
-        await paymentResponse.json();
-
-      if (!paymentResponse.ok) {
+      if (
+        !selectedBill ||
+        !provider ||
+        !accountNumber ||
+        !amount
+      ) {
         alert(
-          paymentResult.message ||
-          "Unable to process bill payment."
+          "Payment information is missing."
         );
-
         return;
       }
 
+      if (pin.length !== 4) {
+        alert(
+          "Please enter your 4-digit PIN."
+        );
+        return;
+      }
 
-      /*
-        STEP 3
-        UPDATE LOCAL SESSION
-        USING BACKEND RESPONSE
+      const billAmount =
+        Number(amount);
 
-        The database is the source
-        of truth.
-      */
-      const updatedUser = {
-        ...currentUser,
+      if (
+        !Number.isFinite(
+          billAmount
+        ) ||
+        billAmount <= 0
+      ) {
+        alert(
+          "Invalid payment amount."
+        );
+        return;
+      }
 
-        balance:
-          paymentResult.newBalance,
+      setLoading(true);
 
-        account: {
-          ...(currentUser.account || {}),
+      try {
+        /*
+          STEP 1
+          VERIFY PIN
+        */
+        const pinResponse =
+          await fetch(
+            "http://localhost:5000/api/auth/verify-pin",
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+
+                Authorization:
+                  `Bearer ${token}`,
+              },
+
+              /*
+                USER ID IS NOT SENT.
+                JWT IDENTIFIES USER.
+              */
+              body: JSON.stringify({
+                pin,
+              }),
+            }
+          );
+
+        const pinData =
+          await pinResponse.json();
+
+        if (
+          pinResponse.status ===
+            401 ||
+          pinResponse.status ===
+            403
+        ) {
+          if (
+            pinResponse.status ===
+            403
+          ) {
+            localStorage.removeItem(
+              "swiftWalletToken"
+            );
+
+            localStorage.removeItem(
+              "swiftWalletCurrentUser"
+            );
+
+            localStorage.removeItem(
+              "swiftWalletUser"
+            );
+
+            navigate("/login");
+
+            return;
+          }
+
+          alert(
+            pinData.message ||
+              "Incorrect PIN."
+          );
+
+          return;
+        }
+
+        if (!pinResponse.ok) {
+          alert(
+            pinData.message ||
+              "Unable to verify PIN."
+          );
+
+          return;
+        }
+
+        /*
+          STEP 2
+          PROCESS BILL PAYMENT
+        */
+        const paymentResponse =
+          await fetch(
+            "http://localhost:5000/api/pay-bills",
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+
+                Authorization:
+                  `Bearer ${token}`,
+              },
+
+              body: JSON.stringify({
+                selectedBill,
+                provider,
+                accountNumber,
+                amount:
+                  billAmount,
+              }),
+            }
+          );
+
+        const paymentResult =
+          await paymentResponse.json();
+
+        if (
+          paymentResponse.status ===
+            401 ||
+          paymentResponse.status ===
+            403
+        ) {
+          localStorage.removeItem(
+            "swiftWalletToken"
+          );
+
+          localStorage.removeItem(
+            "swiftWalletCurrentUser"
+          );
+
+          localStorage.removeItem(
+            "swiftWalletUser"
+          );
+
+          navigate("/login");
+
+          return;
+        }
+
+        if (!paymentResponse.ok) {
+          alert(
+            paymentResult.message ||
+              "Unable to process bill payment."
+          );
+
+          return;
+        }
+
+        /*
+          STEP 3
+          UPDATE LOCAL SESSION
+        */
+        const updatedUser = {
+          ...currentUser,
 
           balance:
-            paymentResult
-              .newBalance
-              .toString(),
-        },
+            paymentResult.newBalance,
 
-        transactions: [
-          paymentResult.transaction,
+          account: {
+            ...(currentUser.account ||
+              {}),
 
-          ...(currentUser.transactions || []),
-        ],
-      };
-
-
-      /*
-        UPDATE CURRENT USER
-      */
-      localStorage.setItem(
-        "swiftWalletCurrentUser",
-        JSON.stringify(
-          updatedUser
-        )
-      );
-
-
-      /*
-        STEP 4
-        GO TO SUCCESS PAGE
-      */
-      navigate(
-        "/pay-bill-success",
-        {
-          state: {
-            transactionId:
+            balance:
               paymentResult
-                .transaction
-                .id,
-
-            selectedBill,
-
-            provider,
-
-            accountNumber,
-
-            amount:
-              billAmount,
-
-            transaction:
-              paymentResult
-                .transaction,
-
-            newBalance:
-              paymentResult
-                .newBalance,
+                .newBalance
+                .toString(),
           },
-        }
-      );
 
-      window.scrollTo(0, 0);
+          transactions: [
+            paymentResult.transaction,
 
-    } catch (error) {
+            ...(currentUser.transactions ||
+              []),
+          ],
+        };
 
-      console.error(
-        "Pay bill error:",
-        error
-      );
+        localStorage.setItem(
+          "swiftWalletCurrentUser",
+          JSON.stringify(
+            updatedUser
+          )
+        );
 
-      alert(
-        "Unable to connect to the Swift Wallet server."
-      );
+        /*
+          STEP 4
+          GO TO SUCCESS PAGE
+        */
+        navigate(
+          "/pay-bill-success",
+          {
+            state: {
+              transactionId:
+                paymentResult
+                  .transaction
+                  .id,
 
-    } finally {
+              selectedBill,
 
-      setLoading(false);
+              provider,
 
-    }
-  };
+              accountNumber,
 
+              amount:
+                billAmount,
+
+              transaction:
+                paymentResult
+                  .transaction,
+
+              newBalance:
+                paymentResult
+                  .newBalance,
+            },
+          }
+        );
+
+        window.scrollTo(
+          0,
+          0
+        );
+
+      } catch (error) {
+        console.error(
+          "Pay bill error:",
+          error
+        );
+
+        alert(
+          "Unable to connect to the Swift Wallet server."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
 
   return (
     <div
@@ -292,7 +323,6 @@ function PayBillsPin() {
         color: "#fff",
       }}
     >
-
       <Link
         to="/pay-bills"
         style={{
@@ -305,7 +335,6 @@ function PayBillsPin() {
           textDecoration: "none",
         }}
       >
-
         <div
           style={{
             width: "40px",
@@ -331,9 +360,7 @@ function PayBillsPin() {
         >
           Swift Wallet
         </span>
-
       </Link>
-
 
       <div
         style={{
@@ -345,7 +372,6 @@ function PayBillsPin() {
           textAlign: "center",
         }}
       >
-
         <h1
           style={{
             color: "#22c55e",
@@ -353,7 +379,6 @@ function PayBillsPin() {
         >
           Enter Transaction PIN
         </h1>
-
 
         <p
           style={{
@@ -363,7 +388,6 @@ function PayBillsPin() {
           Confirm your bill payment.
         </p>
 
-
         <div
           style={{
             backgroundColor: "#111",
@@ -372,7 +396,6 @@ function PayBillsPin() {
             margin: "25px 0",
           }}
         >
-
           <p
             style={{
               color: "#888",
@@ -380,7 +403,6 @@ function PayBillsPin() {
           >
             {selectedBill}
           </p>
-
 
           <h2
             style={{
@@ -395,7 +417,6 @@ function PayBillsPin() {
             )}
           </h2>
 
-
           <small
             style={{
               color: "#999",
@@ -403,9 +424,7 @@ function PayBillsPin() {
           >
             {provider}
           </small>
-
         </div>
-
 
         <input
           type="password"
@@ -414,7 +433,6 @@ function PayBillsPin() {
           placeholder="Enter 4-digit PIN"
           value={pin}
           onChange={(e) => {
-
             const value =
               e.target.value.replace(
                 /\D/g,
@@ -427,9 +445,10 @@ function PayBillsPin() {
           disabled={loading}
         />
 
-
         <button
-          onClick={handleContinue}
+          onClick={
+            handleContinue
+          }
           style={{
             ...buttonStyle,
 
@@ -450,29 +469,26 @@ function PayBillsPin() {
             : "Confirm Payment"}
         </button>
 
-
         <Link
           to="/pay-bills"
           style={{
-            textDecoration: "none",
+            textDecoration:
+              "none",
           }}
         >
-
           <button
-            style={secondaryButton}
+            style={
+              secondaryButton
+            }
             disabled={loading}
           >
             ← Back
           </button>
-
         </Link>
-
       </div>
-
     </div>
   );
 }
-
 
 const inputStyle = {
   width: "100%",
@@ -485,7 +501,6 @@ const inputStyle = {
   boxSizing: "border-box",
 };
 
-
 const buttonStyle = {
   width: "100%",
   padding: "14px",
@@ -496,7 +511,6 @@ const buttonStyle = {
   fontWeight: "700",
   cursor: "pointer",
 };
-
 
 const secondaryButton = {
   width: "100%",
@@ -509,6 +523,5 @@ const secondaryButton = {
   fontWeight: "700",
   cursor: "pointer",
 };
-
 
 export default PayBillsPin;
