@@ -25,7 +25,7 @@ function Support() {
         }}
       >
         <Link
-          to="/"
+          to="/settings"
           style={{
             display: "flex",
             alignItems: "center",
@@ -61,7 +61,7 @@ function Support() {
         </Link>
 
         <Link
-          to="/"
+          to="/settings"
           style={{
             color: "#22c55e",
             textDecoration: "none",
@@ -70,7 +70,6 @@ function Support() {
         >
         </Link>
       </div>
-
 
       {/* Main Content */}
       <div
@@ -101,7 +100,6 @@ function Support() {
           Need help with your account, payments, or transactions?
           Our support team is here to assist you.
         </p>
-
 
         {/* Support Options */}
         <div
@@ -134,7 +132,6 @@ function Support() {
             icon="❓"
           />
         </div>
-
 
         {/* Contact Section */}
         <div
@@ -186,13 +183,10 @@ function Support() {
             Contact Support
           </button>
         </div>
-
-
       </div>
     </div>
   );
 }
-
 
 function SupportCard({ title, text, icon }) {
   return (
@@ -233,6 +227,5 @@ function SupportCard({ title, text, icon }) {
     </div>
   );
 }
-
 
 export default Support;

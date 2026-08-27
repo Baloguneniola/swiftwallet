@@ -4,32 +4,47 @@ import { Link, useNavigate } from "react-router-dom";
 function EditProfile() {
   const navigate = useNavigate();
 
-  const [firstName, setFirstName] =
-    useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [country, setCountry] = useState("");
 
-  const [lastName, setLastName] =
-    useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const [email, setEmail] =
-    useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const [phoneNumber, setPhoneNumber] =
-    useState("");
+  /*
+    SAFELY READ BACKEND RESPONSE
 
-  const [country, setCountry] =
-    useState("");
+    This prevents:
+    Unexpected token '<', "<!DOCTYPE "... is not valid JSON
 
-  const [loading, setLoading] =
-    useState(true);
+    If the server returns HTML instead of JSON,
+    we handle it without crashing the page.
+  */
+  const getResponseData = async (response) => {
+    const contentType =
+      response.headers.get("content-type") || "";
 
-  const [saving, setSaving] =
-    useState(false);
+    if (contentType.includes("application/json")) {
+      return await response.json();
+    }
 
-  const [error, setError] =
-    useState("");
+    const text = await response.text();
 
-  const [success, setSuccess] =
-    useState("");
+    console.error(
+      "Backend returned a non-JSON response:",
+      text
+    );
+
+    return {
+      message:
+        "The backend returned an unexpected response. Please make sure the SwiftWallet backend is running on port 5000.",
+    };
+  };
 
   /*
     LOAD CURRENT USER FROM BACKEND
@@ -37,77 +52,63 @@ function EditProfile() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
+        setError("");
+
         const token =
-          localStorage.getItem(
-            "swiftWalletToken"
-          );
+          localStorage.getItem("swiftWalletToken");
 
         if (!token) {
           navigate("/login");
           return;
         }
 
-        const response =
-          await fetch(
-            "http://localhost:5000/api/auth/me",
-            {
-              method: "GET",
+        const response = await fetch(
+          "http://localhost:5000/api/auth/me",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
-              headers: {
-                Authorization:
-                  `Bearer ${token}`,
-              },
-            }
+        const data = await getResponseData(response);
+
+        /*
+          INVALID / EXPIRED TOKEN
+        */
+        if (response.status === 401) {
+          localStorage.removeItem(
+            "swiftWalletToken"
           );
 
-        const data =
-          await response.json();
+          navigate("/login");
+          return;
+        }
 
         if (!response.ok) {
-          if (
-            response.status === 401
-          ) {
-            localStorage.removeItem(
-              "swiftWalletToken"
-            );
-
-            navigate("/login");
-            return;
-          }
-
           throw new Error(
             data.message ||
-              "Unable to load your profile."
+              `Unable to load your profile. Server returned ${response.status}.`
           );
         }
 
-        const user =
-          data.user;
+        if (!data.user) {
+          throw new Error(
+            "No user information was returned by the backend."
+          );
+        }
+
+        const user = data.user;
 
         /*
-          USER DATA NOW COMES
-          FROM THE DATABASE
+          USER DATA COMES FROM DATABASE
         */
-        setFirstName(
-          user.firstName || ""
-        );
-
-        setLastName(
-          user.lastName || ""
-        );
-
-        setEmail(
-          user.email || ""
-        );
-
-        setPhoneNumber(
-          user.phoneNumber || ""
-        );
-
-        setCountry(
-          user.country || ""
-        );
-
+        setFirstName(user.firstName || "");
+        setLastName(user.lastName || "");
+        setEmail(user.email || "");
+        setPhoneNumber(user.phoneNumber || "");
+        setCountry(user.country || "");
       } catch (error) {
         console.error(
           "Load profile error:",
@@ -129,9 +130,7 @@ function EditProfile() {
   /*
     SAVE PROFILE TO BACKEND
   */
-  const saveProfile = async (
-    event
-  ) => {
+  const saveProfile = async (event) => {
     event.preventDefault();
 
     setError("");
@@ -157,54 +156,50 @@ function EditProfile() {
       setSaving(true);
 
       const token =
-        localStorage.getItem(
-          "swiftWalletToken"
-        );
+        localStorage.getItem("swiftWalletToken");
 
       if (!token) {
         navigate("/login");
         return;
       }
 
-      const response =
-        await fetch(
-          "http://localhost:5000/api/auth/update-profile",
-          {
-            method: "PUT",
+      /*
+        SEND UPDATED PROFILE TO BACKEND
+      */
+      const response = await fetch(
+        "http://localhost:5000/api/auth/update-profile",
+        {
+          method: "PUT",
 
-            headers: {
-              "Content-Type":
-                "application/json",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
 
-              Authorization:
-                `Bearer ${token}`,
-            },
+          body: JSON.stringify({
+            firstName: firstName.trim(),
+            lastName: lastName.trim(),
+            phoneNumber: phoneNumber.trim(),
+            country: country.trim(),
+          }),
+        }
+      );
 
-            body: JSON.stringify({
-              firstName:
-                firstName.trim(),
+      /*
+        SAFELY READ RESPONSE
+      */
+      const data = await getResponseData(response);
 
-              lastName:
-                lastName.trim(),
-
-              phoneNumber:
-                phoneNumber.trim(),
-
-              country:
-                country.trim(),
-            }),
-          }
-        );
-
-      const data =
-        await response.json();
+      console.log(
+        "Update profile response:",
+        response.status,
+        data
+      );
 
       /*
         INVALID / EXPIRED TOKEN
       */
-      if (
-        response.status === 401
-      ) {
+      if (response.status === 401) {
         localStorage.removeItem(
           "swiftWalletToken"
         );
@@ -213,10 +208,13 @@ function EditProfile() {
         return;
       }
 
+      /*
+        OTHER BACKEND ERRORS
+      */
       if (!response.ok) {
         throw new Error(
           data.message ||
-            "Unable to update your profile."
+            `Unable to update your profile. Server returned ${response.status}.`
         );
       }
 
@@ -224,28 +222,40 @@ function EditProfile() {
         SUCCESS
       */
       setSuccess(
-        "Profile updated successfully."
+        data.message ||
+          "Profile updated successfully."
       );
 
       /*
-        Wait briefly so the user
-        can see the success message.
+        Wait briefly so the user can see
+        the success message.
       */
       setTimeout(() => {
         navigate("/profile");
         window.scrollTo(0, 0);
       }, 1000);
-
     } catch (error) {
       console.error(
         "Save profile error:",
         error
       );
 
-      setError(
-        error.message ||
-          "Unable to update your profile."
-      );
+      /*
+        NETWORK ERROR
+      */
+      if (
+        error instanceof TypeError &&
+        error.message.includes("fetch")
+      ) {
+        setError(
+          "Unable to connect to the backend. Please make sure your SwiftWallet backend is running on http://localhost:5000."
+        );
+      } else {
+        setError(
+          error.message ||
+            "Unable to update your profile."
+        );
+      }
     } finally {
       setSaving(false);
     }
@@ -329,8 +339,7 @@ function EditProfile() {
               lineHeight: "1.5",
             }}
           >
-            Update your personal information
-            below.
+            Update your personal information below.
           </p>
 
           {error && (
@@ -343,6 +352,7 @@ function EditProfile() {
                 borderRadius: "8px",
                 marginBottom: "20px",
                 fontSize: "14px",
+                lineHeight: "1.5",
               }}
             >
               {error}
@@ -365,12 +375,8 @@ function EditProfile() {
             </div>
           )}
 
-          <form
-            onSubmit={saveProfile}
-          >
-            <label
-              style={labelStyle}
-            >
+          <form onSubmit={saveProfile}>
+            <label style={labelStyle}>
               First Name
             </label>
 
@@ -379,17 +385,13 @@ function EditProfile() {
               style={inputStyle}
               value={firstName}
               onChange={(e) =>
-                setFirstName(
-                  e.target.value
-                )
+                setFirstName(e.target.value)
               }
               placeholder="Enter your first name"
               disabled={saving}
             />
 
-            <label
-              style={labelStyle}
-            >
+            <label style={labelStyle}>
               Last Name
             </label>
 
@@ -398,17 +400,13 @@ function EditProfile() {
               style={inputStyle}
               value={lastName}
               onChange={(e) =>
-                setLastName(
-                  e.target.value
-                )
+                setLastName(e.target.value)
               }
               placeholder="Enter your last name"
               disabled={saving}
             />
 
-            <label
-              style={labelStyle}
-            >
+            <label style={labelStyle}>
               Email
             </label>
 
@@ -416,7 +414,7 @@ function EditProfile() {
               type="email"
               style={{
                 ...inputStyle,
-                opacity: "0.6",
+                opacity: 0.6,
                 cursor: "not-allowed",
               }}
               value={email}
@@ -430,13 +428,10 @@ function EditProfile() {
                 marginTop: "6px",
               }}
             >
-              Email address cannot be changed
-              here.
+              Email address cannot be changed here.
             </p>
 
-            <label
-              style={labelStyle}
-            >
+            <label style={labelStyle}>
               Phone Number
             </label>
 
@@ -445,17 +440,13 @@ function EditProfile() {
               style={inputStyle}
               value={phoneNumber}
               onChange={(e) =>
-                setPhoneNumber(
-                  e.target.value
-                )
+                setPhoneNumber(e.target.value)
               }
               placeholder="Enter phone number"
               disabled={saving}
             />
 
-            <label
-              style={labelStyle}
-            >
+            <label style={labelStyle}>
               Country
             </label>
 
@@ -464,9 +455,7 @@ function EditProfile() {
               style={inputStyle}
               value={country}
               onChange={(e) =>
-                setCountry(
-                  e.target.value
-                )
+                setCountry(e.target.value)
               }
               placeholder="Enter country"
               disabled={saving}
@@ -477,9 +466,7 @@ function EditProfile() {
               disabled={saving}
               style={{
                 ...buttonStyle,
-                opacity: saving
-                  ? 0.6
-                  : 1,
+                opacity: saving ? 0.6 : 1,
                 cursor: saving
                   ? "not-allowed"
                   : "pointer",
@@ -498,9 +485,7 @@ function EditProfile() {
               disabled={saving}
               style={{
                 ...cancelButtonStyle,
-                opacity: saving
-                  ? 0.6
-                  : 1,
+                opacity: saving ? 0.6 : 1,
                 cursor: saving
                   ? "not-allowed"
                   : "pointer",

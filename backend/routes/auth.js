@@ -1795,4 +1795,132 @@ router.put(
   }
 );
 
+/*
+  GET ACCOUNT SECURITY SETTINGS
+  PROTECTED BY JWT MIDDLEWARE
+*/
+router.get(
+  "/security-settings",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const userId = req.user.userId;
+
+      const user =
+        await prisma.user.findUnique({
+          where: {
+            id: userId,
+          },
+
+          include: {
+            securitySettings: true,
+            cards: true,
+          },
+        });
+
+      if (!user) {
+        return res.status(404).json({
+          message: "User not found.",
+        });
+      }
+
+      const card =
+        user.cards?.[0] || null;
+
+      res.json({
+        security: {
+          hasPin:
+            !!user.securitySettings?.pinHash,
+
+          emailVerified:
+            user.emailVerified,
+
+          cardFrozen:
+            card?.frozen || false,
+        },
+      });
+
+    } catch (error) {
+      console.error(
+        "Get security settings error:",
+        error
+      );
+
+      res.status(500).json({
+        message:
+          "Unable to retrieve your security settings.",
+      });
+    }
+  }
+);
+
+/*
+  UPDATE CARD PROTECTION
+  PROTECTED BY JWT MIDDLEWARE
+*/
+router.put(
+  "/card-protection",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const userId = req.user.userId;
+      const { frozen } = req.body;
+
+      if (typeof frozen !== "boolean") {
+        return res.status(400).json({
+          message:
+            "Card protection status must be true or false.",
+        });
+      }
+
+      const card =
+        await prisma.card.findFirst({
+          where: {
+            userId: userId,
+          },
+        });
+
+      if (!card) {
+        return res.status(404).json({
+          message:
+            "No card was found for this account.",
+        });
+      }
+
+      const updatedCard =
+        await prisma.card.update({
+          where: {
+            id: card.id,
+          },
+
+          data: {
+            frozen: frozen,
+          },
+        });
+
+      res.json({
+        message: frozen
+          ? "Your card has been frozen successfully."
+          : "Your card has been unfrozen successfully.",
+
+        card: {
+          frozen:
+            updatedCard.frozen,
+        },
+      });
+
+    } catch (error) {
+      console.error(
+        "Update card protection error:",
+        error
+      );
+
+      res.status(500).json({
+        message:
+          "Unable to update your card protection settings.",
+      });
+    }
+  }
+);
+
 module.exports = router;
