@@ -25,7 +25,7 @@ function Privacy() {
         }}
       >
         <Link
-          to="/"
+          to="/settings"
           style={{
             display: "flex",
             alignItems: "center",
@@ -61,7 +61,7 @@ function Privacy() {
         </Link>
 
         <Link
-          to="/"
+          to="/settings"
           style={{
             color: "#22c55e",
             textDecoration: "none",

@@ -26,7 +26,7 @@ function Terms() {
         
       >
         <Link
-          to="/"
+          to="/settings"
           style={{
             display: "flex",
             alignItems: "center",
@@ -62,7 +62,7 @@ function Terms() {
         </Link>
 
         <Link
-          to="/"
+          to="/settings"
           style={{
             color: "#22c55e",
             textDecoration: "none",

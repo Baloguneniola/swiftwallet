@@ -108,7 +108,7 @@ function Settings() {
           <SettingItem
             icon={<User size={20}/>}
             title="Profile"
-            description="View your account information"
+            description="View and update your personal details"
             onClick={() =>
               navigate("/profile")
             }
@@ -116,14 +116,6 @@ function Settings() {
 
 
 
-          <SettingItem
-            icon={<User size={20}/>}
-            title="Edit Profile"
-            description="Update your personal details"
-            onClick={() =>
-              navigate("/edit-profile")
-            }
-          />
 
 
         </SettingsSection>
