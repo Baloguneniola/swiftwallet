@@ -31,33 +31,6 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   /*
-    SMOOTH PAGE NAVIGATION
-
-    Uses the browser's native View Transition API
-    when available.
-
-    If the browser does not support it,
-    normal React Router navigation is used.
-  */
-  const smoothNavigate = (path, options = {}) => {
-    const changePage = () => {
-      navigate(path, options);
-    };
-
-    if (
-      typeof document !== "undefined" &&
-      typeof document.startViewTransition ===
-        "function"
-    ) {
-      document.startViewTransition(
-        changePage
-      );
-    } else {
-      changePage();
-    }
-  };
-
-  /*
     GET CURRENT USER FROM BACKEND
 
     The backend/database is now the
@@ -334,7 +307,7 @@ function Dashboard() {
       "swiftWalletToken"
     );
 
-    smoothNavigate("/login");
+    navigate("/login");
 
     window.scrollTo(0, 0);
   };
@@ -345,7 +318,7 @@ function Dashboard() {
   const openTransaction = (
     transaction
   ) => {
-    smoothNavigate(
+    navigate(
       "/transaction-details",
       {
         state: {
@@ -414,7 +387,7 @@ function Dashboard() {
 
           <button
             onClick={() =>
-              smoothNavigate("/login")
+              navigate("/login")
             }
             style={
               styles.copyButton
@@ -432,18 +405,12 @@ function Dashboard() {
       <nav style={styles.navbar}>
         <Link
           to="/dashboard"
-          onClick={(event) => {
-            event.preventDefault();
-
-            smoothNavigate(
-              "/dashboard"
-            );
-
+          onClick={() =>
             window.scrollTo(
               0,
               0
-            );
-          }}
+            )
+          }
           style={
             styles.logoContainer
           }
@@ -495,11 +462,9 @@ function Dashboard() {
                     size={17}
                   />
                 }
-                text="Settings"
-                smoothNavigate={
-                  smoothNavigate
-                }
-              />
+              >
+                Settings
+              </MenuLink>
 
               <button
                 onClick={
@@ -805,9 +770,6 @@ function Dashboard() {
               />
             }
             title="Send Money"
-            smoothNavigate={
-              smoothNavigate
-            }
           />
 
           <ActionCard
@@ -818,12 +780,8 @@ function Dashboard() {
               />
             }
             title="Add Money"
-            smoothNavigate={
-              smoothNavigate
-            }
           />
 
-          {/* PAY BILLS - NAIRA SYMBOL */}
           <ActionCard
             to="/pay-bills"
             icon={
@@ -838,9 +796,6 @@ function Dashboard() {
               </span>
             }
             title="Pay Bills"
-            smoothNavigate={
-              smoothNavigate
-            }
           />
 
           <ActionCard
@@ -851,9 +806,6 @@ function Dashboard() {
               />
             }
             title="Transaction History"
-            smoothNavigate={
-              smoothNavigate
-            }
           />
         </div>
 
@@ -869,18 +821,12 @@ function Dashboard() {
 
           <Link
             to="/transaction-history"
-            onClick={(event) => {
-              event.preventDefault();
-
-              smoothNavigate(
-                "/transaction-history"
-              );
-
+            onClick={() =>
               window.scrollTo(
                 0,
                 0
-              );
-            }}
+              )
+            }
             style={
               styles.viewAll
             }
@@ -998,25 +944,23 @@ function Dashboard() {
 }
 
 
+/*
+  QUICK ACTION CARD
+*/
 function ActionCard({
   to,
   icon,
   title,
-  smoothNavigate,
 }) {
   return (
     <Link
       to={to}
-      onClick={(event) => {
-        event.preventDefault();
-
-        smoothNavigate(to);
-
+      onClick={() =>
         window.scrollTo(
           0,
           0
-        );
-      }}
+        )
+      }
       style={{
         textDecoration:
           "none",
@@ -1044,32 +988,30 @@ function ActionCard({
 }
 
 
+/*
+  ACCOUNT MENU LINK
+*/
 function MenuLink({
   to,
   icon,
-  text,
-  smoothNavigate,
+  children,
 }) {
   return (
     <Link
       to={to}
-      onClick={(event) => {
-        event.preventDefault();
-
-        smoothNavigate(to);
-
+      onClick={() =>
         window.scrollTo(
           0,
           0
-        );
-      }}
+        )
+      }
       style={
         styles.menuLink
       }
     >
       {icon}
 
-      {text}
+      {children}
     </Link>
   );
 }
@@ -1319,7 +1261,8 @@ const styles = {
     flexDirection: "column",
     gap: "15px",
     fontWeight: "600",
-    transition: "transform 0.1s ease, border-color 0.1s ease, background-color 0.1s ease",
+    transition:
+      "transform 0.1s ease, border-color 0.1s ease, background-color 0.1s ease",
     cursor: "pointer",
   },
 
