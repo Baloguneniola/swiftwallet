@@ -2,12 +2,28 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
+const dns = require("dns");
+
 const prisma = require("../lib/prisma");
 const authenticateToken = require("../middleware/auth");
 
 require("dotenv").config();
 
+/*
+  FORCE NODE TO PREFER IPV4
+
+  Render was attempting to connect to Gmail
+  using IPv6 and receiving:
+
+  ENETUNREACH
+
+  This makes Node prefer IPv4 when connecting
+  to the Gmail SMTP server.
+*/
+dns.setDefaultResultOrder("ipv4first");
+
 const router = express.Router();
+
 
 /*
   EMAIL TRANSPORTER
@@ -16,11 +32,37 @@ const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 587,
   secure: false,
+
+  /*
+    Force IPv4
+  */
+  family: 4,
+
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
+
+  /*
+    SMTP connection settings
+  */
+  connectionTimeout: 30000,
+
+  greetingTimeout: 30000,
+
+  socketTimeout: 30000,
+
+  /*
+    Use STARTTLS on port 587
+  */
+  requireTLS: true,
+
+  tls: {
+    rejectUnauthorized: true,
+  },
 });
+
+
 /*
   SEND VERIFICATION EMAIL
 */
@@ -31,53 +73,139 @@ const sendVerificationEmail = async (
 ) => {
   await transporter.sendMail({
     from: `"Swift Wallet" <${process.env.SMTP_USER}>`,
+
     to: email,
-    subject: "Your Swift Wallet verification code",
+
+    subject:
+      "Your Swift Wallet verification code",
+
     html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color:#0d0d0d; color: #ffffff;">
+      <div
+        style="
+          font-family: Arial, sans-serif;
+          max-width: 600px;
+          margin: 0 auto;
+          padding: 40px;
+          background-color: #0d0d0d;
+          color: #ffffff;
+        "
+      >
+
         <div style="text-align: center;">
 
           <div style="margin-bottom: 30px;">
-            <div style="display: inline-flex; align-items: center; gap: 10px;">
 
-              <div style="width: 40px; height: 40px; background-color: #22c55e; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; color: #000000;">
+            <div
+              style="
+                display: inline-flex;
+                align-items: center;
+                gap: 10px;
+              "
+            >
+
+              <div
+                style="
+                  width: 40px;
+                  height: 40px;
+                  background-color: #22c55e;
+                  border-radius: 10px;
+                  display: inline-flex;
+                  align-items: center;
+                  justify-content: center;
+                  font-weight: bold;
+                  color: #000000;
+                "
+              >
                 SW
               </div>
 
-              <span style="font-size: 20px; font-weight: 700; color: #ffffff;">
+              <span
+                style="
+                  font-size: 20px;
+                  font-weight: 700;
+                  color: #ffffff;
+                "
+              >
                 Swift Wallet
               </span>
 
             </div>
+
           </div>
+
 
           <h1 style="color: #22c55e;">
             Verify your email
           </h1>
 
-          <p style="color: #cccccc; font-size: 16px;">
+
+          <p
+            style="
+              color: #cccccc;
+              font-size: 16px;
+            "
+          >
             Hi ${firstName},
           </p>
 
-          <p style="color: #cccccc; font-size: 16px;">
-            Use the verification code below to verify your Swift Wallet account.
+
+          <p
+            style="
+              color: #cccccc;
+              font-size: 16px;
+            "
+          >
+            Use the verification code below
+            to verify your Swift Wallet account.
           </p>
 
-          <div style="margin: 30px 0; padding: 20px; background-color: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px;">
-            <div style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #22c55e;">
+
+          <div
+            style="
+              margin: 30px 0;
+              padding: 20px;
+              background-color: #1a1a1a;
+              border: 1px solid #2a2a2a;
+              border-radius: 10px;
+            "
+          >
+
+            <div
+              style="
+                font-size: 36px;
+                font-weight: bold;
+                letter-spacing: 8px;
+                color: #22c55e;
+              "
+            >
               ${verificationCode}
             </div>
+
           </div>
 
-          <p style="color: #888888; font-size: 14px;">
+
+          <p
+            style="
+              color: #888888;
+              font-size: 14px;
+            "
+          >
             This code expires in 10 minutes.
           </p>
 
-          <p style="color: #888888; font-size: 14px;">
-            If you did not create a Swift Wallet account, you can safely ignore this email.
+
+          <p
+            style="
+              color: #888888;
+              font-size: 14px;
+            "
+          >
+            If you did not create a Swift Wallet
+            account, you can safely ignore this email.
           </p>
 
         </div>
+
       </div>
     `,
   });
@@ -87,123 +215,176 @@ const sendVerificationEmail = async (
 /*
   SIGN UP
 */
-router.post("/signup", async (req, res) => {
-  try {
-    const {
-      name,
-      email,
-      password,
-    } = req.body;
-
-    if (!name || !email || !password) {
-      return res.status(400).json({
-        message:
-          "Name, email and password are required",
-      });
-    }
-
-    const normalizedEmail =
-      email.toLowerCase().trim();
-
-    const existingUser =
-      await prisma.user.findUnique({
-        where: {
-          email: normalizedEmail,
-        },
-      });
-
-    if (existingUser) {
-      return res.status(409).json({
-        message:
-          "An account with this email already exists",
-      });
-    }
-
-    const nameParts =
-      name.trim().split(/\s+/);
-
-    const firstName =
-      nameParts[0];
-
-    const lastName =
-      nameParts.length > 1
-        ? nameParts.slice(1).join(" ")
-        : "";
-
-    const passwordHash =
-      await bcrypt.hash(password, 10);
-
-    const verificationCode =
-      Math.floor(
-        100000 +
-        Math.random() * 900000
-      ).toString();
-
-    const verificationExpires =
-      new Date(
-        Date.now() + 10 * 60 * 1000
-      );
-
-    const user =
-      await prisma.user.create({
-        data: {
-          firstName,
-          lastName,
-          email: normalizedEmail,
-          passwordHash,
-          emailVerified: false,
-          verificationCode,
-          verificationExpires,
-        },
-      });
-
+router.post(
+  "/signup",
+  async (req, res) => {
     try {
-      await sendVerificationEmail(
-        normalizedEmail,
-        firstName,
-        verificationCode
-      );
-    } catch (emailError) {
-      console.error(
-        "Verification email error:",
-        emailError
-      );
+      const {
+        name,
+        email,
+        password,
+      } = req.body;
 
-      await prisma.user.delete({
-        where: {
-          id: user.id,
+
+      if (!name || !email || !password) {
+        return res.status(400).json({
+          message:
+            "Name, email and password are required",
+        });
+      }
+
+
+      const normalizedEmail =
+        email.toLowerCase().trim();
+
+
+      /*
+        CHECK IF EMAIL ALREADY EXISTS
+      */
+      const existingUser =
+        await prisma.user.findUnique({
+          where: {
+            email: normalizedEmail,
+          },
+        });
+
+
+      if (existingUser) {
+        return res.status(409).json({
+          message:
+            "An account with this email already exists",
+        });
+      }
+
+
+      /*
+        SPLIT NAME
+      */
+      const nameParts =
+        name.trim().split(/\s+/);
+
+
+      const firstName =
+        nameParts[0];
+
+
+      const lastName =
+        nameParts.length > 1
+          ? nameParts.slice(1).join(" ")
+          : "";
+
+
+      /*
+        HASH PASSWORD
+      */
+      const passwordHash =
+        await bcrypt.hash(password, 10);
+
+
+      /*
+        CREATE VERIFICATION CODE
+      */
+      const verificationCode =
+        Math.floor(
+          100000 +
+          Math.random() * 900000
+        ).toString();
+
+
+      const verificationExpires =
+        new Date(
+          Date.now() +
+          10 * 60 * 1000
+        );
+
+
+      /*
+        CREATE USER
+      */
+      const user =
+        await prisma.user.create({
+          data: {
+            firstName,
+            lastName,
+            email: normalizedEmail,
+            passwordHash,
+            emailVerified: false,
+            verificationCode,
+            verificationExpires,
+          },
+        });
+
+
+      /*
+        SEND VERIFICATION EMAIL
+      */
+      try {
+        await sendVerificationEmail(
+          normalizedEmail,
+          firstName,
+          verificationCode
+        );
+
+      } catch (emailError) {
+
+        console.error(
+          "Verification email error:",
+          emailError
+        );
+
+
+        /*
+          DELETE USER IF EMAIL
+          CANNOT BE SENT
+        */
+        await prisma.user.delete({
+          where: {
+            id: user.id,
+          },
+        });
+
+
+        return res.status(500).json({
+          message:
+            "Account could not be created because the verification email could not be sent",
+        });
+      }
+
+
+      res.status(201).json({
+        message:
+          "Account created successfully",
+
+        user: {
+          id:
+            user.id,
+
+          firstName:
+            user.firstName,
+
+          lastName:
+            user.lastName,
+
+          email:
+            user.email,
         },
       });
 
-      return res.status(500).json({
+    } catch (error) {
+
+      console.error(
+        "Signup error:",
+        error
+      );
+
+
+      res.status(500).json({
         message:
-          "Account could not be created because the verification email could not be sent",
+          "Something went wrong while creating the account",
       });
     }
-
-    res.status(201).json({
-      message:
-        "Account created successfully",
-
-      user: {
-        id: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-      },
-    });
-  } catch (error) {
-    console.error(
-      "Signup error:",
-      error
-    );
-
-    res.status(500).json({
-      message:
-        "Something went wrong while creating the account",
-    });
   }
-});
+);
 
 
 /*
@@ -214,60 +395,147 @@ const sendPasswordResetEmail = async (
   firstName,
   resetCode
 ) => {
+
   await transporter.sendMail({
-    from: `"Swift Wallet" <${process.env.SMTP_USER}>`,
+    from:
+      `"Swift Wallet" <${process.env.SMTP_USER}>`,
+
     to: email,
-    subject: "Your Swift Wallet password reset code",
+
+    subject:
+      "Your Swift Wallet password reset code",
+
     html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color:#0d0d0d; color: #ffffff;">
+      <div
+        style="
+          font-family: Arial, sans-serif;
+          max-width: 600px;
+          margin: 0 auto;
+          padding: 40px;
+          background-color: #0d0d0d;
+          color: #ffffff;
+        "
+      >
+
         <div style="text-align: center;">
 
           <div style="margin-bottom: 30px;">
-            <div style="display: inline-flex; align-items: center; gap: 10px;">
 
-              <div style="width: 40px; height: 40px; background-color: #22c55e; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; color: #000000;">
+            <div
+              style="
+                display: inline-flex;
+                align-items: center;
+                gap: 10px;
+              "
+            >
+
+              <div
+                style="
+                  width: 40px;
+                  height: 40px;
+                  background-color: #22c55e;
+                  border-radius: 10px;
+                  display: inline-flex;
+                  align-items: center;
+                  justify-content: center;
+                  font-weight: bold;
+                  color: #000000;
+                "
+              >
                 SW
               </div>
 
-              <span style="font-size: 20px; font-weight: 700; color: #ffffff;">
+              <span
+                style="
+                  font-size: 20px;
+                  font-weight: 700;
+                  color: #ffffff;
+                "
+              >
                 Swift Wallet
               </span>
 
             </div>
+
           </div>
+
 
           <h1 style="color: #22c55e;">
             Reset your password
           </h1>
 
-          <p style="color: #cccccc; font-size: 16px;">
+
+          <p
+            style="
+              color: #cccccc;
+              font-size: 16px;
+            "
+          >
             Hi ${firstName},
           </p>
 
-          <p style="color: #cccccc; font-size: 16px;">
-            Use the password reset code below to create a new Swift Wallet password.
+
+          <p
+            style="
+              color: #cccccc;
+              font-size: 16px;
+            "
+          >
+            Use the password reset code below
+            to create a new Swift Wallet password.
           </p>
 
-          <div style="margin: 30px 0; padding: 20px; background-color: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px;">
-            <div style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #22c55e;">
+
+          <div
+            style="
+              margin: 30px 0;
+              padding: 20px;
+              background-color: #1a1a1a;
+              border: 1px solid #2a2a2a;
+              border-radius: 10px;
+            "
+          >
+
+            <div
+              style="
+                font-size: 36px;
+                font-weight: bold;
+                letter-spacing: 8px;
+                color: #22c55e;
+              "
+            >
               ${resetCode}
             </div>
+
           </div>
 
-          <p style="color: #888888; font-size: 14px;">
+
+          <p
+            style="
+              color: #888888;
+              font-size: 14px;
+            "
+          >
             This code expires in 10 minutes.
           </p>
 
-          <p style="color: #888888; font-size: 14px;">
-            If you did not request a password reset, you can safely ignore this email.
+
+          <p
+            style="
+              color: #888888;
+              font-size: 14px;
+            "
+          >
+            If you did not request a password reset,
+            you can safely ignore this email.
           </p>
 
         </div>
+
       </div>
     `,
   });
 };
-
 
 
 /*
@@ -276,11 +544,14 @@ const sendPasswordResetEmail = async (
 router.post(
   "/verify-email",
   async (req, res) => {
+
     try {
+
       const {
         email,
         code,
       } = req.body;
+
 
       if (!email || !code) {
         return res.status(400).json({
@@ -289,8 +560,10 @@ router.post(
         });
       }
 
+
       const normalizedEmail =
         email.toLowerCase().trim();
+
 
       const user =
         await prisma.user.findUnique({
@@ -299,11 +572,14 @@ router.post(
           },
         });
 
+
       if (!user) {
         return res.status(404).json({
-          message: "User not found",
+          message:
+            "User not found",
         });
       }
+
 
       if (user.emailVerified) {
         return res.status(400).json({
@@ -311,6 +587,7 @@ router.post(
             "Email is already verified",
         });
       }
+
 
       if (
         !user.verificationCode ||
@@ -322,6 +599,7 @@ router.post(
         });
       }
 
+
       if (
         new Date() >
         user.verificationExpires
@@ -332,6 +610,7 @@ router.post(
         });
       }
 
+
       if (
         user.verificationCode !==
         code.toString()
@@ -341,6 +620,7 @@ router.post(
             "Invalid verification code",
         });
       }
+
 
       const updatedUser =
         await prisma.user.update({
@@ -355,25 +635,33 @@ router.post(
           },
         });
 
+
       res.json({
         message:
           "Email verified successfully",
 
         user: {
-          id: updatedUser.id,
+          id:
+            updatedUser.id,
+
           firstName:
             updatedUser.firstName,
+
           lastName:
             updatedUser.lastName,
+
           email:
             updatedUser.email,
         },
       });
+
     } catch (error) {
+
       console.error(
         "Email verification error:",
         error
       );
+
 
       res.status(500).json({
         message:
@@ -390,8 +678,11 @@ router.post(
 router.post(
   "/resend-code",
   async (req, res) => {
+
     try {
+
       const { email } = req.body;
+
 
       if (!email) {
         return res.status(400).json({
@@ -400,8 +691,10 @@ router.post(
         });
       }
 
+
       const normalizedEmail =
         email.toLowerCase().trim();
+
 
       const user =
         await prisma.user.findUnique({
@@ -410,12 +703,14 @@ router.post(
           },
         });
 
+
       if (!user) {
         return res.status(404).json({
           message:
             "User not found",
         });
       }
+
 
       if (user.emailVerified) {
         return res.status(400).json({
@@ -424,16 +719,20 @@ router.post(
         });
       }
 
+
       const verificationCode =
         Math.floor(
           100000 +
           Math.random() * 900000
         ).toString();
 
+
       const verificationExpires =
         new Date(
-          Date.now() + 10 * 60 * 1000
+          Date.now() +
+          10 * 60 * 1000
         );
+
 
       await prisma.user.update({
         where: {
@@ -446,17 +745,22 @@ router.post(
         },
       });
 
+
       try {
+
         await sendVerificationEmail(
           user.email,
           user.firstName,
           verificationCode
         );
+
       } catch (emailError) {
+
         console.error(
           "Resend verification email error:",
           emailError
         );
+
 
         return res.status(500).json({
           message:
@@ -464,15 +768,19 @@ router.post(
         });
       }
 
+
       res.json({
         message:
           "A new verification code has been sent to your email",
       });
+
     } catch (error) {
+
       console.error(
         "Resend code error:",
         error
       );
+
 
       res.status(500).json({
         message:
@@ -489,8 +797,11 @@ router.post(
 router.post(
   "/forgot-password",
   async (req, res) => {
+
     try {
+
       const { email } = req.body;
+
 
       if (!email) {
         return res.status(400).json({
@@ -499,8 +810,10 @@ router.post(
         });
       }
 
+
       const normalizedEmail =
         email.toLowerCase().trim();
+
 
       const user =
         await prisma.user.findUnique({
@@ -509,12 +822,14 @@ router.post(
           },
         });
 
+
       if (!user) {
         return res.status(404).json({
           message:
             "No account was found with this email address.",
         });
       }
+
 
       if (!user.emailVerified) {
         return res.status(400).json({
@@ -523,16 +838,20 @@ router.post(
         });
       }
 
+
       const resetCode =
         Math.floor(
           100000 +
           Math.random() * 900000
         ).toString();
 
+
       const resetExpires =
         new Date(
-          Date.now() + 10 * 60 * 1000
+          Date.now() +
+          10 * 60 * 1000
         );
+
 
       await prisma.user.update({
         where: {
@@ -548,17 +867,22 @@ router.post(
         },
       });
 
+
       try {
+
         await sendPasswordResetEmail(
           user.email,
           user.firstName,
           resetCode
         );
+
       } catch (emailError) {
+
         console.error(
           "Password reset email error:",
           emailError
         );
+
 
         await prisma.user.update({
           where: {
@@ -571,21 +895,26 @@ router.post(
           },
         });
 
+
         return res.status(500).json({
           message:
             "Unable to send password reset email.",
         });
       }
 
+
       res.json({
         message:
           "A password reset code has been sent to your email address.",
       });
+
     } catch (error) {
+
       console.error(
         "Forgot password error:",
         error
       );
+
 
       res.status(500).json({
         message:
@@ -595,18 +924,22 @@ router.post(
   }
 );
 
+
 /*
   RESET PASSWORD
 */
 router.post(
   "/reset-password",
   async (req, res) => {
+
     try {
+
       const {
         email,
         code,
         newPassword,
       } = req.body;
+
 
       if (
         !email ||
@@ -619,22 +952,32 @@ router.post(
         });
       }
 
-      if (!/^\d{6}$/.test(code.toString())) {
+
+      if (
+        !/^\d{6}$/.test(
+          code.toString()
+        )
+      ) {
         return res.status(400).json({
           message:
             "Verification code must be exactly 6 digits.",
         });
       }
 
-      if (newPassword.length < 8) {
+
+      if (
+        newPassword.length < 8
+      ) {
         return res.status(400).json({
           message:
             "Your password must be at least 8 characters long.",
         });
       }
 
+
       const normalizedEmail =
         email.toLowerCase().trim();
+
 
       const user =
         await prisma.user.findUnique({
@@ -643,12 +986,14 @@ router.post(
           },
         });
 
+
       if (!user) {
         return res.status(404).json({
           message:
             "User not found.",
         });
       }
+
 
       if (
         !user.passwordResetCode ||
@@ -660,10 +1005,12 @@ router.post(
         });
       }
 
+
       if (
         new Date() >
         user.passwordResetExpires
       ) {
+
         await prisma.user.update({
           where: {
             id: user.id,
@@ -675,11 +1022,13 @@ router.post(
           },
         });
 
+
         return res.status(400).json({
           message:
             "Your password reset code has expired. Please request a new code.",
         });
       }
+
 
       if (
         user.passwordResetCode !==
@@ -691,11 +1040,13 @@ router.post(
         });
       }
 
+
       const passwordHash =
         await bcrypt.hash(
           newPassword,
           10
         );
+
 
       await prisma.user.update({
         where: {
@@ -713,15 +1064,19 @@ router.post(
         },
       });
 
+
       res.json({
         message:
           "Your password has been reset successfully. You can now log in with your new password.",
       });
+
     } catch (error) {
+
       console.error(
         "Reset password error:",
         error
       );
+
 
       res.status(500).json({
         message:
@@ -738,7 +1093,9 @@ router.post(
 router.post(
   "/complete-profile",
   async (req, res) => {
+
     try {
+
       const {
         email,
         phoneNumber,
@@ -747,6 +1104,7 @@ router.post(
         country,
         stateProvince,
       } = req.body;
+
 
       if (
         !email ||
@@ -762,8 +1120,10 @@ router.post(
         });
       }
 
+
       const normalizedEmail =
         email.toLowerCase().trim();
+
 
       const user =
         await prisma.user.findUnique({
@@ -772,12 +1132,14 @@ router.post(
           },
         });
 
+
       if (!user) {
         return res.status(404).json({
           message:
             "User not found",
         });
       }
+
 
       if (!user.emailVerified) {
         return res.status(400).json({
@@ -786,8 +1148,10 @@ router.post(
         });
       }
 
+
       const parsedDateOfBirth =
         new Date(dateOfBirth);
+
 
       if (
         isNaN(
@@ -799,6 +1163,7 @@ router.post(
             "Invalid date of birth",
         });
       }
+
 
       const updatedUser =
         await prisma.user.update({
@@ -824,25 +1189,33 @@ router.post(
           },
         });
 
+
       res.json({
         message:
           "Profile completed successfully",
 
         user: {
-          id: updatedUser.id,
+          id:
+            updatedUser.id,
+
           firstName:
             updatedUser.firstName,
+
           lastName:
             updatedUser.lastName,
+
           email:
             updatedUser.email,
         },
       });
+
     } catch (error) {
+
       console.error(
         "Complete profile error:",
         error
       );
+
 
       res.status(500).json({
         message:
@@ -859,7 +1232,9 @@ router.post(
 router.post(
   "/identity-verification",
   async (req, res) => {
+
     try {
+
       const {
         email,
         nationality,
@@ -867,6 +1242,7 @@ router.post(
         identityNumber,
         identityDocument,
       } = req.body;
+
 
       if (
         !email ||
@@ -880,8 +1256,10 @@ router.post(
         });
       }
 
+
       const normalizedEmail =
         email.toLowerCase().trim();
+
 
       const user =
         await prisma.user.findUnique({
@@ -890,6 +1268,7 @@ router.post(
           },
         });
 
+
       if (!user) {
         return res.status(404).json({
           message:
@@ -897,12 +1276,14 @@ router.post(
         });
       }
 
+
       if (!user.emailVerified) {
         return res.status(400).json({
           message:
             "Please verify your email before completing identity verification",
         });
       }
+
 
       if (
         !user.phoneNumber ||
@@ -916,6 +1297,7 @@ router.post(
             "Please complete your profile before identity verification",
         });
       }
+
 
       const updatedUser =
         await prisma.user.update({
@@ -938,25 +1320,33 @@ router.post(
           },
         });
 
+
       res.json({
         message:
           "Identity verification information saved successfully",
 
         user: {
-          id: updatedUser.id,
+          id:
+            updatedUser.id,
+
           firstName:
             updatedUser.firstName,
+
           lastName:
             updatedUser.lastName,
+
           email:
             updatedUser.email,
         },
       });
+
     } catch (error) {
+
       console.error(
         "Identity verification error:",
         error
       );
+
 
       res.status(500).json({
         message:
@@ -973,11 +1363,14 @@ router.post(
 router.post(
   "/create-pin",
   async (req, res) => {
+
     try {
+
       const {
         email,
         pin,
       } = req.body;
+
 
       if (!email || !pin) {
         return res.status(400).json({
@@ -986,6 +1379,7 @@ router.post(
         });
       }
 
+
       if (!/^\d{4}$/.test(pin)) {
         return res.status(400).json({
           message:
@@ -993,8 +1387,10 @@ router.post(
         });
       }
 
+
       const normalizedEmail =
         email.toLowerCase().trim();
+
 
       const user =
         await prisma.user.findUnique({
@@ -1009,6 +1405,7 @@ router.post(
           },
         });
 
+
       if (!user) {
         return res.status(404).json({
           message:
@@ -1016,12 +1413,14 @@ router.post(
         });
       }
 
+
       if (!user.emailVerified) {
         return res.status(400).json({
           message:
             "Please verify your email before creating your PIN",
         });
       }
+
 
       if (
         !user.phoneNumber ||
@@ -1036,6 +1435,7 @@ router.post(
         });
       }
 
+
       if (
         !user.nationality ||
         !user.identityType ||
@@ -1047,6 +1447,7 @@ router.post(
         });
       }
 
+
       if (
         user.securitySettings?.pinHash
       ) {
@@ -1056,6 +1457,7 @@ router.post(
         });
       }
 
+
       if (user.account) {
         return res.status(400).json({
           message:
@@ -1063,8 +1465,13 @@ router.post(
         });
       }
 
+
       const pinHash =
-        await bcrypt.hash(pin, 10);
+        await bcrypt.hash(
+          pin,
+          10
+        );
+
 
       const accountNumber =
         Math.floor(
@@ -1072,33 +1479,43 @@ router.post(
           Math.random() * 9000000000
         ).toString();
 
+
       const cardNumber =
         "4829 " +
         Math.floor(
-          1000 + Math.random() * 9000
+          1000 +
+          Math.random() * 9000
         ) +
         " " +
         Math.floor(
-          1000 + Math.random() * 9000
+          1000 +
+          Math.random() * 9000
         ) +
         " " +
         Math.floor(
-          1000 + Math.random() * 9000
+          1000 +
+          Math.random() * 9000
         );
+
 
       const expiryDate =
         "12/" +
-        (29 +
+        (
+          29 +
           Math.floor(
             Math.random() * 3
-          ));
+          )
+        );
+
 
       const welcomeBalance =
         200350;
 
+
       const result =
         await prisma.$transaction(
           async (tx) => {
+
             const securitySettings =
               await tx.securitySettings.upsert({
                 where: {
@@ -1115,39 +1532,52 @@ router.post(
                 },
               });
 
+
             const account =
               await tx.account.create({
                 data: {
                   userId: user.id,
                   accountNumber,
+
                   balance:
                     welcomeBalance,
                 },
               });
 
+
             const card =
               await tx.card.create({
                 data: {
                   userId: user.id,
+
                   cardNumber,
+
                   expiryDate,
+
                   frozen: false,
                 },
               });
+
 
             const transaction =
               await tx.transaction.create({
                 data: {
                   userId: user.id,
-                  type: "credit",
+
+                  type:
+                    "credit",
+
                   amount:
                     welcomeBalance,
+
                   description:
                     "Welcome Bonus",
+
                   status:
                     "completed",
                 },
               });
+
 
             return {
               securitySettings,
@@ -1158,16 +1588,21 @@ router.post(
           }
         );
 
+
       res.status(201).json({
         message:
           "Your Swift Wallet account has been created successfully",
 
         user: {
-          id: user.id,
+          id:
+            user.id,
+
           firstName:
             user.firstName,
+
           lastName:
             user.lastName,
+
           email:
             user.email,
         },
@@ -1191,11 +1626,14 @@ router.post(
             result.card.frozen,
         },
       });
+
     } catch (error) {
+
       console.error(
         "Create PIN error:",
         error
       );
+
 
       if (
         error.code === "P2002"
@@ -1205,6 +1643,7 @@ router.post(
             "An account or card already exists for this user. Please try logging in.",
         });
       }
+
 
       res.status(500).json({
         message:
@@ -1221,11 +1660,14 @@ router.post(
 router.post(
   "/login",
   async (req, res) => {
+
     try {
+
       const {
         email,
         password,
       } = req.body;
+
 
       if (!email || !password) {
         return res.status(400).json({
@@ -1234,8 +1676,10 @@ router.post(
         });
       }
 
+
       const normalizedEmail =
         email.toLowerCase().trim();
+
 
       const user =
         await prisma.user.findUnique({
@@ -1258,6 +1702,7 @@ router.post(
           },
         });
 
+
       if (!user) {
         return res.status(401).json({
           message:
@@ -1265,11 +1710,13 @@ router.post(
         });
       }
 
+
       const passwordMatches =
         await bcrypt.compare(
           password,
           user.passwordHash
         );
+
 
       if (!passwordMatches) {
         return res.status(401).json({
@@ -1278,6 +1725,7 @@ router.post(
         });
       }
 
+
       if (!user.emailVerified) {
         return res.status(403).json({
           message:
@@ -1285,22 +1733,30 @@ router.post(
         });
       }
 
+
       const token =
         jwt.sign(
           {
-            userId: user.id,
-            email: user.email,
+            userId:
+              user.id,
+
+            email:
+              user.email,
           },
 
           process.env.JWT_SECRET,
 
           {
-            expiresIn: "7d",
+            expiresIn:
+              "7d",
           }
         );
 
+
       const card =
-        user.cards?.[0] || null;
+        user.cards?.[0] ||
+        null;
+
 
       res.json({
         message:
@@ -1354,32 +1810,32 @@ router.post(
           account:
             user.account
               ? {
-                id:
-                  user.account.id,
+                  id:
+                    user.account.id,
 
-                accountNumber:
-                  user.account.accountNumber,
+                  accountNumber:
+                    user.account.accountNumber,
 
-                balance:
-                  user.account.balance.toString(),
-              }
+                  balance:
+                    user.account.balance.toString(),
+                }
               : null,
 
           card:
             card
               ? {
-                id:
-                  card.id,
+                  id:
+                    card.id,
 
-                cardNumber:
-                  card.cardNumber,
+                  cardNumber:
+                    card.cardNumber,
 
-                expiryDate:
-                  card.expiryDate,
+                  expiryDate:
+                    card.expiryDate,
 
-                frozen:
-                  card.frozen,
-              }
+                  frozen:
+                    card.frozen,
+                }
               : null,
 
           hasPin:
@@ -1411,11 +1867,14 @@ router.post(
             ),
         },
       });
+
     } catch (error) {
+
       console.error(
         "Login error:",
         error
       );
+
 
       res.status(500).json({
         message:
@@ -1434,10 +1893,11 @@ router.post(
   "/verify-pin",
   authenticateToken,
   async (req, res) => {
+
     try {
-      const {
-        pin,
-      } = req.body;
+
+      const { pin } = req.body;
+
 
       if (!pin) {
         return res.status(400).json({
@@ -1446,6 +1906,7 @@ router.post(
         });
       }
 
+
       if (!/^\d{4}$/.test(pin)) {
         return res.status(400).json({
           message:
@@ -1453,12 +1914,14 @@ router.post(
         });
       }
 
+
       /*
         USER ID COMES FROM JWT
         NOT FROM THE FRONTEND
       */
       const userId =
         req.user.userId;
+
 
       const user =
         await prisma.user.findUnique({
@@ -1471,12 +1934,14 @@ router.post(
           },
         });
 
+
       if (!user) {
         return res.status(404).json({
           message:
             "User not found.",
         });
       }
+
 
       if (
         !user.securitySettings ||
@@ -1488,11 +1953,13 @@ router.post(
         });
       }
 
+
       const pinMatches =
         await bcrypt.compare(
           pin,
           user.securitySettings.pinHash
         );
+
 
       if (!pinMatches) {
         return res.status(401).json({
@@ -1501,16 +1968,19 @@ router.post(
         });
       }
 
+
       res.json({
         message:
           "PIN verified successfully.",
       });
 
     } catch (error) {
+
       console.error(
         "PIN verification error:",
         error
       );
+
 
       res.status(500).json({
         message:
@@ -1521,7 +1991,6 @@ router.post(
 );
 
 
-
 /*
   GET CURRENT LOGGED-IN USER
   PROTECTED BY JWT MIDDLEWARE
@@ -1530,11 +1999,14 @@ router.get(
   "/me",
   authenticateToken,
   async (req, res) => {
+
     try {
+
       const user =
         await prisma.user.findUnique({
           where: {
-            id: req.user.userId,
+            id:
+              req.user.userId,
           },
 
           include: {
@@ -1544,7 +2016,8 @@ router.get(
 
             transactions: {
               orderBy: {
-                createdAt: "desc",
+                createdAt:
+                  "desc",
               },
 
               take: 5,
@@ -1554,6 +2027,7 @@ router.get(
           },
         });
 
+
       if (!user) {
         return res.status(404).json({
           message:
@@ -1561,8 +2035,11 @@ router.get(
         });
       }
 
+
       const card =
-        user.cards?.[0] || null;
+        user.cards?.[0] ||
+        null;
+
 
       res.json({
         user: {
@@ -1611,32 +2088,32 @@ router.get(
           account:
             user.account
               ? {
-                id:
-                  user.account.id,
+                  id:
+                    user.account.id,
 
-                accountNumber:
-                  user.account.accountNumber,
+                  accountNumber:
+                    user.account.accountNumber,
 
-                balance:
-                  user.account.balance.toString(),
-              }
+                  balance:
+                    user.account.balance.toString(),
+                }
               : null,
 
           card:
             card
               ? {
-                id:
-                  card.id,
+                  id:
+                    card.id,
 
-                cardNumber:
-                  card.cardNumber,
+                  cardNumber:
+                    card.cardNumber,
 
-                expiryDate:
-                  card.expiryDate,
+                  expiryDate:
+                    card.expiryDate,
 
-                frozen:
-                  card.frozen,
-              }
+                  frozen:
+                    card.frozen,
+                }
               : null,
 
           hasPin:
@@ -1668,11 +2145,14 @@ router.get(
             ),
         },
       });
+
     } catch (error) {
+
       console.error(
         "Get current user error:",
         error
       );
+
 
       res.status(500).json({
         message:
@@ -1682,6 +2162,7 @@ router.get(
   }
 );
 
+
 /*
   UPDATE PROFILE
   PROTECTED BY JWT MIDDLEWARE
@@ -1690,8 +2171,12 @@ router.put(
   "/update-profile",
   authenticateToken,
   async (req, res) => {
+
     try {
-      const userId = req.user.userId;
+
+      const userId =
+        req.user.userId;
+
 
       const {
         firstName,
@@ -1699,6 +2184,7 @@ router.put(
         phoneNumber,
         country,
       } = req.body;
+
 
       if (
         !firstName ||
@@ -1712,17 +2198,22 @@ router.put(
         });
       }
 
+
       const cleanedFirstName =
         firstName.trim();
+
 
       const cleanedLastName =
         lastName.trim();
 
+
       const cleanedPhoneNumber =
         phoneNumber.trim();
 
+
       const cleanedCountry =
         country.trim();
+
 
       if (
         !cleanedFirstName ||
@@ -1736,10 +2227,12 @@ router.put(
         });
       }
 
+
       const updatedUser =
         await prisma.user.update({
           where: {
-            id: userId,
+            id:
+              userId,
           },
 
           data: {
@@ -1756,6 +2249,7 @@ router.put(
               cleanedCountry,
           },
         });
+
 
       res.json({
         message:
@@ -1783,10 +2277,12 @@ router.put(
       });
 
     } catch (error) {
+
       console.error(
         "Update profile error:",
         error
       );
+
 
       res.status(500).json({
         message:
@@ -1796,6 +2292,7 @@ router.put(
   }
 );
 
+
 /*
   GET ACCOUNT SECURITY SETTINGS
   PROTECTED BY JWT MIDDLEWARE
@@ -1804,13 +2301,18 @@ router.get(
   "/security-settings",
   authenticateToken,
   async (req, res) => {
+
     try {
-      const userId = req.user.userId;
+
+      const userId =
+        req.user.userId;
+
 
       const user =
         await prisma.user.findUnique({
           where: {
-            id: userId,
+            id:
+              userId,
           },
 
           include: {
@@ -1819,33 +2321,42 @@ router.get(
           },
         });
 
+
       if (!user) {
         return res.status(404).json({
-          message: "User not found.",
+          message:
+            "User not found.",
         });
       }
 
+
       const card =
-        user.cards?.[0] || null;
+        user.cards?.[0] ||
+        null;
+
 
       res.json({
         security: {
           hasPin:
-            !!user.securitySettings?.pinHash,
+            !!user.securitySettings
+              ?.pinHash,
 
           emailVerified:
             user.emailVerified,
 
           cardFrozen:
-            card?.frozen || false,
+            card?.frozen ||
+            false,
         },
       });
 
     } catch (error) {
+
       console.error(
         "Get security settings error:",
         error
       );
+
 
       res.status(500).json({
         message:
@@ -1855,6 +2366,7 @@ router.get(
   }
 );
 
+
 /*
   UPDATE CARD PROTECTION
   PROTECTED BY JWT MIDDLEWARE
@@ -1863,23 +2375,36 @@ router.put(
   "/card-protection",
   authenticateToken,
   async (req, res) => {
-    try {
-      const userId = req.user.userId;
-      const { frozen } = req.body;
 
-      if (typeof frozen !== "boolean") {
+    try {
+
+      const userId =
+        req.user.userId;
+
+
+      const { frozen } =
+        req.body;
+
+
+      if (
+        typeof frozen !==
+        "boolean"
+      ) {
         return res.status(400).json({
           message:
             "Card protection status must be true or false.",
         });
       }
 
+
       const card =
         await prisma.card.findFirst({
           where: {
-            userId: userId,
+            userId:
+              userId,
           },
         });
+
 
       if (!card) {
         return res.status(404).json({
@@ -1888,21 +2413,26 @@ router.put(
         });
       }
 
+
       const updatedCard =
         await prisma.card.update({
           where: {
-            id: card.id,
+            id:
+              card.id,
           },
 
           data: {
-            frozen: frozen,
+            frozen:
+              frozen,
           },
         });
 
+
       res.json({
-        message: frozen
-          ? "Your card has been frozen successfully."
-          : "Your card has been unfrozen successfully.",
+        message:
+          frozen
+            ? "Your card has been frozen successfully."
+            : "Your card has been unfrozen successfully.",
 
         card: {
           frozen:
@@ -1911,10 +2441,12 @@ router.put(
       });
 
     } catch (error) {
+
       console.error(
         "Update card protection error:",
         error
       );
+
 
       res.status(500).json({
         message:
@@ -1923,5 +2455,6 @@ router.put(
     }
   }
 );
+
 
 module.exports = router;
