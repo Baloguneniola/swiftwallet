@@ -9,11 +9,8 @@ import {
   ArrowUpRight
 } from "lucide-react";
 
-
 function PayBills() {
-
   const navigate = useNavigate();
-
 
   const currentUser =
     JSON.parse(
@@ -21,8 +18,6 @@ function PayBills() {
         "swiftWalletCurrentUser"
       )
     ) || null;
-
-
 
   const [selectedBill, setSelectedBill] =
     useState("");
@@ -36,18 +31,13 @@ function PayBills() {
   const [amount, setAmount] =
     useState("");
 
-
-
   const balance =
     currentUser?.balance || 0;
-
-
 
   /*
     PROVIDERS BASED ON BILL TYPE
   */
   const providers = {
-
     Electricity: [
       "Ikeja Electric",
       "Eko Electricity",
@@ -77,18 +67,13 @@ function PayBills() {
       "Glo",
       "9mobile"
     ]
-
   };
-
-
 
   /*
     GET PROVIDERS FOR SELECTED BILL
   */
   const availableProviders =
     providers[selectedBill] || [];
-
-
 
   const recentPayments =
     currentUser?.transactions
@@ -99,57 +84,38 @@ function PayBills() {
       .slice(-5)
       .reverse() || [];
 
-
-
-
-
   const handleContinue = () => {
-
     if (
       !selectedBill ||
       !provider ||
       !accountNumber ||
       !amount
     ) {
-
       alert(
         "Please complete all fields."
       );
 
       return;
-
     }
-
-
 
     const billAmount =
       Number(amount);
 
-
-
     if (billAmount <= 0) {
-
       alert(
         "Enter a valid amount."
       );
 
       return;
-
     }
 
-
-
     if (billAmount > balance) {
-
       alert(
         "Insufficient balance."
       );
 
       return;
-
     }
-
-
 
     navigate(
       "/pay-bills-pin",
@@ -162,17 +128,10 @@ function PayBills() {
         }
       }
     );
-
   };
 
-
-
-
-
   const getBillIcon = () => {
-
     switch (selectedBill) {
-
       case "Electricity":
         return <Zap size={22} />;
 
@@ -190,28 +149,16 @@ function PayBills() {
 
       default:
         return null;
-
     }
-
   };
 
-
-
-
-
   return (
-
     <div
       style={styles.page}
     >
-
-
-
       <div
         style={styles.navbar}
       >
-
-
         <Link
           to="/dashboard"
           onClick={() =>
@@ -219,48 +166,28 @@ function PayBills() {
           }
           style={styles.logoContainer}
         >
-
-
           <div
             style={styles.logo}
           >
             SW
           </div>
 
-
-
           <span
             style={styles.brand}
           >
             Swift Wallet
           </span>
-
-
-
         </Link>
-
-
       </div>
-
-
-
-
 
       <div
         style={styles.container}
       >
-
-
-
         <h1
           style={styles.heading}
         >
-
           Pay Bills
-
         </h1>
-
-
 
         <p
           style={styles.subtitle}
@@ -268,45 +195,25 @@ function PayBills() {
           Pay your everyday bills quickly and securely.
         </p>
 
-
-
-
-
         <div
           style={styles.card}
         >
-
-
           <div
             style={styles.sectionHeader}
           >
-
             Available Balance
-
           </div>
-
-
-
 
           <h2
             style={styles.balance}
           >
-
             ₦
             {balance.toLocaleString("en-NG", {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}
-
           </h2>
-
-
         </div>
-
-
-
-
-
 
         <div
           style={{
@@ -314,18 +221,12 @@ function PayBills() {
             marginTop: "25px"
           }}
         >
-
-
-
           <div
             style={styles.sectionHeader}
           >
-
-
             {
               getBillIcon()
             }
-
 
             <h2
               style={{
@@ -334,22 +235,13 @@ function PayBills() {
             >
               Pay a Bill
             </h2>
-
-
           </div>
-
-
-
-
 
           <p
             style={styles.text}
           >
             Select a service and enter your payment details.
           </p>
-
-
-
 
           {/* BILL TYPE */}
 
@@ -358,7 +250,6 @@ function PayBills() {
               position: "relative"
             }}
           >
-
             <select
               style={{
                 ...styles.input,
@@ -367,7 +258,6 @@ function PayBills() {
               }}
               value={selectedBill}
               onChange={(e) => {
-
                 setSelectedBill(
                   e.target.value
                 );
@@ -377,10 +267,8 @@ function PayBills() {
                   BILL TYPE CHANGES
                 */
                 setProvider("");
-
               }}
             >
-
               <option value="">
                 Choose Service
               </option>
@@ -404,9 +292,7 @@ function PayBills() {
               <option value="Airtime">
                 Airtime
               </option>
-
             </select>
-
 
             <span
               style={{
@@ -422,13 +308,7 @@ function PayBills() {
             >
               ▼
             </span>
-
-
           </div>
-
-
-
-
 
           {/* PROVIDER */}
 
@@ -437,7 +317,6 @@ function PayBills() {
               position: "relative"
             }}
           >
-
             <select
               style={{
                 ...styles.input,
@@ -459,35 +338,27 @@ function PayBills() {
               }
               disabled={!selectedBill}
             >
-
               <option value="">
-
                 {
                   selectedBill
                     ? "Choose Provider"
                     : "Choose a service first"
                 }
-
               </option>
-
 
               {
                 availableProviders.map(
                   (providerName) => (
-
                     <option
                       key={providerName}
                       value={providerName}
                     >
                       {providerName}
                     </option>
-
                   )
                 )
               }
-
             </select>
-
 
             <span
               style={{
@@ -506,12 +377,7 @@ function PayBills() {
             >
               ▼
             </span>
-
           </div>
-
-
-
-
 
           {/* ACCOUNT / PHONE NUMBER */}
 
@@ -526,10 +392,6 @@ function PayBills() {
             }
           />
 
-
-
-
-
           {/* AMOUNT */}
 
           <input
@@ -537,45 +399,28 @@ function PayBills() {
             placeholder="Amount (₦)"
             value={
               amount
-                ?
-                Number(amount)
-                  .toLocaleString("en-NG")
-                :
-                ""
+                ? Number(amount)
+                    .toLocaleString("en-NG")
+                : ""
             }
             onChange={(e) => {
-
               const value =
                 e.target.value
                   .replace(/,/g, "");
 
-
               if (!isNaN(value)) {
                 setAmount(value);
               }
-
             }}
           />
-
-
-
-
 
           <button
             style={styles.button}
             onClick={handleContinue}
           >
-
             Continue
-
           </button>
-
-
-
-
-
         </div>
-
 
         <div
           style={{
@@ -583,8 +428,6 @@ function PayBills() {
             marginTop: "30px"
           }}
         >
-
-
           <h2
             style={{
               display: "flex",
@@ -593,22 +436,12 @@ function PayBills() {
               marginBottom: "20px"
             }}
           >
-
             Recent Payments
-
           </h2>
-
-
-
-
 
           {
             recentPayments.length === 0
-
-              ?
-
-              (
-
+              ? (
                 <p
                   style={{
                     color: "#888"
@@ -616,24 +449,14 @@ function PayBills() {
                 >
                   No payments yet.
                 </p>
-
               )
-
-              :
-
-              (
-
+              : (
                 recentPayments.map(
                   (payment, index) => (
-
-
                     <div
                       key={index}
                       style={styles.transaction}
                     >
-
-
-
                       <div
                         style={{
                           display: "flex",
@@ -641,33 +464,21 @@ function PayBills() {
                           gap: "14px"
                         }}
                       >
-
-
-
                         <div
                           style={styles.debitIcon}
                         >
-
                           <ArrowUpRight
                             size={18}
                           />
-
                         </div>
 
-
-
-
-
                         <div>
-
                           <strong>
                             {
                               payment.name ||
                               "Bill Payment"
                             }
                           </strong>
-
-
 
                           <p
                             style={{
@@ -676,26 +487,13 @@ function PayBills() {
                               fontSize: "13px"
                             }}
                           >
-
                             {
                               payment.date ||
                               "Unknown date"
                             }
-
                           </p>
-
-
-
                         </div>
-
-
-
-
                       </div>
-
-
-
-
 
                       <span
                         style={{
@@ -703,7 +501,6 @@ function PayBills() {
                           fontWeight: "700"
                         }}
                       >
-
                         -
 
                         ₦
@@ -711,43 +508,25 @@ function PayBills() {
                           Number(
                             String(
                               payment.amount
+                            ).replace(
+                              /[^\d]/g,
+                              ""
                             )
-                              .replace(
-                                /[^\d]/g,
-                                ""
-                              )
+                          ).toLocaleString(
+                            "en-NG",
+                            {
+                              minimumFractionDigits:
+                                2
+                            }
                           )
-                            .toLocaleString(
-                              "en-NG",
-                              {
-                                minimumFractionDigits:
-                                  2
-                              }
-                            )
                         }
-
-
                       </span>
-
-
-
                     </div>
-
-
                   )
                 )
-
               )
-
           }
-
-
-
         </div>
-
-
-
-
 
         <Link
           to="/dashboard"
@@ -758,87 +537,31 @@ function PayBills() {
             textDecoration: "none"
           }}
         >
-
           <button
             style={{
               ...styles.button,
               marginTop: "30px"
             }}
           >
-
             ← Back to Dashboard
-
           </button>
-
-
         </Link>
-
-
-
-
-
       </div>
-
-
     </div>
-
   );
-
 }
-
-
-
-
-
-function WalletIcon() {
-
-  return (
-
-    <div
-      style={{
-        width: "22px",
-        height: "22px",
-        borderRadius: "50%",
-        backgroundColor: "#22c55e",
-        color: "#000",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontSize: "12px",
-        fontWeight: "800"
-      }}
-    >
-
-      ₦
-
-    </div>
-
-  );
-
-}
-
-
-
-
-
 
 const styles = {
-
-
   page: {
     backgroundColor: "#0d0d0d",
     minHeight: "100vh",
     color: "#fff"
   },
 
-
-
   navbar: {
     padding: "20px 50px",
     borderBottom: "1px solid #222"
   },
-
-
 
   logoContainer: {
     display: "flex",
@@ -846,8 +569,6 @@ const styles = {
     gap: "10px",
     textDecoration: "none"
   },
-
-
 
   logo: {
     width: "40px",
@@ -861,23 +582,17 @@ const styles = {
     fontWeight: "800"
   },
 
-
-
   brand: {
     color: "#fff",
     fontSize: "20px",
     fontWeight: "700"
   },
 
-
-
   container: {
     maxWidth: "700px",
     margin: "45px auto",
     padding: "0 20px"
   },
-
-
 
   heading: {
     color: "#22c55e",
@@ -887,14 +602,10 @@ const styles = {
     gap: "12px"
   },
 
-
-
   subtitle: {
     color: "#999",
     marginBottom: "35px"
   },
-
-
 
   card: {
     backgroundColor: "#1a1a1a",
@@ -903,15 +614,11 @@ const styles = {
     padding: "25px"
   },
 
-
-
   sectionHeader: {
     display: "flex",
     alignItems: "center",
     gap: "10px"
   },
-
-
 
   balance: {
     color: "#22c55e",
@@ -919,13 +626,9 @@ const styles = {
     marginBottom: 0
   },
 
-
-
   text: {
     color: "#999"
   },
-
-
 
   input: {
     width: "100%",
@@ -940,8 +643,6 @@ const styles = {
     outline: "none"
   },
 
-
-
   button: {
     width: "100%",
     padding: "15px",
@@ -953,8 +654,6 @@ const styles = {
     cursor: "pointer"
   },
 
-
-
   transaction: {
     display: "flex",
     justifyContent: "space-between",
@@ -962,8 +661,6 @@ const styles = {
     padding: "16px 0",
     borderBottom: "1px solid #2a2a2a"
   },
-
-
 
   debitIcon: {
     width: "40px",
@@ -975,10 +672,6 @@ const styles = {
     alignItems: "center",
     justifyContent: "center"
   }
-
-
-
 };
-
 
 export default PayBills;
