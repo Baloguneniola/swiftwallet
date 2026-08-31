@@ -7,10 +7,9 @@ const Footer = () => {
       style={{
         backgroundColor: "#0d0d0d",
         padding: "24px 40px",
-        display: "flex",
-        justifyContent: "space-between",
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr 1fr",
         alignItems: "center",
-        flexWrap: "wrap",
         gap: "20px",
         borderTop: "1px solid #1a1a1a",
       }}
@@ -41,7 +40,6 @@ const Footer = () => {
           SW
         </div>
 
-
         <span
           style={{
             fontWeight: "700",
@@ -58,6 +56,8 @@ const Footer = () => {
       <div
         style={{
           display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
           gap: "24px",
           flexWrap: "wrap",
         }}
@@ -86,14 +86,6 @@ const Footer = () => {
           Support
         </Link>
 
-
-        <a
-          href="#"
-          style={footerLink}
-        >
-          Careers
-        </a>
-
       </div>
 
 
@@ -102,6 +94,7 @@ const Footer = () => {
         style={{
           color: "#555",
           fontSize: "12px",
+          textAlign: "right",
         }}
       >
         © 2026 Swift Wallet Inc. All rights reserved.

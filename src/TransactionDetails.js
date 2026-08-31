@@ -2,7 +2,6 @@ import React from "react";
 import {
   Link,
   useLocation,
-  useNavigate,
 } from "react-router-dom";
 
 import {
@@ -14,7 +13,6 @@ import {
 
 function TransactionDetails() {
   const location = useLocation();
-  const navigate = useNavigate();
 
   const transaction =
     location.state?.transaction;
