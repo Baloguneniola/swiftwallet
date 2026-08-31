@@ -52,18 +52,7 @@ function TransactionDetails() {
               your transaction history.
             </p>
 
-            <button
-              onClick={() => {
-                navigate(
-                  "/transaction-history"
-                );
 
-                window.scrollTo(0, 0);
-              }}
-              style={styles.button}
-            >
-              ← Back to Transaction History
-            </button>
           </div>
         </div>
       </div>
@@ -195,18 +184,7 @@ function TransactionDetails() {
 
       {/* MAIN CONTENT */}
       <div style={styles.container}>
-        <button
-          onClick={() => {
-            navigate(
-              "/transaction-history"
-            );
 
-            window.scrollTo(0, 0);
-          }}
-          style={styles.backButton}
-        >
-          ← Back to Transaction History
-        </button>
 
         <h1 style={styles.heading}>
           Transaction Details
@@ -399,19 +377,7 @@ function TransactionDetails() {
           </div>
         </div>
 
-        {/* BACK BUTTON */}
-        <button
-          onClick={() => {
-            navigate(
-              "/transaction-history"
-            );
 
-            window.scrollTo(0, 0);
-          }}
-          style={styles.button}
-        >
-          Back to Transaction History
-        </button>
       </div>
     </div>
   );

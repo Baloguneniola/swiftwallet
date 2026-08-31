@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import API_URL from "./api";
 
 function IdentityVerification() {
   const navigate = useNavigate();
@@ -52,7 +53,9 @@ function IdentityVerification() {
       !identityNumber ||
       !identityDocument
     ) {
-      setError("Please complete all identity verification fields.");
+      setError(
+        "Please complete all identity verification fields."
+      );
       return;
     }
 
@@ -70,7 +73,7 @@ function IdentityVerification() {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/auth/identity-verification",
+        `${API_URL}/api/auth/identity-verification`,
         {
           method: "POST",
           headers: {
@@ -91,14 +94,17 @@ function IdentityVerification() {
       if (!response.ok) {
         setError(
           data.message ||
-          "Unable to save your identity verification information."
+            "Unable to save your identity verification information."
         );
         return;
       }
 
       navigate("/create-pin");
     } catch (error) {
-      console.error("Identity verification error:", error);
+      console.error(
+        "Identity verification error:",
+        error
+      );
 
       setError(
         "Unable to connect to Swift Wallet. Please try again."
@@ -170,7 +176,8 @@ function IdentityVerification() {
           width: "450px",
           textAlign: "center",
           border: "1px solid #2a2a2a",
-          boxShadow: "0 0 20px rgba(34,197,94,0.15)",
+          boxShadow:
+            "0 0 20px rgba(34,197,94,0.15)",
         }}
       >
         <p
@@ -228,7 +235,10 @@ function IdentityVerification() {
           placeholder="Nationality"
           value={verificationData.nationality}
           onChange={(e) =>
-            handleChange("nationality", e.target.value)
+            handleChange(
+              "nationality",
+              e.target.value
+            )
           }
           style={inputStyle}
         />
@@ -236,16 +246,28 @@ function IdentityVerification() {
         <select
           value={verificationData.identityType}
           onChange={(e) =>
-            handleChange("identityType", e.target.value)
+            handleChange(
+              "identityType",
+              e.target.value
+            )
           }
           style={selectStyle}
         >
           <option value="" disabled>
             Select ID Type
           </option>
-          <option value="National ID">National ID</option>
-          <option value="Passport">Passport</option>
-          <option value="Driver's Licence">Driver's Licence</option>
+
+          <option value="National ID">
+            National ID
+          </option>
+
+          <option value="Passport">
+            Passport
+          </option>
+
+          <option value="Driver's Licence">
+            Driver's Licence
+          </option>
         </select>
 
         <input
@@ -253,7 +275,10 @@ function IdentityVerification() {
           placeholder="ID Number"
           value={verificationData.identityNumber}
           onChange={(e) =>
-            handleChange("identityNumber", e.target.value)
+            handleChange(
+              "identityNumber",
+              e.target.value
+            )
           }
           style={inputStyle}
         />

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import API_URL from "./api";
 
 function Signup() {
   const navigate = useNavigate();
@@ -21,7 +22,12 @@ function Signup() {
       confirmPassword,
     } = signupData;
 
-    if (!name || !email || !password || !confirmPassword) {
+    if (
+      !name ||
+      !email ||
+      !password ||
+      !confirmPassword
+    ) {
       alert("Please complete all fields");
       return;
     }
@@ -35,7 +41,7 @@ function Signup() {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/auth/signup",
+        `${API_URL}/api/auth/signup`,
         {
           method: "POST",
           headers: {
@@ -52,7 +58,10 @@ function Signup() {
       const data = await response.json();
 
       if (!response.ok) {
-        alert(data.message || "Unable to create account");
+        alert(
+          data.message ||
+            "Unable to create account"
+        );
         return;
       }
 
@@ -63,7 +72,10 @@ function Signup() {
 
       navigate("/verify-email");
     } catch (error) {
-      console.error("Signup error:", error);
+      console.error(
+        "Signup error:",
+        error
+      );
 
       alert(
         "Unable to connect to Swift Wallet. Please try again."
@@ -83,10 +95,16 @@ function Signup() {
         alignItems: "center",
         position: "relative",
         color: "#fff",
+        padding: "20px",
+        boxSizing: "border-box",
       }}
     >
+      {/* Swift Wallet Logo */}
       <Link
         to="/"
+        onClick={() =>
+          window.scrollTo(0, 0)
+        }
         style={{
           position: "absolute",
           top: "35px",
@@ -124,6 +142,7 @@ function Signup() {
         </span>
       </Link>
 
+      {/* Signup Card */}
       <div
         style={{
           width: "380px",
@@ -131,7 +150,8 @@ function Signup() {
           border: "1px solid #2a2a2a",
           borderRadius: "15px",
           padding: "40px",
-          boxShadow: "0 0 20px rgba(34,197,94,0.15)",
+          boxShadow:
+            "0 0 20px rgba(34,197,94,0.15)",
           textAlign: "center",
         }}
       >
@@ -149,11 +169,14 @@ function Signup() {
           style={{
             color: "#999",
             marginBottom: "30px",
+            lineHeight: "1.5",
           }}
         >
-          Join Swift Wallet and start sending money instantly.
+          Join Swift Wallet and start
+          sending money instantly.
         </p>
 
+        {/* Full Name */}
         <input
           type="text"
           name="swiftwallet-signup-name"
@@ -169,6 +192,7 @@ function Signup() {
           }
         />
 
+        {/* Email */}
         <input
           type="email"
           name="swiftwallet-signup-email"
@@ -184,6 +208,7 @@ function Signup() {
           }
         />
 
+        {/* Password */}
         <input
           type="password"
           name="swiftwallet-signup-password"
@@ -199,6 +224,7 @@ function Signup() {
           }
         />
 
+        {/* Confirm Password */}
         <input
           type="password"
           name="swiftwallet-signup-confirm-password"
@@ -209,11 +235,13 @@ function Signup() {
           onChange={(e) =>
             setSignupData({
               ...signupData,
-              confirmPassword: e.target.value,
+              confirmPassword:
+                e.target.value,
             })
           }
         />
 
+        {/* Continue Button */}
         <button
           onClick={handleSignup}
           disabled={loading}
@@ -230,6 +258,7 @@ function Signup() {
             : "Continue"}
         </button>
 
+        {/* Login Link */}
         <p
           style={{
             color: "#888",
@@ -241,6 +270,9 @@ function Signup() {
 
           <Link
             to="/login"
+            onClick={() =>
+              window.scrollTo(0, 0)
+            }
             style={{
               color: "#22c55e",
               textDecoration: "none",

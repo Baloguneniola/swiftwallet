@@ -4,6 +4,7 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
+import API_URL from "./api";
 
 function EnterPin() {
   const [pin, setPin] = useState("");
@@ -15,9 +16,15 @@ function EnterPin() {
 
   const transferData = location.state;
 
+  /*
+    COMPLETE TRANSFER
+  */
   const handleContinue = async () => {
     setError("");
 
+    /*
+      GET JWT TOKEN
+    */
     const token = localStorage.getItem(
       "swiftWalletToken"
     );
@@ -45,7 +52,7 @@ function EnterPin() {
     }
 
     /*
-      CHECK PIN
+      CHECK PIN LENGTH
     */
     if (pin.length !== 4) {
       setError(
@@ -59,11 +66,14 @@ function EnterPin() {
 
     try {
       /*
+        ========================================
         STEP 1
         VERIFY TRANSACTION PIN
+        ========================================
       */
+
       const pinResponse = await fetch(
-        "http://localhost:5000/api/auth/verify-pin",
+        `${API_URL}/api/auth/verify-pin`,
         {
           method: "POST",
 
@@ -82,7 +92,7 @@ function EnterPin() {
         await pinResponse.json();
 
       /*
-        HANDLE INVALID / EXPIRED TOKEN
+        HANDLE EXPIRED / INVALID TOKEN
       */
       if (
         pinResponse.status === 401 ||
@@ -100,9 +110,7 @@ function EnterPin() {
           "swiftWalletUser"
         );
 
-        setError(
-          "Your login session has expired. Please log in again."
-        );
+        navigate("/login");
 
         return;
       }
@@ -120,12 +128,15 @@ function EnterPin() {
       }
 
       /*
+        ========================================
         STEP 2
-        COMPLETE THE TRANSFER
+        COMPLETE TRANSFER THROUGH BACKEND
+        ========================================
       */
+
       const transferResponse =
         await fetch(
-          "http://localhost:5000/api/transfers",
+          `${API_URL}/api/transfers`,
           {
             method: "POST",
 
@@ -154,7 +165,7 @@ function EnterPin() {
         await transferResponse.json();
 
       /*
-        HANDLE INVALID / EXPIRED TOKEN
+        HANDLE EXPIRED / INVALID TOKEN
       */
       if (
         transferResponse.status === 401 ||
@@ -172,9 +183,7 @@ function EnterPin() {
           "swiftWalletUser"
         );
 
-        setError(
-          "Your login session has expired. Please log in again."
-        );
+        navigate("/login");
 
         return;
       }
@@ -192,8 +201,11 @@ function EnterPin() {
       }
 
       /*
+        ========================================
         TRANSFER SUCCESSFUL
+        ========================================
       */
+
       navigate(
         "/transfer-success",
         {
@@ -242,7 +254,11 @@ function EnterPin() {
         position: "relative",
       }}
     >
-      {/* LOGO */}
+
+      {/* =====================================
+          LOGO
+          ===================================== */}
+
       <Link
         to="/confirm-transfer"
         state={transferData}
@@ -283,7 +299,10 @@ function EnterPin() {
         </span>
       </Link>
 
-      {/* PIN CARD */}
+      {/* =====================================
+          PIN CARD
+          ===================================== */}
+
       <div
         style={{
           width: "420px",
@@ -296,6 +315,7 @@ function EnterPin() {
             "0 0 20px rgba(34,197,94,0.15)",
         }}
       >
+
         <h1
           style={{
             color: "#22c55e",
@@ -313,6 +333,8 @@ function EnterPin() {
         >
           Enter your 4-digit PIN to complete the transfer.
         </p>
+
+        {/* PIN INPUT */}
 
         <input
           type="password"
@@ -340,6 +362,8 @@ function EnterPin() {
           style={inputStyle}
         />
 
+        {/* ERROR */}
+
         {error && (
           <div
             style={{
@@ -359,6 +383,8 @@ function EnterPin() {
           </div>
         )}
 
+        {/* CONFIRM */}
+
         <button
           onClick={handleContinue}
           disabled={loading}
@@ -374,6 +400,8 @@ function EnterPin() {
             ? "Processing..."
             : "Confirm Transfer"}
         </button>
+
+        {/* BACK */}
 
         <Link
           to="/confirm-transfer"
@@ -396,10 +424,18 @@ function EnterPin() {
             ← Back
           </button>
         </Link>
+
       </div>
     </div>
   );
 }
+
+
+/*
+  ============================================
+  INPUT STYLE
+  ============================================
+*/
 
 const inputStyle = {
   width: "100%",
@@ -417,6 +453,13 @@ const inputStyle = {
   letterSpacing: "6px",
 };
 
+
+/*
+  ============================================
+  PRIMARY BUTTON
+  ============================================
+*/
+
 const buttonStyle = {
   width: "100%",
   padding: "14px",
@@ -429,6 +472,13 @@ const buttonStyle = {
   fontSize: "15px",
 };
 
+
+/*
+  ============================================
+  SECONDARY BUTTON
+  ============================================
+*/
+
 const secondaryButton = {
   width: "100%",
   padding: "14px",
@@ -440,5 +490,6 @@ const secondaryButton = {
   fontSize: "15px",
   cursor: "pointer",
 };
+
 
 export default EnterPin;

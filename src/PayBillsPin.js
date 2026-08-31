@@ -4,6 +4,7 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
+import API_URL from "./api";
 
 function PayBillsPin() {
   const [pin, setPin] = useState("");
@@ -93,7 +94,7 @@ function PayBillsPin() {
         */
         const pinResponse =
           await fetch(
-            "http://localhost:5000/api/auth/verify-pin",
+            `${API_URL}/api/auth/verify-pin`,
             {
               method: "POST",
 
@@ -168,7 +169,7 @@ function PayBillsPin() {
         */
         const paymentResponse =
           await fetch(
-            "http://localhost:5000/api/pay-bills",
+            `${API_URL}/api/pay-bills`,
             {
               method: "POST",
 

@@ -9,6 +9,8 @@ import {
   TrendingDown,
 } from "lucide-react";
 
+import api from "./api";
+
 function TransactionHistory() {
   const navigate = useNavigate();
 
@@ -41,50 +43,22 @@ function TransactionHistory() {
           return;
         }
 
-        const response = await fetch(
-          "http://localhost:5000/api/transfers",
+        /*
+          GET TRANSACTIONS FROM BACKEND
+        */
+        const response = await api.get(
+          "/api/transfers",
           {
-            method: "GET",
-
             headers: {
               Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
             },
           }
         );
 
-        const data = await response.json();
-
-        if (!response.ok) {
-          /*
-            If JWT has expired or is invalid,
-            send the user back to login.
-          */
-          if (
-            response.status === 401 ||
-            response.status === 403
-          ) {
-            localStorage.removeItem(
-              "swiftWalletToken"
-            );
-
-            localStorage.removeItem(
-              "swiftWalletCurrentUser"
-            );
-
-            navigate("/login");
-
-            return;
-          }
-
-          throw new Error(
-            data.message ||
-              "Unable to load transactions."
-          );
-        }
+        const data = response.data;
 
         /*
-          Backend returns:
+          BACKEND RETURNS:
 
           {
             transactions: [
@@ -114,8 +88,36 @@ function TransactionHistory() {
           error
         );
 
+        /*
+          HANDLE EXPIRED / INVALID TOKEN
+        */
+        if (
+          error.response &&
+          (
+            error.response.status === 401 ||
+            error.response.status === 403
+          )
+        ) {
+          localStorage.removeItem(
+            "swiftWalletToken"
+          );
+
+          localStorage.removeItem(
+            "swiftWalletCurrentUser"
+          );
+
+          localStorage.removeItem(
+            "swiftWalletUser"
+          );
+
+          navigate("/login");
+
+          return;
+        }
+
         setError(
-          error.message ||
+          error.response?.data?.message ||
+            error.message ||
             "Unable to load transaction history."
         );
       } finally {
@@ -238,12 +240,14 @@ function TransactionHistory() {
       (transaction) => {
         const matchesFilter =
           filter === "All" ||
-          (filter === "Credit" &&
-            transaction.type ===
-              "credit") ||
-          (filter === "Debit" &&
-            transaction.type ===
-              "debit");
+          (
+            filter === "Credit" &&
+            transaction.type === "credit"
+          ) ||
+          (
+            filter === "Debit" &&
+            transaction.type === "debit"
+          );
 
         const transactionName =
           getTransactionName(
@@ -270,8 +274,7 @@ function TransactionHistory() {
   const moneyIn = transactions
     .filter(
       (transaction) =>
-        transaction.type ===
-        "credit"
+        transaction.type === "credit"
     )
     .reduce(
       (total, transaction) =>
@@ -288,8 +291,7 @@ function TransactionHistory() {
   const moneyOut = transactions
     .filter(
       (transaction) =>
-        transaction.type ===
-        "debit"
+        transaction.type === "debit"
     )
     .reduce(
       (total, transaction) =>
@@ -320,8 +322,10 @@ function TransactionHistory() {
 
   return (
     <div style={styles.page}>
+
       {/* NAVBAR */}
       <div style={styles.navbar}>
+
         <Link
           to="/dashboard"
           onClick={() =>
@@ -337,10 +341,12 @@ function TransactionHistory() {
             Swift Wallet
           </span>
         </Link>
+
       </div>
 
       {/* MAIN CONTENT */}
       <div style={styles.container}>
+
         <h1 style={styles.heading}>
           Transaction History
         </h1>
@@ -355,10 +361,12 @@ function TransactionHistory() {
             styles.summaryContainer
           }
         >
+
           {/* MONEY IN */}
           <div
             style={styles.summaryCard}
           >
+
             <div
               style={
                 styles.summaryHeader
@@ -383,12 +391,14 @@ function TransactionHistory() {
                 }
               )}
             </h2>
+
           </div>
 
           {/* MONEY OUT */}
           <div
             style={styles.summaryCard}
           >
+
             <div
               style={
                 styles.summaryHeader
@@ -415,7 +425,9 @@ function TransactionHistory() {
                 }
               )}
             </h2>
+
           </div>
+
         </div>
 
         {/* SEARCH + FILTER */}
@@ -425,12 +437,14 @@ function TransactionHistory() {
             marginBottom: "30px",
           }}
         >
+
           {/* SEARCH */}
           <div
             style={
               styles.inputWrapper
             }
           >
+
             <Search size={18} />
 
             <input
@@ -445,6 +459,7 @@ function TransactionHistory() {
                 )
               }
             />
+
           </div>
 
           {/* FILTER */}
@@ -453,6 +468,7 @@ function TransactionHistory() {
               position: "relative",
             }}
           >
+
             <select
               style={{
                 ...styles.input,
@@ -466,6 +482,7 @@ function TransactionHistory() {
                 )
               }
             >
+
               <option value="All">
                 All Transactions
               </option>
@@ -477,6 +494,7 @@ function TransactionHistory() {
               <option value="Debit">
                 Money Out
               </option>
+
             </select>
 
             <span
@@ -493,11 +511,14 @@ function TransactionHistory() {
             >
               ▼
             </span>
+
           </div>
+
         </div>
 
         {/* TRANSACTIONS */}
         <div style={styles.card}>
+
           <h2
             style={{
               color: "#22c55e",
@@ -509,6 +530,7 @@ function TransactionHistory() {
 
           {/* LOADING */}
           {loading ? (
+
             <p
               style={{
                 color: "#888",
@@ -516,7 +538,9 @@ function TransactionHistory() {
             >
               Loading transactions...
             </p>
+
           ) : error ? (
+
             /* ERROR */
             <p
               style={{
@@ -525,8 +549,10 @@ function TransactionHistory() {
             >
               {error}
             </p>
+
           ) : filteredTransactions.length ===
             0 ? (
+
             /* EMPTY */
             <p
               style={{
@@ -538,13 +564,16 @@ function TransactionHistory() {
                 ? "No transactions match your search or filter."
                 : "No transactions found."}
             </p>
+
           ) : (
+
             /* TRANSACTION LIST */
             filteredTransactions.map(
               (
                 transaction,
                 index
               ) => {
+
                 const amount =
                   getAmount(
                     transaction.amount
@@ -581,6 +610,7 @@ function TransactionHistory() {
                           : "1px solid #2a2a2a",
                     }}
                   >
+
                     {/* LEFT SIDE */}
                     <div
                       style={{
@@ -591,6 +621,7 @@ function TransactionHistory() {
                         minWidth: 0,
                       }}
                     >
+
                       {/* ICON */}
                       <div
                         style={
@@ -599,15 +630,21 @@ function TransactionHistory() {
                             : styles.debitIcon
                         }
                       >
+
                         {isCredit ? (
+
                           <ArrowDownLeft
                             size={20}
                           />
+
                         ) : (
+
                           <ArrowUpRight
                             size={20}
                           />
+
                         )}
+
                       </div>
 
                       {/* DETAILS */}
@@ -616,6 +653,7 @@ function TransactionHistory() {
                           minWidth: 0,
                         }}
                       >
+
                         <strong>
                           {name}
                         </strong>
@@ -636,6 +674,7 @@ function TransactionHistory() {
 
                         {/* STATUS */}
                         {transaction.status && (
+
                           <p
                             style={{
                               color:
@@ -656,10 +695,12 @@ function TransactionHistory() {
                           >
                             {transaction.status}
                           </p>
+
                         )}
 
                         {/* TRANSACTION ID */}
                         {transaction.id && (
+
                           <small
                             style={{
                               color:
@@ -677,8 +718,11 @@ function TransactionHistory() {
                               transaction.id
                             }
                           </small>
+
                         )}
+
                       </div>
+
                     </div>
 
                     {/* AMOUNT */}
@@ -698,6 +742,7 @@ function TransactionHistory() {
                           "nowrap",
                       }}
                     >
+
                       {isCredit
                         ? "+"
                         : "-"}
@@ -710,12 +755,15 @@ function TransactionHistory() {
                           maximumFractionDigits: 2,
                         }
                       )}
+
                     </span>
+
                   </div>
                 );
               }
             )
           )}
+
         </div>
 
         {/* BACK TO DASHBOARD */}
@@ -728,6 +776,7 @@ function TransactionHistory() {
             textDecoration: "none",
           }}
         >
+
           <button
             style={{
               ...styles.button,
@@ -736,7 +785,9 @@ function TransactionHistory() {
           >
             ← Back to Dashboard
           </button>
+
         </Link>
+
       </div>
     </div>
   );
@@ -746,6 +797,7 @@ function TransactionHistory() {
   STYLES
 */
 const styles = {
+
   page: {
     backgroundColor: "#0d0d0d",
     minHeight: "100vh",

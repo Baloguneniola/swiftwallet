@@ -7,6 +7,7 @@ import {
   CreditCard,
   ArrowDownLeft,
 } from "lucide-react";
+import API_URL from "./api";
 
 function AddMoney() {
   const navigate = useNavigate();
@@ -58,7 +59,7 @@ function AddMoney() {
           GET CURRENT USER
         */
         const response = await fetch(
-          "http://localhost:5000/api/auth/me",
+          `${API_URL}/api/auth/me`,
           {
             method: "GET",
 

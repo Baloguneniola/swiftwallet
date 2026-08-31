@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Lock, CheckCircle } from "lucide-react";
+import API_URL from "./api";
 
 function ChangePin() {
   const navigate = useNavigate();
@@ -70,7 +71,7 @@ function ChangePin() {
 
       const response =
         await fetch(
-          "http://localhost:5000/api/auth/change-pin",
+          `${API_URL}/api/auth/change-pin`,
           {
             method: "POST",
 

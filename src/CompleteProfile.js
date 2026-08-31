@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import API_URL from "./api";
 
 function CompleteProfile() {
   const navigate = useNavigate();
@@ -60,7 +61,7 @@ function CompleteProfile() {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/auth/complete-profile",
+        `${API_URL}/api/auth/complete-profile`,
         {
           method: "POST",
           headers: {

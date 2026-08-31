@@ -1,5 +1,6 @@
 import React, { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import API_URL from "./api";
 
 function VerifyEmail() {
   const navigate = useNavigate();
@@ -50,11 +51,15 @@ function VerifyEmail() {
     const verificationCode = code.join("");
 
     if (verificationCode.length !== 6) {
-      setError("Please enter the 6-digit verification code.");
+      setError(
+        "Please enter the 6-digit verification code."
+      );
       return;
     }
 
-    const email = localStorage.getItem("pendingUserEmail");
+    const email = localStorage.getItem(
+      "pendingUserEmail"
+    );
 
     if (!email) {
       setError(
@@ -69,7 +74,7 @@ function VerifyEmail() {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/auth/verify-email",
+        `${API_URL}/api/auth/verify-email`,
         {
           method: "POST",
           headers: {
@@ -86,15 +91,18 @@ function VerifyEmail() {
 
       if (!response.ok) {
         setError(
-          data.message || "Unable to verify your email."
+          data.message ||
+            "Unable to verify your email."
         );
         return;
       }
-      
 
       navigate("/complete-profile");
     } catch (error) {
-      console.error("Email verification error:", error);
+      console.error(
+        "Email verification error:",
+        error
+      );
 
       setError(
         "Unable to connect to Swift Wallet. Please try again."
@@ -105,7 +113,9 @@ function VerifyEmail() {
   };
 
   const handleResend = async () => {
-    const email = localStorage.getItem("pendingUserEmail");
+    const email = localStorage.getItem(
+      "pendingUserEmail"
+    );
 
     if (!email) {
       setError(
@@ -120,7 +130,7 @@ function VerifyEmail() {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/auth/resend-code",
+        `${API_URL}/api/auth/resend-code`,
         {
           method: "POST",
           headers: {
@@ -136,7 +146,8 @@ function VerifyEmail() {
 
       if (!response.ok) {
         setError(
-          data.message || "Unable to resend verification code."
+          data.message ||
+            "Unable to resend verification code."
         );
         return;
       }
@@ -156,7 +167,10 @@ function VerifyEmail() {
         "A new verification code has been sent to your email."
       );
     } catch (error) {
-      console.error("Resend code error:", error);
+      console.error(
+        "Resend code error:",
+        error
+      );
 
       setError(
         "Unable to connect to Swift Wallet. Please try again."
@@ -226,7 +240,8 @@ function VerifyEmail() {
           width: "420px",
           textAlign: "center",
           border: "1px solid #2a2a2a",
-          boxShadow: "0 0 20px rgba(34,197,94,0.15)",
+          boxShadow:
+            "0 0 20px rgba(34,197,94,0.15)",
         }}
       >
         <p
@@ -276,7 +291,8 @@ function VerifyEmail() {
             lineHeight: "1.5",
           }}
         >
-          Enter the 6-digit verification code we sent to your email address.
+          Enter the 6-digit verification code we sent
+          to your email address.
         </p>
 
         <div
@@ -298,7 +314,10 @@ function VerifyEmail() {
               maxLength="1"
               value={digit}
               onChange={(e) =>
-                handleChange(e.target.value, index)
+                handleChange(
+                  e.target.value,
+                  index
+                )
               }
               onKeyDown={(e) =>
                 handleKeyDown(e, index)
@@ -337,14 +356,17 @@ function VerifyEmail() {
           disabled={loading || resending}
           style={{
             ...buttonStyle,
-            opacity: loading || resending ? 0.7 : 1,
+            opacity:
+              loading || resending ? 0.7 : 1,
             cursor:
               loading || resending
                 ? "not-allowed"
                 : "pointer",
           }}
         >
-          {loading ? "Verifying..." : "Verify Email"}
+          {loading
+            ? "Verifying..."
+            : "Verify Email"}
         </button>
 
         <p
@@ -355,8 +377,13 @@ function VerifyEmail() {
           }}
         >
           Didn't receive a code?{" "}
+
           <span
-            onClick={resending ? undefined : handleResend}
+            onClick={
+              resending
+                ? undefined
+                : handleResend
+            }
             style={{
               color: "#22c55e",
               cursor: resending
@@ -366,7 +393,9 @@ function VerifyEmail() {
               opacity: resending ? 0.7 : 1,
             }}
           >
-            {resending ? "Sending..." : "Resend Code"}
+            {resending
+              ? "Sending..."
+              : "Resend Code"}
           </span>
         </p>
       </div>

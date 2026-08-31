@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { User, Lock, LogOut, Copy } from "lucide-react";
+import API_URL from "./api";
 
 function Profile() {
   const navigate = useNavigate();
@@ -26,7 +27,7 @@ function Profile() {
         }
 
         const response = await fetch(
-          "http://localhost:5000/api/auth/me",
+          `${API_URL}/api/auth/me`,
           {
             method: "GET",
             headers: {

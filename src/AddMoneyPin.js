@@ -6,6 +6,8 @@ import {
   useNavigate,
 } from "react-router-dom";
 
+import API_URL from "./api";
+
 function AddMoneyPin() {
   const [pin, setPin] = useState("");
   const [loading, setLoading] = useState(false);
@@ -77,7 +79,7 @@ function AddMoneyPin() {
       */
       const pinResponse =
         await fetch(
-          "http://localhost:5000/api/auth/verify-pin",
+          `${API_URL}/api/auth/verify-pin`,
           {
             method: "POST",
 
@@ -113,7 +115,7 @@ function AddMoneyPin() {
       */
       const addMoneyResponse =
         await fetch(
-          "http://localhost:5000/api/add-money",
+          `${API_URL}/api/add-money`,
           {
             method: "POST",
 

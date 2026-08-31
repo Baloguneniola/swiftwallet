@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import API_URL from "./api";
 
 function SendMoney() {
   const navigate = useNavigate();
@@ -62,7 +63,7 @@ function SendMoney() {
         LOOK UP ACCOUNT WITH JWT
       */
       const response = await fetch(
-        `http://localhost:5000/api/transfers/lookup/${accountNumber}`,
+        `${API_URL}/api/transfers/lookup/${accountNumber}`,
         {
           headers: {
             Authorization:
@@ -95,7 +96,7 @@ function SendMoney() {
 
         setAccountError(
           data.message ||
-          "Your session has expired. Please log in again."
+            "Your session has expired. Please log in again."
         );
 
         return;
@@ -114,7 +115,7 @@ function SendMoney() {
 
         setAccountError(
           data.message ||
-          "Account not found."
+            "Account not found."
         );
 
         return;

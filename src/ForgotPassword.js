@@ -1,5 +1,9 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import {
+  Link,
+  useNavigate,
+} from "react-router-dom";
+import API_URL from "./api";
 
 function ForgotPassword() {
   const navigate = useNavigate();
@@ -28,7 +32,7 @@ function ForgotPassword() {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/auth/forgot-password",
+        `${API_URL}/api/auth/forgot-password`,
         {
           method: "POST",
 
@@ -108,7 +112,7 @@ function ForgotPassword() {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/auth/reset-password",
+        `${API_URL}/api/auth/reset-password`,
         {
           method: "POST",
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import API_URL from "./api";
 
 function EditProfile() {
   const navigate = useNavigate();
@@ -42,7 +43,7 @@ function EditProfile() {
 
     return {
       message:
-        "The backend returned an unexpected response. Please make sure the SwiftWallet backend is running on port 5000.",
+        "The backend returned an unexpected response. Please make sure the SwiftWallet backend is running.",
     };
   };
 
@@ -63,7 +64,7 @@ function EditProfile() {
         }
 
         const response = await fetch(
-          "http://localhost:5000/api/auth/me",
+          `${API_URL}/api/auth/me`,
           {
             method: "GET",
             headers: {
@@ -167,7 +168,7 @@ function EditProfile() {
         SEND UPDATED PROFILE TO BACKEND
       */
       const response = await fetch(
-        "http://localhost:5000/api/auth/update-profile",
+        `${API_URL}/api/auth/update-profile`,
         {
           method: "PUT",
 
@@ -248,7 +249,7 @@ function EditProfile() {
         error.message.includes("fetch")
       ) {
         setError(
-          "Unable to connect to the backend. Please make sure your SwiftWallet backend is running on http://localhost:5000."
+          "Unable to connect to the backend. Please try again."
         );
       } else {
         setError(

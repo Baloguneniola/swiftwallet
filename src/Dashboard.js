@@ -15,6 +15,7 @@ import {
   ArrowUpRight,
   ArrowDownLeft,
 } from "lucide-react";
+import API_URL from "./api";
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -54,7 +55,7 @@ function Dashboard() {
 
         const response =
           await fetch(
-            "http://localhost:5000/api/auth/me",
+            `${API_URL}/api/auth/me`,
             {
               method: "GET",
 
@@ -71,7 +72,7 @@ function Dashboard() {
         if (!response.ok) {
           throw new Error(
             data.message ||
-              "Unable to load your account."
+            "Unable to load your account."
           );
         }
 
@@ -186,7 +187,7 @@ function Dashboard() {
   ) => {
     if (
       typeof amount ===
-        "number" &&
+      "number" &&
       !isNaN(amount)
     ) {
       return amount;
@@ -249,7 +250,7 @@ function Dashboard() {
       if (
         !accountNumber ||
         accountNumber ===
-          "N/A"
+        "N/A"
       ) {
         return;
       }
@@ -556,12 +557,12 @@ function Dashboard() {
             >
               {showBalance
                 ? `₦${balance.toLocaleString(
-                    "en-NG",
-                    {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    }
-                  )}`
+                  "en-NG",
+                  {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }
+                )}`
                 : "₦••••••"}
             </h2>
 
@@ -609,8 +610,8 @@ function Dashboard() {
                 ? cardNumber
                 : cardNumber !==
                   "N/A"
-                ? "•••• •••• •••• 7890"
-                : "N/A"}
+                  ? "•••• •••• •••• 7890"
+                  : "N/A"}
             </h3>
 
             <div
@@ -836,7 +837,7 @@ function Dashboard() {
         </div>
 
         {latestTransactions.length ===
-        0 ? (
+          0 ? (
           <p
             style={{
               color: "#888",
@@ -872,13 +873,13 @@ function Dashboard() {
                   <div
                     style={
                       transaction.type ===
-                      "credit"
+                        "credit"
                         ? styles.creditIcon
                         : styles.debitIcon
                     }
                   >
                     {transaction.type ===
-                    "credit" ? (
+                      "credit" ? (
                       <ArrowDownLeft
                         size={18}
                       />
@@ -893,7 +894,7 @@ function Dashboard() {
                     <strong>
                       {transaction.description ||
                         (transaction.type ===
-                        "credit"
+                          "credit"
                           ? "Money received"
                           : "Money sent")}
                     </strong>
@@ -913,13 +914,13 @@ function Dashboard() {
                 <span
                   style={
                     transaction.type ===
-                    "credit"
+                      "credit"
                       ? styles.creditAmount
                       : styles.debitAmount
                   }
                 >
                   {transaction.type ===
-                  "credit"
+                    "credit"
                     ? "+"
                     : "-"}
 

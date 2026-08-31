@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import API_URL from "./api";
 
 function CreatePin() {
   const navigate = useNavigate();
@@ -35,7 +36,7 @@ function CreatePin() {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/auth/create-pin",
+        `${API_URL}/api/auth/create-pin`,
         {
           method: "POST",
           headers: {
