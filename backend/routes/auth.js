@@ -13,13 +13,14 @@ const router = express.Router();
   EMAIL TRANSPORTER
 */
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
 });
-
 /*
   SEND VERIFICATION EMAIL
 */
@@ -1353,32 +1354,32 @@ router.post(
           account:
             user.account
               ? {
-                  id:
-                    user.account.id,
+                id:
+                  user.account.id,
 
-                  accountNumber:
-                    user.account.accountNumber,
+                accountNumber:
+                  user.account.accountNumber,
 
-                  balance:
-                    user.account.balance.toString(),
-                }
+                balance:
+                  user.account.balance.toString(),
+              }
               : null,
 
           card:
             card
               ? {
-                  id:
-                    card.id,
+                id:
+                  card.id,
 
-                  cardNumber:
-                    card.cardNumber,
+                cardNumber:
+                  card.cardNumber,
 
-                  expiryDate:
-                    card.expiryDate,
+                expiryDate:
+                  card.expiryDate,
 
-                  frozen:
-                    card.frozen,
-                }
+                frozen:
+                  card.frozen,
+              }
               : null,
 
           hasPin:
@@ -1610,32 +1611,32 @@ router.get(
           account:
             user.account
               ? {
-                  id:
-                    user.account.id,
+                id:
+                  user.account.id,
 
-                  accountNumber:
-                    user.account.accountNumber,
+                accountNumber:
+                  user.account.accountNumber,
 
-                  balance:
-                    user.account.balance.toString(),
-                }
+                balance:
+                  user.account.balance.toString(),
+              }
               : null,
 
           card:
             card
               ? {
-                  id:
-                    card.id,
+                id:
+                  card.id,
 
-                  cardNumber:
-                    card.cardNumber,
+                cardNumber:
+                  card.cardNumber,
 
-                  expiryDate:
-                    card.expiryDate,
+                expiryDate:
+                  card.expiryDate,
 
-                  frozen:
-                    card.frozen,
-                }
+                frozen:
+                  card.frozen,
+              }
               : null,
 
           hasPin:
